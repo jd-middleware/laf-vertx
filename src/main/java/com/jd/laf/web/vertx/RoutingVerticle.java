@@ -26,8 +26,6 @@ public class RoutingVerticle extends AbstractVerticle {
     private ExtensionManager extensionManager = ExtensionManager.getInstance();
     //参数
     private Map<String, Object> parameters;
-    //HTTP端口
-    private int httpPort = 8080;
     //资源文件
     private String file = "routing.properties";
     private ContextHandler contextHandler = new ContextHandler();
@@ -58,8 +56,8 @@ public class RoutingVerticle extends AbstractVerticle {
         for (Route route : config.getMessages()) {
             buildConsumer(route, eventBus, em);
         }
-        vertx.createHttpServer(options == null ? new HttpServerOptions() : options).
-                requestHandler(router::accept).listen(httpPort);
+        HttpServerOptions serverOptions = options == null ? new HttpServerOptions() : options;
+        vertx.createHttpServer(serverOptions).requestHandler(router::accept).listen();
     }
 
     protected void buildConfig() throws IOException {
@@ -220,10 +218,6 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
-    }
-
-    public void setHttpPort(int httpPort) {
-        this.httpPort = httpPort;
     }
 
     public void setFile(String file) {
