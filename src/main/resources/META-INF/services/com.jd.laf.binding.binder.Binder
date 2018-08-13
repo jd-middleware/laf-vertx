@@ -1,0 +1,8 @@
+com.jd.laf.web.vertx.binder.ContextBinder
+com.jd.laf.web.vertx.binder.CookieParamBinder
+com.jd.laf.web.vertx.binder.FormParamBinder
+com.jd.laf.web.vertx.binder.HeaderParamBinder
+com.jd.laf.web.vertx.binder.PathParamBinder
+com.jd.laf.web.vertx.binder.QueryParamBinder
+com.jd.laf.web.vertx.binder.RequestBinder
+com.jd.laf.web.vertx.binder.ResponseBinder
