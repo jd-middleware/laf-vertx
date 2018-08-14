@@ -7,7 +7,7 @@ import io.vertx.core.MultiMap;
 import io.vertx.ext.web.RoutingContext;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Collection;
 
 /**
  * 表单绑定
@@ -22,12 +22,9 @@ public class FormParamBinder implements Binder {
         name = name == null || name.isEmpty() ? field.getName() : name;
         Class<?> type = field.getType();
         MultiMap attributes = ctx.request().formAttributes();
-        if (type.isAssignableFrom(List.class)) {
+        if (Collection.class.isAssignableFrom(type)) {
+            //集合
             return context.bind(attributes.getAll(name));
-        } else if (type.isAssignableFrom(Set.class)) {
-            return context.bind(new HashSet<>(attributes.getAll(name)));
-        } else if (type.isAssignableFrom(SortedSet.class)) {
-            return context.bind(new TreeSet<>(attributes.getAll(name)));
         } else {
             return context.bind(attributes.get(name));
         }
