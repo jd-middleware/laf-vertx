@@ -1,5 +1,6 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.binding.Binding;
 import com.jd.laf.extension.ExtensionManager;
 import com.jd.laf.web.vertx.VertxConfig.Builder;
 import io.vertx.core.AbstractVerticle;
@@ -10,13 +11,12 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 
+import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
+import javax.validation.ValidationException;
 import javax.validation.Validator;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 路由装配件
@@ -31,7 +31,7 @@ public class RoutingVerticle extends AbstractVerticle {
     private Map<String, Object> parameters;
     //资源文件
     private String file = "routing.properties";
-    private ContextHandler contextHandler = new ContextHandler();
+    private ContextHandler contextHandler;
     //http选项
     private HttpServerOptions options;
     //验证器
@@ -52,6 +52,7 @@ public class RoutingVerticle extends AbstractVerticle {
         if (validator == null) {
             validator = Validation.buildDefaultValidatorFactory().getValidator();
         }
+        contextHandler = new ContextHandler(parameters, validator);
 
         Router router = Router.router(vertx);
         router.route().handler(BodyHandler.create());
@@ -119,13 +120,18 @@ public class RoutingVerticle extends AbstractVerticle {
                     //命令
                     command = em.getExtension(Command.class, name);
                     if (command != null) {
-                        webRoute.handler(new CommandHandler(command));
+                        webRoute.handler(new CommandHandler(command, validator));
                     }
                 }
             }
         }
     }
 
+    /**
+     * 读取配置
+     *
+     * @throws IOException
+     */
     protected void buildConfig() throws IOException {
         if (file == null || file.isEmpty()) {
             throw new IllegalStateException("file can not be empty.");
@@ -150,7 +156,6 @@ public class RoutingVerticle extends AbstractVerticle {
             }
         }
     }
-
 
     /**
      * 创建异常处理链
@@ -207,19 +212,91 @@ public class RoutingVerticle extends AbstractVerticle {
     /**
      * 上下文处理器
      */
-    protected class ContextHandler implements Handler<RoutingContext> {
+    protected static class ContextHandler implements Handler<RoutingContext> {
+
+        private Map<String, Object> parameters;
+        protected Validator validator;
+
+        public ContextHandler(Map<String, Object> parameters, Validator validator) {
+            this.parameters = parameters;
+            this.validator = validator;
+        }
 
         @Override
         public void handle(final RoutingContext context) {
             context.put(Command.VALIDATOR, validator);
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                context.put(entry.getKey(), entry.getValue());
+            if (parameters != null) {
+                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                    context.put(entry.getKey(), entry.getValue());
+                }
             }
             String contentType = context.getAcceptableContentType();
             if (contentType == null || contentType.isEmpty()) {
                 context.setAcceptableContentType("application/json;charset:utf-8");
             }
             context.next();
+        }
+    }
+
+    /**
+     * 命令处理器
+     */
+    protected static class CommandHandler implements Handler<RoutingContext> {
+
+        protected Command command;
+        protected Validator validator;
+
+        public CommandHandler(Command command, Validator validator) {
+            this.command = command;
+            this.validator = validator;
+        }
+
+        @Override
+        public void handle(final RoutingContext context) {
+            try {
+                //克隆一份
+                Command clone = command.getClass().newInstance();
+                //绑定
+                Binding.bind(context, clone);
+                //验证
+                validate(clone);
+                //执行
+                Command.Result result = clone.execute();
+                if (result != null) {
+                    //有返回结果
+                    if (result.getKey() != null) {
+                        context.put(result.getKey(), result.getResult());
+                    }
+                    //继续执行
+                    if (result.getType() == Command.ResultType.CONTINUE) {
+                        context.next();
+                    }
+                } else {
+                    context.next();
+                }
+            } catch (Exception e) {
+                context.fail(e);
+            }
+        }
+
+        /**
+         * 验证
+         *
+         * @param command
+         */
+        protected void validate(final Command command) {
+            Set<ConstraintViolation<Command>> constraints = validator.validate(command);
+            if (constraints != null && !constraints.isEmpty()) {
+                StringBuilder builder = new StringBuilder(100);
+                int count = 0;
+                for (ConstraintViolation<Command> violation : constraints) {
+                    if (count++ > 0) {
+                        builder.append('\n');
+                    }
+                    builder.append(violation.getMessage());
+                }
+                throw new ValidationException(builder.toString());
+            }
         }
     }
 }
