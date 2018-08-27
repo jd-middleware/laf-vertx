@@ -29,9 +29,7 @@ public abstract class Commands {
                     Map<String, Command> result = new HashMap<String, Command>();
                     //加载插件
                     ServiceLoader<Command> loader = ServiceLoader.load(Command.class, Commands.class.getClassLoader());
-                    for (Command command : loader) {
-                        result.put(command.type(), command);
-                    }
+                    loader.forEach(o -> result.put(o.type(), o));
                     plugins = result;
                 }
             }

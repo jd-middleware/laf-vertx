@@ -29,9 +29,7 @@ public abstract class MessageHandlers {
                     Map<String, MessageHandler> result = new HashMap<String, MessageHandler>();
                     //加载插件
                     ServiceLoader<MessageHandler> loader = ServiceLoader.load(MessageHandler.class, MessageHandlers.class.getClassLoader());
-                    for (MessageHandler handler : loader) {
-                        result.put(handler.type(), handler);
-                    }
+                    loader.forEach(o -> result.put(o.type(), o));
                     plugins = result;
                 }
             }

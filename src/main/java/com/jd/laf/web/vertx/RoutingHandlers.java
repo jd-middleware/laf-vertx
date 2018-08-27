@@ -29,9 +29,7 @@ public abstract class RoutingHandlers {
                     Map<String, RoutingHandler> result = new HashMap<String, RoutingHandler>();
                     //加载插件
                     ServiceLoader<RoutingHandler> loader = ServiceLoader.load(RoutingHandler.class, RoutingHandlers.class.getClassLoader());
-                    for (RoutingHandler handler : loader) {
-                        result.put(handler.type(), handler);
-                    }
+                    loader.forEach(o -> result.put(o.type(), o));
                     plugins = result;
                 }
             }

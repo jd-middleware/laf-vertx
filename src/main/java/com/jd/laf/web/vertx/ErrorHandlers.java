@@ -29,9 +29,7 @@ public abstract class ErrorHandlers {
                     Map<String, ErrorHandler> result = new HashMap<String, ErrorHandler>();
                     //加载插件
                     ServiceLoader<ErrorHandler> loader = ServiceLoader.load(ErrorHandler.class, ErrorHandlers.class.getClassLoader());
-                    for (ErrorHandler handler : loader) {
-                        result.put(handler.type(), handler);
-                    }
+                    loader.forEach(o -> result.put(o.type(), o));
                     plugins = result;
                 }
             }

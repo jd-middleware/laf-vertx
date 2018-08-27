@@ -41,17 +41,17 @@ public interface Command {
         String key;
 
         public Result(Object result) {
-            this(ResultType.CONTINUE, result, RESULT);
+            this(ResultType.CONTINUE, result, null);
         }
 
         public Result(ResultType type, Object result) {
-            this(type, result, RESULT);
+            this(type, result, null);
         }
 
         public Result(ResultType type, Object result, String key) {
-            this.type = type;
+            this.type = type == null ? ResultType.CONTINUE : type;
             this.result = result;
-            this.key = key;
+            this.key = key == null && result != null ? RESULT : key;
         }
 
         public ResultType getType() {
@@ -64,6 +64,24 @@ public interface Command {
 
         public String getKey() {
             return key;
+        }
+    }
+
+    /**
+     * 没有返回值，继续
+     */
+    class EmptyContinue extends Result {
+        public EmptyContinue() {
+            super(ResultType.CONTINUE, null, null);
+        }
+    }
+
+    /**
+     * 没有返回值，挂住
+     */
+    class EmptyHold extends Result {
+        public EmptyHold() {
+            super(ResultType.HOLD, null, null);
         }
     }
 
