@@ -1,11 +1,16 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
-import com.jd.laf.web.vertx.VertxConfig.Builder;
+import com.jd.laf.web.vertx.annotation.ErrorHandler;
+import com.jd.laf.web.vertx.annotation.ErrorHandlers;
+import com.jd.laf.web.vertx.config.RouteConfig;
+import com.jd.laf.web.vertx.config.VertxConfig;
+import com.jd.laf.web.vertx.config.VertxConfig.Builder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -14,25 +19,30 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.ValidationException;
 import javax.validation.Validator;
+import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.*;
+
+import static com.jd.laf.web.vertx.RenderHandler.render;
 
 /**
  * 路由装配件
  */
 public class RoutingVerticle extends AbstractVerticle {
 
+    public static final String DEFAULT_ERROR = "";
     //配置
-    private VertxConfig config;
+    protected VertxConfig config;
     //参数
-    private Map<String, Object> parameters;
+    protected Map<String, Object> parameters;
     //资源文件
-    private String file = "routing.properties";
-    private ContextHandler contextHandler;
+    protected String file = "routing.xml";
+    protected ContextHandler contextHandler;
     //http选项
-    private HttpServerOptions options;
+    protected HttpServerOptions options;
     //验证器
-    private Validator validator;
+    protected Validator validator;
+    protected Map<String, List<ErrorHandler>> errors;
 
 
     @Override
@@ -49,9 +59,9 @@ public class RoutingVerticle extends AbstractVerticle {
         router.route().handler(BodyHandler.create());
 
         //构建异常处理器
-        Map<String, List<ErrorHandler>> errors = buildErros();
+        errors = buildErros();
         //构建业务处理链
-        buildHandlers(router, errors);
+        buildHandlers(router);
         //构建消息处理链
         buildConsumers();
         //启动服务
@@ -65,7 +75,7 @@ public class RoutingVerticle extends AbstractVerticle {
     protected void buildConsumers() {
         EventBus eventBus = vertx.eventBus();
         MessageHandler handler;
-        for (Route route : config.getMessages()) {
+        for (RouteConfig route : config.getMessages()) {
             //设置消息处理链
             for (String name : route.getHandlers()) {
                 handler = MessageHandlers.getPlugin(name);
@@ -80,37 +90,88 @@ public class RoutingVerticle extends AbstractVerticle {
      * 构造处理链
      *
      * @param router 路由
-     * @param errors 异常处理器
      */
-    protected void buildHandlers(final Router router, final Map<String, List<ErrorHandler>> errors) {
-        io.vertx.ext.web.Route webRoute;
+    protected void buildHandlers(final Router router) {
+        Route route;
+        for (RouteConfig info : config.getRoutes()) {
+            route = router.route(info.getType().getMethod(), info.getPath()).handler(contextHandler);
+            // 设置能产生的内容
+            buildProduces(route, info);
+            // 设置能消费的内容
+            buildConsumes(route, info);
+            //设置异常处理链
+            buildErrors(route, info);
+            //设置业务处理链
+            buildHandler(route, info);
+        }
+    }
+
+    /**
+     * 构建路由的异常处理
+     *
+     * @param route  路由对象
+     * @param config 路由配置
+     */
+    protected void buildErrors(final Route route, final RouteConfig config) {
         List<ErrorHandler> errorHandlers;
+        errorHandlers = errors.get(config.getPath());
+        if (errorHandlers == null) {
+            errorHandlers = errors.get(DEFAULT_ERROR);
+        }
+        if (errorHandlers != null) {
+            for (ErrorHandler errorHandler : errorHandlers) {
+                route.failureHandler(errorHandler);
+            }
+        }
+    }
+
+    /**
+     * 构建路由处理器
+     *
+     * @param route  路由对象
+     * @param config 路由配置
+     */
+    protected void buildHandler(final Route route, final RouteConfig config) {
         RoutingHandler handler;
         Command command;
-        for (Route route : config.getRoutes()) {
-            webRoute = router.route(route.getType().getMethod(), route.getPath()).handler(contextHandler);
-            //设置异常处理链
-            errorHandlers = errors.get(route.getPath());
-            if (errorHandlers == null) {
-                errorHandlers = errors.get("");
-            }
-            if (errorHandlers != null) {
-                for (ErrorHandler errorHandler : errorHandlers) {
-                    webRoute.failureHandler(errorHandler);
+        for (String name : config.getHandlers()) {
+            handler = RoutingHandlers.getPlugin(name);
+            if (handler != null) {
+                route.handler(handler);
+            } else {
+                //命令
+                command = Commands.getPlugin(name);
+                if (command != null) {
+                    route.handler(new CommandHandler(command, validator));
                 }
             }
-            //设置业务处理链
-            for (String name : route.getHandlers()) {
-                handler = RoutingHandlers.getPlugin(name);
-                if (handler != null) {
-                    webRoute.handler(handler);
-                } else {
-                    //命令
-                    command = Commands.getPlugin(name);
-                    if (command != null) {
-                        webRoute.handler(new CommandHandler(command, validator));
-                    }
-                }
+        }
+    }
+
+    /**
+     * 构建消费内容
+     *
+     * @param route  路由对象
+     * @param config 路由配置
+     */
+    protected void buildConsumes(final Route route, final RouteConfig config) {
+        if (config.getConsumes() != null) {
+            for (String type : config.getConsumes()) {
+                route.consumes(type);
+            }
+        }
+    }
+
+    /**
+     * 构建生产内容
+     *
+     * @param route  路由对象
+     * @param config 路由配置
+     */
+    protected void buildProduces(final Route route, final RouteConfig config) {
+        if (config.getProduces() != null) {
+            for (String type : config.getProduces()) {
+                route.produces(type);
             }
         }
     }
@@ -119,8 +180,9 @@ public class RoutingVerticle extends AbstractVerticle {
      * 读取配置
      *
      * @throws IOException
+     * @throws JAXBException
      */
-    protected void buildConfig() throws IOException {
+    protected void buildConfig() throws IOException, JAXBException {
         if (file == null || file.isEmpty()) {
             throw new IllegalStateException("file can not be empty.");
         }
@@ -155,8 +217,8 @@ public class RoutingVerticle extends AbstractVerticle {
         List<ErrorHandler> errorHandlers;
         ErrorHandler errorHandler;
         String path;
-        for (Route r : config.getErrors()) {
-            path = r.getPath() != null && !r.getPath().isEmpty() ? r.getPath() : "";
+        for (RouteConfig r : config.getErrors()) {
+            path = r.getPath() != null && !r.getPath().isEmpty() ? r.getPath() : DEFAULT_ERROR;
             errorHandlers = errorMap.get(path);
             if (errorHandlers == null) {
                 errorHandlers = new ArrayList<>();
@@ -246,9 +308,21 @@ public class RoutingVerticle extends AbstractVerticle {
                     if (result.getKey() != null) {
                         context.put(result.getKey(), result.getResult());
                     }
-                    //继续执行
-                    if (result.getType() == Command.ResultType.CONTINUE) {
-                        context.next();
+                    switch (result.getType()) {
+                        case CONTINUE:
+                            //继续
+                            context.next();
+                            break;
+                        case END:
+                            //渲染输出
+                            break;
+                        case HOLD:
+                            render(context);
+                            //挂住
+                            break;
+                        default:
+                            //默认继续
+                            context.next();
                     }
                 } else {
                     context.next();

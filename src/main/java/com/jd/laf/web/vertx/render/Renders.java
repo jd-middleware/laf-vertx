@@ -1,4 +1,4 @@
-package com.jd.laf.web.vertx;
+package com.jd.laf.web.vertx.render;
 
 import java.util.*;
 
@@ -20,6 +20,24 @@ public abstract class Renders {
         if (name == null) {
             return null;
         }
+        return getPlugins().get(name);
+    }
+
+    /**
+     * 获取支持的插件类型
+     *
+     * @return
+     */
+    public static Set<String> getTypes() {
+        return getPlugins().keySet();
+    }
+
+    /**
+     * 获取插件散列
+     *
+     * @return
+     */
+    protected static Map<String, Render> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (Renders.class) {
@@ -36,9 +54,7 @@ public abstract class Renders {
                 }
             }
         }
-
-        //获取适合的插件
-        return plugins.get(name);
+        return plugins;
     }
 
 }

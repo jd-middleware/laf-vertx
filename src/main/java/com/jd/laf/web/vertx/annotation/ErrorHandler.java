@@ -1,4 +1,4 @@
-package com.jd.laf.web.vertx;
+package com.jd.laf.web.vertx.annotation;
 
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;

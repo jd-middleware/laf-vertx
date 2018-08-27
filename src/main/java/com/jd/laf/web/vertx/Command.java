@@ -94,6 +94,10 @@ public interface Command {
          */
         CONTINUE,
         /**
+         * 渲染输出
+         */
+        END,
+        /**
          * 挂住
          */
         HOLD

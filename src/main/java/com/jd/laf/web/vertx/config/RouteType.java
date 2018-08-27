@@ -1,4 +1,4 @@
-package com.jd.laf.web.vertx;
+package com.jd.laf.web.vertx.config;
 
 import io.vertx.core.http.HttpMethod;
 
