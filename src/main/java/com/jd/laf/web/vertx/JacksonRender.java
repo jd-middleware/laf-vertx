@@ -1,8 +1,11 @@
 package com.jd.laf.web.vertx;
 
+import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import static io.vertx.core.http.HttpHeaders.CONTENT_ENCODING;
+import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 /**
  * Jackson渲染
@@ -14,8 +17,10 @@ public class JacksonRender implements Render {
     }
 
     @Override
-    public String render(final Object obj) {
-        return Json.encode(obj);
+    public void render(final HttpServerResponse response, final Object obj) {
+        response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
+        response.putHeader(CONTENT_ENCODING, "UTF-8");
+        response.end(Json.encode(obj));
     }
 
     @Override

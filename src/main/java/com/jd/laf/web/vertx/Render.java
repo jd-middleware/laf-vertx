@@ -1,5 +1,7 @@
 package com.jd.laf.web.vertx;
 
+import io.vertx.core.http.HttpServerResponse;
+
 /**
  * 渲染
  */
@@ -13,7 +15,7 @@ public interface Render {
      * @param obj
      * @return
      */
-    String render(Object obj);
+    void render(HttpServerResponse response, Object obj);
 
     /**
      * 顺序
