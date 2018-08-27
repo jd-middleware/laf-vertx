@@ -1,7 +1,6 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
-import com.jd.laf.extension.ExtensionManager;
 import com.jd.laf.web.vertx.VertxConfig.Builder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -25,8 +24,6 @@ public class RoutingVerticle extends AbstractVerticle {
 
     //配置
     private VertxConfig config;
-    //插件管理器
-    private ExtensionManager extensionManager = ExtensionManager.getInstance();
     //参数
     private Map<String, Object> parameters;
     //资源文件
@@ -42,12 +39,6 @@ public class RoutingVerticle extends AbstractVerticle {
     public void start() throws Exception {
         //构建配置数据
         buildConfig();
-        //加载扩展点
-        ExtensionManager em = extensionManager == null ? ExtensionManager.getInstance() : extensionManager;
-        em.add(RoutingHandler.class);
-        em.add(MessageHandler.class);
-        em.add(ErrorHandler.class);
-        em.add(Command.class);
 
         if (validator == null) {
             validator = Validation.buildDefaultValidatorFactory().getValidator();
@@ -58,11 +49,11 @@ public class RoutingVerticle extends AbstractVerticle {
         router.route().handler(BodyHandler.create());
 
         //构建异常处理器
-        Map<String, List<ErrorHandler>> errors = buildErros(em);
+        Map<String, List<ErrorHandler>> errors = buildErros();
         //构建业务处理链
-        buildHandlers(router, errors, em);
+        buildHandlers(router, errors);
         //构建消息处理链
-        buildConsumers(em);
+        buildConsumers();
         //启动服务
         HttpServerOptions serverOptions = options == null ? new HttpServerOptions() : options;
         vertx.createHttpServer(serverOptions).requestHandler(router::accept).listen();
@@ -70,16 +61,14 @@ public class RoutingVerticle extends AbstractVerticle {
 
     /**
      * 构造消息处理链
-     *
-     * @param em 插件管理器
      */
-    protected void buildConsumers(final ExtensionManager em) {
+    protected void buildConsumers() {
         EventBus eventBus = vertx.eventBus();
         MessageHandler handler;
         for (Route route : config.getMessages()) {
             //设置消息处理链
             for (String name : route.getHandlers()) {
-                handler = em.getExtension(MessageHandler.class, name);
+                handler = MessageHandlers.getPlugin(name);
                 if (handler != null) {
                     eventBus.consumer(route.getPath(), handler);
                 }
@@ -92,9 +81,8 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param router 路由
      * @param errors 异常处理器
-     * @param em     插件管理器
      */
-    protected void buildHandlers(final Router router, final Map<String, List<ErrorHandler>> errors, final ExtensionManager em) {
+    protected void buildHandlers(final Router router, final Map<String, List<ErrorHandler>> errors) {
         io.vertx.ext.web.Route webRoute;
         List<ErrorHandler> errorHandlers;
         RoutingHandler handler;
@@ -113,12 +101,12 @@ public class RoutingVerticle extends AbstractVerticle {
             }
             //设置业务处理链
             for (String name : route.getHandlers()) {
-                handler = em.getExtension(RoutingHandler.class, name);
+                handler = RoutingHandlers.getPlugin(name);
                 if (handler != null) {
                     webRoute.handler(handler);
                 } else {
                     //命令
-                    command = em.getExtension(Command.class, name);
+                    command = Commands.getPlugin(name);
                     if (command != null) {
                         webRoute.handler(new CommandHandler(command, validator));
                     }
@@ -160,10 +148,9 @@ public class RoutingVerticle extends AbstractVerticle {
     /**
      * 创建异常处理链
      *
-     * @param em
      * @return
      */
-    protected Map<String, List<ErrorHandler>> buildErros(final ExtensionManager em) {
+    protected Map<String, List<ErrorHandler>> buildErros() {
         Map<String, List<ErrorHandler>> errorMap = new HashMap<>();
         List<ErrorHandler> errorHandlers;
         ErrorHandler errorHandler;
@@ -176,7 +163,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 errorMap.put(r.getPath(), errorHandlers);
             }
             for (String name : r.getHandlers()) {
-                errorHandler = em.getExtension(ErrorHandler.class, name);
+                errorHandler = ErrorHandlers.getPlugin(name);
                 if (errorHandler != null) {
                     errorHandlers.add(errorHandler);
                 }
@@ -187,10 +174,6 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setConfig(VertxConfig config) {
         this.config = config;
-    }
-
-    public void setExtensionManager(ExtensionManager extensionManager) {
-        this.extensionManager = extensionManager;
     }
 
     public void setValidator(Validator validator) {

@@ -1,11 +1,8 @@
 package com.jd.laf.web.vertx;
 
-import com.jd.laf.extension.Extensible;
-
 /**
  * 命令接口
  */
-@Extensible("vertx.command")
 public interface Command {
 
     /**
@@ -24,6 +21,13 @@ public interface Command {
      * @throws Exception
      */
     Result execute() throws Exception;
+
+    /**
+     * 名称
+     *
+     * @return
+     */
+    String type();
 
     /**
      * 返回结果
