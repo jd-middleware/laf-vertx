@@ -9,6 +9,11 @@ import io.vertx.ext.web.RoutingContext;
 public interface RoutingHandler extends Handler<RoutingContext> {
 
     /**
+     * WEB根路径
+     */
+    String WEB_ROOT = "web.root";
+
+    /**
      * 类型
      *
      * @return
