@@ -213,10 +213,6 @@ public class RoutingVerticle extends AbstractVerticle {
                     context.put(entry.getKey(), entry.getValue());
                 }
             }
-            String contentType = context.getAcceptableContentType();
-            if (contentType == null || contentType.isEmpty()) {
-                context.setAcceptableContentType("application/json;charset:utf-8");
-            }
             context.next();
         }
     }
