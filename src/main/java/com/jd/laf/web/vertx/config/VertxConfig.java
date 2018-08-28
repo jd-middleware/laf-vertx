@@ -17,12 +17,6 @@ import java.util.Set;
 @XmlRootElement(name = "vertx")
 @XmlAccessorType(XmlAccessType.NONE)
 public class VertxConfig {
-    //默认支持的消费内容
-    @XmlAttribute
-    private Set<String> consumes = new HashSet();
-    //默认支持的生产内容
-    @XmlAttribute
-    private Set<String> produces = new HashSet<>();
     //路由处理器
     @XmlElementWrapper
     @XmlElement(name = "route")
@@ -37,22 +31,6 @@ public class VertxConfig {
     List<RouteConfig> messages = new ArrayList<>(10);
 
     public VertxConfig() {
-    }
-
-    public Set<String> getConsumes() {
-        return consumes;
-    }
-
-    public void setConsumes(Set<String> consumes) {
-        this.consumes = consumes;
-    }
-
-    public Set<String> getProduces() {
-        return produces;
-    }
-
-    public void setProduces(Set<String> produces) {
-        this.produces = produces;
     }
 
     public List<RouteConfig> getRoutes() {

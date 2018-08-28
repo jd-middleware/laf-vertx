@@ -51,7 +51,7 @@ public class RoutingVerticle extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         //构建配置数据
-        buildConfig();
+        config = config == null ? buildConfig(file) : config;
 
         if (validator == null) {
             if (parameters != null) {
@@ -214,7 +214,7 @@ public class RoutingVerticle extends AbstractVerticle {
      * @throws IOException
      * @throws JAXBException
      */
-    protected void buildConfig() throws IOException, JAXBException {
+    protected static VertxConfig buildConfig(String file) throws IOException, JAXBException {
         if (file == null || file.isEmpty()) {
             throw new IllegalStateException("file can not be empty.");
         }
@@ -225,13 +225,13 @@ public class RoutingVerticle extends AbstractVerticle {
             if (f.exists()) {
                 in = new FileInputStream(f);
             } else {
-                in = this.getClass().getClassLoader().getResourceAsStream(file);
+                in = RoutingVerticle.class.getClassLoader().getResourceAsStream(file);
                 if (in == null) {
                     throw new IOException("file is not found. " + file);
                 }
             }
             reader = new BufferedReader(new InputStreamReader(in));
-            config = buildConfig(Builder.build(reader));
+            return buildConfig(Builder.build(reader));
         } finally {
             if (reader != null) {
                 reader.close();
@@ -245,7 +245,7 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param config
      * @return
      */
-    protected VertxConfig buildConfig(final VertxConfig config) {
+    protected static VertxConfig buildConfig(final VertxConfig config) {
         if (config == null) {
             return config;
         }
@@ -287,27 +287,26 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (cfg.getProduces() == null && cfg.getProduces() != null) {
                     cfg.setProduces(parent.getProduces());
                 }
-                if (parent.getHandlers() == null || parent.getHandlers().isEmpty()) {
-                    continue;
-                }
-                if (cfg.getHandlers() == null || cfg.getHandlers().isEmpty()) {
-                    cfg.setHandlers(parent.getHandlers());
-                } else {
-                    result = new ArrayList<>(parent.getHandlers().size()
-                            + (cfg.getHandlers() == null ? 0 : cfg.getHandlers().size()));
-                    flag = false;
-                    for (String b : parent.getHandlers()) {
-                        if (!PLACE_HOLDER.equals(b)) {
-                            result.add(b);
-                        } else if (!flag) {
-                            flag = true;
+                if (parent.getHandlers() != null && !parent.getHandlers().isEmpty()) {
+                    if (cfg.getHandlers() == null || cfg.getHandlers().isEmpty()) {
+                        cfg.setHandlers(parent.getHandlers());
+                    } else {
+                        result = new ArrayList<>(parent.getHandlers().size()
+                                + (cfg.getHandlers() == null ? 0 : cfg.getHandlers().size()));
+                        flag = false;
+                        for (String b : parent.getHandlers()) {
+                            if (!PLACE_HOLDER.equals(b)) {
+                                result.add(b);
+                            } else if (!flag) {
+                                flag = true;
+                                result.addAll(cfg.getHandlers());
+                            }
+                        }
+                        if (!flag) {
                             result.addAll(cfg.getHandlers());
                         }
+                        cfg.setHandlers(result);
                     }
-                    if (!flag) {
-                        result.addAll(cfg.getHandlers());
-                    }
-                    cfg.setHandlers(result);
                 }
                 parent = parent.getInherit() == null || parent.getInherit().isEmpty() ? null : map.get(parent.getInherit());
             }
