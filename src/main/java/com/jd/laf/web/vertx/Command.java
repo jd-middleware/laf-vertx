@@ -9,10 +9,6 @@ public interface Command {
      * 命令的结果
      */
     String RESULT = "command.result";
-    /**
-     * 验证器
-     */
-    String VALIDATOR = "command.validator";
 
     /**
      * 执行命令

@@ -22,6 +22,16 @@ public abstract class MessageHandlers {
         if (name == null) {
             return null;
         }
+        //获取适合的插件
+        return getPlugins().get(name);
+    }
+
+    /**
+     * 构建插件
+     *
+     * @return
+     */
+    protected static Map<String, MessageHandler> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (MessageHandlers.class) {
@@ -34,9 +44,26 @@ public abstract class MessageHandlers {
                 }
             }
         }
+        return plugins;
+    }
 
-        //获取适合的插件
-        return plugins.get(name);
+    /**
+     * 构建上下文
+     *
+     * @param context
+     */
+    public static void setup(final Map<String, Object> context) {
+        if (context == null) {
+            return;
+        }
+
+        MessageHandler handler;
+        for (Map.Entry<String, MessageHandler> entry : getPlugins().entrySet()) {
+            handler = entry.getValue();
+            if (handler instanceof ContextAware) {
+                ((ContextAware) handler).setup(context);
+            }
+        }
     }
 
 }

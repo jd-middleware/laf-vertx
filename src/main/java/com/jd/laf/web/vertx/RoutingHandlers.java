@@ -22,11 +22,21 @@ public abstract class RoutingHandlers {
         if (name == null) {
             return null;
         }
+        //获取适合的插件
+        return getPlugins().get(name);
+    }
+
+    /**
+     * 构建插件
+     *
+     * @return
+     */
+    protected static Map<String, RoutingHandler> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (RoutingHandlers.class) {
                 if (plugins == null) {
-                    Map<String, RoutingHandler> result = new HashMap<String, RoutingHandler>();
+                    Map<String, RoutingHandler> result = new HashMap();
                     //加载插件
                     ServiceLoader<RoutingHandler> loader = ServiceLoader.load(RoutingHandler.class, RoutingHandlers.class.getClassLoader());
                     loader.forEach(o -> result.put(o.type(), o));
@@ -34,9 +44,26 @@ public abstract class RoutingHandlers {
                 }
             }
         }
+        return plugins;
+    }
 
-        //获取适合的插件
-        return plugins.get(name);
+    /**
+     * 构建上下文
+     *
+     * @param context
+     */
+    public static void setup(final Map<String, Object> context) {
+        if (context == null) {
+            return;
+        }
+
+        RoutingHandler handler;
+        for (Map.Entry<String, RoutingHandler> entry : getPlugins().entrySet()) {
+            handler = entry.getValue();
+            if (handler instanceof ContextAware) {
+                ((ContextAware) handler).setup(context);
+            }
+        }
     }
 
 }

@@ -4,16 +4,17 @@ import com.jd.laf.binding.Binding;
 import com.jd.laf.web.vertx.annotation.ErrorHandler;
 import com.jd.laf.web.vertx.annotation.ErrorHandlers;
 import com.jd.laf.web.vertx.config.RouteConfig;
+import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.config.VertxConfig.Builder;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -22,8 +23,11 @@ import javax.validation.Validator;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.jd.laf.web.vertx.RenderHandler.render;
+import static com.jd.laf.web.vertx.RoutingHandler.VALIDATOR;
+import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
 
 /**
  * 路由装配件
@@ -37,13 +41,12 @@ public class RoutingVerticle extends AbstractVerticle {
     protected Map<String, Object> parameters;
     //资源文件
     protected String file = "routing.xml";
-    protected ContextHandler contextHandler;
     //http选项
     protected HttpServerOptions options;
     //验证器
     protected Validator validator;
     protected Map<String, List<ErrorHandler>> errors;
-
+    protected HttpServer httpServer;
 
     @Override
     public void start() throws Exception {
@@ -51,35 +54,53 @@ public class RoutingVerticle extends AbstractVerticle {
         buildConfig();
 
         if (validator == null) {
-            validator = Validation.buildDefaultValidatorFactory().getValidator();
+            if (parameters != null) {
+                validator = (Validator) parameters.get(VALIDATOR);
+            }
+            if (validator == null) {
+                validator = Validation.buildDefaultValidatorFactory().getValidator();
+            }
         }
-        contextHandler = new ContextHandler(parameters, validator);
+        if (parameters == null) {
+            parameters = new HashMap<>();
+            parameters.put(VALIDATOR, validator);
+        }
+        MessageHandlers.setup(parameters);
+        RoutingHandlers.setup(parameters);
 
         Router router = Router.router(vertx);
-        router.route().handler(BodyHandler.create());
-
         //构建异常处理器
-        errors = buildErros();
+        errors = buildErros(config);
         //构建业务处理链
-        buildHandlers(router);
+        buildHandlers(router, config);
         //构建消息处理链
-        buildConsumers();
+        buildConsumers(config);
         //启动服务
         HttpServerOptions serverOptions = options == null ? new HttpServerOptions() : options;
-        vertx.createHttpServer(serverOptions).requestHandler(router::accept).listen();
+        httpServer = vertx.createHttpServer(serverOptions);
+        httpServer.requestHandler(router::accept).listen();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        if (httpServer != null) {
+            httpServer.close();
+        }
     }
 
     /**
      * 构造消息处理链
+     *
+     * @param config
      */
-    protected void buildConsumers() {
+    protected void buildConsumers(final VertxConfig config) {
         EventBus eventBus = vertx.eventBus();
         MessageHandler handler;
         for (RouteConfig route : config.getMessages()) {
             //设置消息处理链
             for (String name : route.getHandlers()) {
                 handler = MessageHandlers.getPlugin(name);
-                if (handler != null) {
+                if (handler != null && route.getPath() != null && !route.getPath().isEmpty()) {
                     eventBus.consumer(route.getPath(), handler);
                 }
             }
@@ -90,19 +111,30 @@ public class RoutingVerticle extends AbstractVerticle {
      * 构造处理链
      *
      * @param router 路由
+     * @param config
      */
-    protected void buildHandlers(final Router router) {
+    protected void buildHandlers(final Router router, final VertxConfig config) {
         Route route;
+        String path;
+        RouteType type;
         for (RouteConfig info : config.getRoutes()) {
-            route = router.route(info.getType().getMethod(), info.getPath()).handler(contextHandler);
-            // 设置能产生的内容
-            buildProduces(route, info);
-            // 设置能消费的内容
-            buildConsumes(route, info);
-            //设置异常处理链
-            buildErrors(route, info);
-            //设置业务处理链
-            buildHandler(route, info);
+            // 过滤掉模板
+            if (!info.isTemplate()) {
+                type = info.getType();
+                path = info.getPath();
+                path = path != null ? path.trim() : path;
+                //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
+                route = path == null || path.isEmpty() ? router.route() :
+                        (type == null ? router.route(path) : router.route(type.getMethod(), path));
+                // 设置能产生的内容
+                buildProduces(route, info);
+                // 设置能消费的内容
+                buildConsumes(route, info);
+                //设置异常处理链
+                buildErrors(route, info);
+                //设置业务处理链
+                buildHandler(route, info);
+            }
         }
     }
 
@@ -199,7 +231,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             }
             reader = new BufferedReader(new InputStreamReader(in));
-            config = Builder.build(reader);
+            config = buildConfig(Builder.build(reader));
         } finally {
             if (reader != null) {
                 reader.close();
@@ -208,11 +240,88 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     /**
-     * 创建异常处理链
+     * 构建配置，处理继承
      *
+     * @param config
      * @return
      */
-    protected Map<String, List<ErrorHandler>> buildErros() {
+    protected VertxConfig buildConfig(final VertxConfig config) {
+        if (config == null) {
+            return config;
+        }
+        List<RouteConfig> routes = config.getRoutes();
+        if (routes == null || routes.isEmpty()) {
+            return config;
+        }
+        LinkedList<RouteConfig> inherits = new LinkedList<>();
+        for (RouteConfig cfg : config.getRoutes()) {
+            if (cfg.getInherit() == null || cfg.getInherit().isEmpty() || cfg.isTemplate()) {
+                continue;
+            }
+            inherits.add(cfg);
+        }
+        if (inherits == null || inherits.isEmpty()) {
+            return config;
+        }
+
+        Map<String, RouteConfig> map = config.getRoutes().stream().filter(a -> a.getName() != null)
+                .collect(Collectors.toMap(a -> a.getName(), a -> a));
+        RouteConfig parent;
+        List<String> result;
+        boolean flag;
+        //当前节点遍历过的节点，防止递归
+        Set<RouteConfig> graph = new HashSet<>(map.size());
+        for (RouteConfig cfg : inherits) {
+            //获取当前节点
+            parent = map.get(cfg.getInherit());
+            //清理当前节点遍历过的节点
+            graph.clear();
+            graph.add(cfg);
+            while (parent != null && graph.add(parent)) {
+                if (cfg.getType() == null && parent.getType() != null) {
+                    cfg.setType(parent.getType());
+                }
+                if (cfg.getConsumes() == null && parent.getConsumes() != null) {
+                    cfg.setConsumes(parent.getConsumes());
+                }
+                if (cfg.getProduces() == null && cfg.getProduces() != null) {
+                    cfg.setProduces(parent.getProduces());
+                }
+                if (parent.getHandlers() == null || parent.getHandlers().isEmpty()) {
+                    continue;
+                }
+                if (cfg.getHandlers() == null || cfg.getHandlers().isEmpty()) {
+                    cfg.setHandlers(parent.getHandlers());
+                } else {
+                    result = new ArrayList<>(parent.getHandlers().size()
+                            + (cfg.getHandlers() == null ? 0 : cfg.getHandlers().size()));
+                    flag = false;
+                    for (String b : parent.getHandlers()) {
+                        if (!PLACE_HOLDER.equals(b)) {
+                            result.add(b);
+                        } else if (!flag) {
+                            flag = true;
+                            result.addAll(cfg.getHandlers());
+                        }
+                    }
+                    if (!flag) {
+                        result.addAll(cfg.getHandlers());
+                    }
+                    cfg.setHandlers(result);
+                }
+                parent = parent.getInherit() == null || parent.getInherit().isEmpty() ? null : map.get(parent.getInherit());
+            }
+        }
+        return config;
+    }
+
+    /**
+     * 创建异常处理链
+     *
+     * @param config
+     * @return
+     */
+    protected Map<String, List<ErrorHandler>> buildErros(final VertxConfig config) {
         Map<String, List<ErrorHandler>> errorMap = new HashMap<>();
         List<ErrorHandler> errorHandlers;
         ErrorHandler errorHandler;
@@ -252,31 +361,6 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setOptions(HttpServerOptions options) {
         this.options = options;
-    }
-
-    /**
-     * 上下文处理器
-     */
-    protected static class ContextHandler implements Handler<RoutingContext> {
-
-        private Map<String, Object> parameters;
-        protected Validator validator;
-
-        public ContextHandler(Map<String, Object> parameters, Validator validator) {
-            this.parameters = parameters;
-            this.validator = validator;
-        }
-
-        @Override
-        public void handle(final RoutingContext context) {
-            context.put(Command.VALIDATOR, validator);
-            if (parameters != null) {
-                for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                    context.put(entry.getKey(), entry.getValue());
-                }
-            }
-            context.next();
-        }
     }
 
     /**
