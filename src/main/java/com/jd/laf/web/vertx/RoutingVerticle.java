@@ -138,28 +138,31 @@ public class RoutingVerticle extends AbstractVerticle {
         RouteType type;
         for (RouteConfig info : config.getRoutes()) {
             // 过滤掉模板
-            if (!info.isTemplate()) {
-                type = info.getType();
-                path = info.getPath();
-                path = path != null ? path.trim() : path;
-                //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
-                route = null;
-                if (path == null || path.isEmpty()) {
-                    route = router.route();
-                } else if (!info.isRegex()) {
-                    route = type == null ? router.route(path) : router.route(type.getMethod(), path);
-                } else {
-                    route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
-                }
-                // 设置能产生的内容
-                buildProduces(route, info);
-                // 设置能消费的内容
-                buildConsumes(route, info);
-                //设置异常处理链
-                buildErrors(route, info);
-                //设置业务处理链
-                buildHandler(route, info);
+            if (info.isTemplate()) {
+                continue;
             }
+            type = info.getType();
+            path = info.getPath();
+            path = path != null ? path.trim() : path;
+            //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
+            if (path == null || path.isEmpty()) {
+                route = router.route();
+            } else if (!info.isRegex()) {
+                route = type == null ? router.route(path) : router.route(type.getMethod(), path);
+            } else {
+                route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
+            }
+            if (info.getOrder() != null) {
+                route.order(info.getOrder());
+            }
+            // 设置能产生的内容
+            buildProduces(route, info);
+            // 设置能消费的内容
+            buildConsumes(route, info);
+            //设置异常处理链
+            buildErrors(route, info);
+            //设置业务处理链
+            buildHandler(route, info);
         }
     }
 

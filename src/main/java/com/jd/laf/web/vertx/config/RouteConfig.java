@@ -32,7 +32,11 @@ public class RouteConfig {
     @XmlAttribute
     private RouteType type;
     //超时时间
+    @XmlAttribute
     private Long timeout;
+    //顺序
+    @XmlAttribute
+    private Integer order;
     //支持的消费内容
     @XmlAttribute
     private Set<String> consumes = new HashSet<>();
@@ -106,6 +110,14 @@ public class RouteConfig {
 
     public void setTimeout(Long timeout) {
         this.timeout = timeout;
+    }
+
+    public Integer getOrder() {
+        return order;
+    }
+
+    public void setOrder(Integer order) {
+        this.order = order;
     }
 
     public Set<String> getConsumes() {
