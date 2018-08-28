@@ -1,5 +1,6 @@
 package com.jd.laf.web.vertx;
 
+import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -7,7 +8,7 @@ import io.vertx.ext.web.RoutingContext;
  */
 public class StaticHandler implements RoutingHandler {
 
-    protected static io.vertx.ext.web.handler.StaticHandler delegate = io.vertx.ext.web.handler.StaticHandler.create();
+    protected volatile Handler<RoutingContext> handler;
 
     @Override
     public String type() {
@@ -16,6 +17,20 @@ public class StaticHandler implements RoutingHandler {
 
     @Override
     public void handle(final RoutingContext context) {
-        delegate.handle(context);
+        if (handler == null) {
+            synchronized (this) {
+                if (handler == null) {
+                    Handler<RoutingContext> target;
+                    String webRoot = context.get(WEB_ROOT);
+                    if (webRoot == null || webRoot.isEmpty()) {
+                        target = io.vertx.ext.web.handler.StaticHandler.create();
+                    } else {
+                        target = io.vertx.ext.web.handler.StaticHandler.create(webRoot);
+                    }
+                    handler = target;
+                }
+            }
+        }
+        handler.handle(context);
     }
 }
