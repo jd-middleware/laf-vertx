@@ -1,4 +1,4 @@
-package com.jd.laf.web.vertx.annotation;
+package com.jd.laf.web.vertx;
 
 import java.util.HashMap;
 import java.util.Map;

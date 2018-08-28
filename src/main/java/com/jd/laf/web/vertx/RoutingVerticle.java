@@ -1,8 +1,6 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
-import com.jd.laf.web.vertx.annotation.ErrorHandler;
-import com.jd.laf.web.vertx.annotation.ErrorHandlers;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
