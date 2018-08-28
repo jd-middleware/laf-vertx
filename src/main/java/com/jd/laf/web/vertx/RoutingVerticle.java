@@ -70,7 +70,7 @@ public class RoutingVerticle extends AbstractVerticle {
 
         Router router = Router.router(vertx);
         //构建异常处理器
-        errors = buildErros(config);
+        errors = buildErrors(config);
         //构建业务处理链
         buildHandlers(router, config);
         //构建消息处理链
@@ -321,7 +321,7 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param config
      * @return
      */
-    protected Map<String, List<ErrorHandler>> buildErros(final VertxConfig config) {
+    protected Map<String, List<ErrorHandler>> buildErrors(final VertxConfig config) {
         Map<String, List<ErrorHandler>> errorMap = new HashMap<>();
         List<ErrorHandler> errorHandlers;
         ErrorHandler errorHandler;
