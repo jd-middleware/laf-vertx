@@ -5,6 +5,7 @@ import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.config.VertxConfig.Builder;
+import com.jd.laf.web.vertx.render.Renders;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -66,9 +67,12 @@ public class RoutingVerticle extends AbstractVerticle {
             parameters = new HashMap<>();
             parameters.put(VALIDATOR, validator);
         }
+
+        //初始化插件
         Context context = new Context(vertx, parameters);
         MessageHandlers.setup(context);
         RoutingHandlers.setup(context);
+        Renders.setup(context);
 
         Router router = Router.router(vertx);
         //构建业务处理链

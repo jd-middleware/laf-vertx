@@ -1,1 +1,3 @@
 com.jd.laf.web.vertx.render.JacksonRender
+com.jd.laf.web.vertx.render.TemplateRender
+com.jd.laf.web.vertx.render.TextPlainRender

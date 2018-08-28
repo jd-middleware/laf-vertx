@@ -8,7 +8,7 @@ public interface Command {
     /**
      * 命令的结果
      */
-    String RESULT = "command.result";
+    String RESULT = "result";
 
     /**
      * 执行命令
@@ -60,6 +60,29 @@ public interface Command {
 
         public String getKey() {
             return key;
+        }
+    }
+
+    /**
+     * 模板渲染对象
+     */
+    class TemplateResult {
+        //模板
+        String template;
+        //数据
+        Object result;
+
+        public TemplateResult(String template, Object result) {
+            this.template = template;
+            this.result = result;
+        }
+
+        public String getTemplate() {
+            return template;
+        }
+
+        public Object getResult() {
+            return result;
         }
     }
 

@@ -2,7 +2,6 @@ package com.jd.laf.web.vertx;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
@@ -47,10 +46,11 @@ public class RoutingVerticleTest {
     public void testConfig() throws InterruptedException {
         final AtomicReference<String> result = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
-        client.get(8080, "localhost", "/hello?echo=1234567").send(a -> {
+        client.get(8080, "localhost", "/hello?echo=1234567").
+                putHeader("Accept", "text/plain").send(a -> {
             if (a.succeeded()) {
                 HttpResponse<Buffer> response = a.result();
-                result.set(Json.decodeValue(response.body(), String.class));
+                result.set(response.bodyAsString());
             } else {
                 logger.log(Level.SEVERE, "failed", a.cause());
             }

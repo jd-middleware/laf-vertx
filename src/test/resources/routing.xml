@@ -7,7 +7,7 @@
         <route name="delete" template="true" type="DELETE" inherit="default"/>
         <route path="/host" inherit="post" handlers="addHost"/>
         <route path="/host/:id" inherit="delete" handlers="deleteHost"/>
-        <route path="/hello" inherit="default" handlers="helloWorld"/>
+        <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
     </routes>
     <messages/>
 </vertx>

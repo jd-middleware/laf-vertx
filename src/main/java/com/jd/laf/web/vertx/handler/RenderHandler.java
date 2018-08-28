@@ -1,6 +1,5 @@
 package com.jd.laf.web.vertx.handler;
 
-import com.jd.laf.web.vertx.Command;
 import com.jd.laf.web.vertx.RoutingHandler;
 import com.jd.laf.web.vertx.render.Render;
 import io.vertx.ext.web.RoutingContext;
@@ -40,6 +39,10 @@ public class RenderHandler implements RoutingHandler {
         contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
         Render render = getPlugin(contentType);
         render = render == null ? JSON : render;
-        render.render(context.response(), context.get(Command.RESULT));
+        try {
+            render.render(context);
+        } catch (Exception e) {
+            context.fail(e);
+        }
     }
 }

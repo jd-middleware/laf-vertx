@@ -1,6 +1,6 @@
 package com.jd.laf.web.vertx.render;
 
-import io.vertx.core.http.HttpServerResponse;
+import io.vertx.ext.web.RoutingContext;
 
 /**
  * 渲染
@@ -9,13 +9,17 @@ public interface Render {
 
     String APPLICATION_JSON = "application/json";
 
+    String TEXT_PLAIN = "text/plain";
+
+    String TEXT_HTML = "text/html";
+
     /**
      * 渲染
      *
-     * @param obj
-     * @return
+     * @param context 上下文
+     * @throws Exception
      */
-    void render(HttpServerResponse response, Object obj);
+    void render(RoutingContext context) throws Exception;
 
     /**
      * 顺序
