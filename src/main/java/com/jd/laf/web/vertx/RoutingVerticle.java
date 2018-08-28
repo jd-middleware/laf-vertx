@@ -27,8 +27,8 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.jd.laf.web.vertx.Context.VALIDATOR;
-import static com.jd.laf.web.vertx.handler.RenderHandler.render;
 import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
+import static com.jd.laf.web.vertx.handler.RenderHandler.render;
 
 /**
  * 路由装配件
@@ -143,8 +143,14 @@ public class RoutingVerticle extends AbstractVerticle {
                 path = info.getPath();
                 path = path != null ? path.trim() : path;
                 //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
-                route = path == null || path.isEmpty() ? router.route() :
-                        (type == null ? router.route(path) : router.route(type.getMethod(), path));
+                route = null;
+                if (path == null || path.isEmpty()) {
+                    route = router.route();
+                } else if (!info.isRegex()) {
+                    route = type == null ? router.route(path) : router.route(type.getMethod(), path);
+                } else {
+                    route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
+                }
                 // 设置能产生的内容
                 buildProduces(route, info);
                 // 设置能消费的内容

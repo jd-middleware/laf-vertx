@@ -22,6 +22,9 @@ public class RouteConfig {
     //是否是模板，模板不构建路由
     @XmlAttribute
     private boolean template;
+    //是否是正则表达式
+    @XmlAttribute
+    private boolean regex;
     //继承自
     @XmlAttribute
     private String inherit;
@@ -71,6 +74,14 @@ public class RouteConfig {
 
     public void setTemplate(boolean template) {
         this.template = template;
+    }
+
+    public boolean isRegex() {
+        return regex;
+    }
+
+    public void setRegex(boolean regex) {
+        this.regex = regex;
     }
 
     public String getInherit() {
