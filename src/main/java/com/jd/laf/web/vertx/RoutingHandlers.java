@@ -52,7 +52,7 @@ public abstract class RoutingHandlers {
      *
      * @param context
      */
-    public static void setup(final Map<String, Object> context) {
+    public static void setup(final Context context) {
         if (context == null) {
             return;
         }

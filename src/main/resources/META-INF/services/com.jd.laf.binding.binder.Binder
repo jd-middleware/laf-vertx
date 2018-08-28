@@ -6,3 +6,5 @@ com.jd.laf.web.vertx.binder.PathParamBinder
 com.jd.laf.web.vertx.binder.QueryParamBinder
 com.jd.laf.web.vertx.binder.RequestBinder
 com.jd.laf.web.vertx.binder.ResponseBinder
+com.jd.laf.web.vertx.binder.SessionBinder
+com.jd.laf.web.vertx.binder.SessionParamBinder

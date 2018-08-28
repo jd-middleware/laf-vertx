@@ -2,7 +2,7 @@ package com.jd.laf.web.vertx.binder;
 
 import com.jd.laf.binding.binder.Binder;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
-import com.jd.laf.web.vertx.annotation.Response;
+import com.jd.laf.web.vertx.annotation.CResponse;
 import io.vertx.ext.web.RoutingContext;
 
 /**
@@ -17,6 +17,6 @@ public class ResponseBinder implements Binder {
 
     @Override
     public Class<?> annotation() {
-        return Response.class;
+        return CResponse.class;
     }
 }

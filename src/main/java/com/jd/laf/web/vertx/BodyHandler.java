@@ -3,7 +3,8 @@ package com.jd.laf.web.vertx;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
-import java.util.Map;
+import static com.jd.laf.web.vertx.Context.BODY_LIMIT;
+import static com.jd.laf.web.vertx.Context.UPLOAD_DIR;
 
 /**
  * Body处理器
@@ -19,17 +20,13 @@ public class BodyHandler implements RoutingHandler, ContextAware {
     }
 
     @Override
-    public void setup(final Map<String, Object> context) {
+    public void setup(final Context context) {
         io.vertx.ext.web.handler.BodyHandler target = io.vertx.ext.web.handler.BodyHandler.create();
-        String uploadDir = (String) context.get(UPLOAD_DIR);
+        String uploadDir = context.getString(UPLOAD_DIR);
         if (uploadDir != null && !uploadDir.isEmpty()) {
             target.setUploadsDirectory(uploadDir);
         }
-        //设置默认页
-        Number bodyLimit = (Number) context.get(BODY_LIMIT);
-        if (bodyLimit != null) {
-            target.setBodyLimit(bodyLimit.longValue());
-        }
+        target.setBodyLimit(context.getLong(BODY_LIMIT, -1L));
         handler = target;
     }
 

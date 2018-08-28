@@ -26,8 +26,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static com.jd.laf.web.vertx.Context.VALIDATOR;
 import static com.jd.laf.web.vertx.RenderHandler.render;
-import static com.jd.laf.web.vertx.RoutingHandler.VALIDATOR;
 import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
 
 /**
@@ -66,8 +66,9 @@ public class RoutingVerticle extends AbstractVerticle {
             parameters = new HashMap<>();
             parameters.put(VALIDATOR, validator);
         }
-        MessageHandlers.setup(parameters);
-        RoutingHandlers.setup(parameters);
+        Context context = new Context(vertx, parameters);
+        MessageHandlers.setup(context);
+        RoutingHandlers.setup(context);
 
         Router router = Router.router(vertx);
         //构建业务处理链

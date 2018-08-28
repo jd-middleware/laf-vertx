@@ -13,8 +13,8 @@ public class ContextHandler implements RoutingHandler, ContextAware {
     private Map<String, Object> parameters;
 
     @Override
-    public void setup(final Map<String, Object> context) {
-        this.parameters = context;
+    public void setup(final Context context) {
+        this.parameters = context.parameters;
     }
 
     @Override

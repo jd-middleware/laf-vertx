@@ -3,7 +3,8 @@ package com.jd.laf.web.vertx;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
-import java.util.Map;
+import static com.jd.laf.web.vertx.Context.INDEX_PAGE;
+import static com.jd.laf.web.vertx.Context.WEB_ROOT;
 
 /**
  * 静态资源
@@ -19,14 +20,14 @@ public class StaticHandler implements RoutingHandler, ContextAware {
     }
 
     @Override
-    public void setup(final Map<String, Object> context) {
+    public void setup(final Context context) {
         io.vertx.ext.web.handler.StaticHandler target = io.vertx.ext.web.handler.StaticHandler.create();
-        String webRoot = (String) context.get(WEB_ROOT);
+        String webRoot = context.getString(WEB_ROOT);
         if (webRoot != null && !webRoot.isEmpty()) {
             target.setWebRoot(webRoot);
         }
         //设置默认页
-        String indexPage = (String) context.get(INDEX_PAGE);
+        String indexPage = context.getString(INDEX_PAGE);
         if (indexPage != null && !indexPage.isEmpty()) {
             target.setIndexPage(indexPage);
         }
