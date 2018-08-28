@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.jd.laf.web.vertx.Context.VALIDATOR;
-import static com.jd.laf.web.vertx.RenderHandler.render;
+import static com.jd.laf.web.vertx.handler.RenderHandler.render;
 import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
 
 /**

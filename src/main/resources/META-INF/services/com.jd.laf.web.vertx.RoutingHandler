@@ -1,6 +1,10 @@
-com.jd.laf.web.vertx.StaticHandler
-com.jd.laf.web.vertx.BodyHandler
-com.jd.laf.web.vertx.ContextHandler
-com.jd.laf.web.vertx.RenderHandler
-com.jd.laf.web.vertx.CookieHandler
-com.jd.laf.web.vertx.SessionHandler
+com.jd.laf.web.vertx.handler.StaticHandler
+com.jd.laf.web.vertx.handler.BodyHandler
+com.jd.laf.web.vertx.handler.ContextHandler
+com.jd.laf.web.vertx.handler.RenderHandler
+com.jd.laf.web.vertx.handler.CookieHandler
+com.jd.laf.web.vertx.handler.SessionHandler
+com.jd.laf.web.vertx.handler.UserSessionHandler
+com.jd.laf.web.vertx.handler.BasicAuthHandler
+com.jd.laf.web.vertx.handler.FormLoginHandler
+com.jd.laf.web.vertx.handler.RedirectAuthHandler

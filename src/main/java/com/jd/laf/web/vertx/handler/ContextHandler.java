@@ -1,5 +1,8 @@
-package com.jd.laf.web.vertx;
+package com.jd.laf.web.vertx.handler;
 
+import com.jd.laf.web.vertx.Context;
+import com.jd.laf.web.vertx.ContextAware;
+import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.Map;
@@ -14,7 +17,7 @@ public class ContextHandler implements RoutingHandler, ContextAware {
 
     @Override
     public void setup(final Context context) {
-        this.parameters = context.parameters;
+        this.parameters = context.toMap();
     }
 
     @Override

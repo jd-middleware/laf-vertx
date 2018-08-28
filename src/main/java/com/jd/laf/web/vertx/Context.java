@@ -49,6 +49,31 @@ public class Context implements Serializable, Cloneable, Contextual {
      */
     public static final String SESSION_NAME = "session.name";
 
+    /**
+     * 认证提供者
+     */
+    public static final String AUTH_PROVIDER = "auth.provider";
+
+    /**
+     * 认证重定向URL
+     */
+    public static final String AUTH_REDIRECT_URL = "auth.redirect.url";
+
+    /**
+     * 认证跳回的URL参数
+     */
+    public static final String AUTH_RETURN_URL_PARAM = "auth.return.urlParam";
+
+    /**
+     * 用户参数
+     */
+    public static final String AUTH_USER_PARAM = "auth.userParam";
+
+    /**
+     * 密码参数
+     */
+    public static final String AUTH_PASSWORD_PARAM = "auth.passwordParam";
+
     // 参数
     protected ConcurrentHashMap<String, Object> parameters = new ConcurrentHashMap<String, Object>();
 
