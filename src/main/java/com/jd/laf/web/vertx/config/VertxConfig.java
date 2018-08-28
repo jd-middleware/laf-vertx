@@ -7,9 +7,7 @@ import javax.xml.bind.annotation.*;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * 配置
@@ -21,10 +19,6 @@ public class VertxConfig {
     @XmlElementWrapper
     @XmlElement(name = "route")
     List<RouteConfig> routes = new ArrayList<>(50);
-    //异常处理器
-    @XmlElementWrapper
-    @XmlElement(name = "error")
-    List<RouteConfig> errors = new ArrayList<>(1);
     //消息处理器
     @XmlElementWrapper
     @XmlElement(name = "messages")
@@ -39,14 +33,6 @@ public class VertxConfig {
 
     public void setRoutes(List<RouteConfig> routes) {
         this.routes = routes;
-    }
-
-    public List<RouteConfig> getErrors() {
-        return errors;
-    }
-
-    public void setErrors(List<RouteConfig> errors) {
-        this.errors = errors;
     }
 
     public List<RouteConfig> getMessages() {
@@ -66,8 +52,6 @@ public class VertxConfig {
         if (route != null) {
             if (RouteType.MSG == route.getType()) {
                 messages.add(route);
-            } else if (RouteType.ERROR == route.getType()) {
-                errors.add(route);
             } else {
                 routes.add(route);
             }

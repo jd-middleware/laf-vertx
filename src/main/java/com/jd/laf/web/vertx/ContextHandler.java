@@ -9,6 +9,7 @@ import java.util.Map;
  */
 public class ContextHandler implements RoutingHandler, ContextAware {
 
+    public static final String CONTEXT = "context";
     private Map<String, Object> parameters;
 
     @Override
@@ -18,7 +19,7 @@ public class ContextHandler implements RoutingHandler, ContextAware {
 
     @Override
     public String type() {
-        return "context";
+        return CONTEXT;
     }
 
     @Override

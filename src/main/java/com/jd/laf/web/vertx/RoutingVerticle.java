@@ -15,6 +15,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.TimeoutHandler;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -45,7 +46,6 @@ public class RoutingVerticle extends AbstractVerticle {
     protected HttpServerOptions options;
     //验证器
     protected Validator validator;
-    protected Map<String, List<ErrorHandler>> errors;
     protected HttpServer httpServer;
 
     @Override
@@ -69,8 +69,6 @@ public class RoutingVerticle extends AbstractVerticle {
         RoutingHandlers.setup(parameters);
 
         Router router = Router.router(vertx);
-        //构建异常处理器
-        errors = buildErrors(config);
         //构建业务处理链
         buildHandlers(router, config);
         //构建消息处理链
@@ -145,14 +143,13 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param config 路由配置
      */
     protected void buildErrors(final Route route, final RouteConfig config) {
-        List<ErrorHandler> errorHandlers;
-        errorHandlers = errors.get(config.getPath());
-        if (errorHandlers == null) {
-            errorHandlers = errors.get(DEFAULT_ERROR);
-        }
-        if (errorHandlers != null) {
-            for (ErrorHandler errorHandler : errorHandlers) {
-                route.failureHandler(errorHandler);
+        if (config.getErrors() != null) {
+            ErrorHandler handler;
+            for (String error : config.getErrors()) {
+                handler = ErrorHandlers.getPlugin(error);
+                if (handler != null) {
+                    route.failureHandler(handler);
+                }
             }
         }
     }
@@ -166,6 +163,10 @@ public class RoutingVerticle extends AbstractVerticle {
     protected void buildHandler(final Route route, final RouteConfig config) {
         RoutingHandler handler;
         Command command;
+        //超时处理
+        if (config.getTimeout() != null && config.getTimeout() > 0) {
+            route.handler(TimeoutHandler.create(config.getTimeout()));
+        }
         for (String name : config.getHandlers()) {
             handler = RoutingHandlers.getPlugin(name);
             if (handler != null) {
@@ -287,6 +288,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (cfg.getProduces() == null && cfg.getProduces() != null) {
                     cfg.setProduces(parent.getProduces());
                 }
+                //处理业务处理器
                 if (parent.getHandlers() != null && !parent.getHandlers().isEmpty()) {
                     if (cfg.getHandlers() == null || cfg.getHandlers().isEmpty()) {
                         cfg.setHandlers(parent.getHandlers());
@@ -308,38 +310,15 @@ public class RoutingVerticle extends AbstractVerticle {
                         cfg.setHandlers(result);
                     }
                 }
+                //处理异常处理器，直接覆盖
+                if ((cfg.getErrors() == null || cfg.getErrors().isEmpty())
+                        && parent.getErrors() != null && !parent.getErrors().isEmpty()) {
+                    cfg.setErrors(parent.getHandlers());
+                }
                 parent = parent.getInherit() == null || parent.getInherit().isEmpty() ? null : map.get(parent.getInherit());
             }
         }
         return config;
-    }
-
-    /**
-     * 创建异常处理链
-     *
-     * @param config
-     * @return
-     */
-    protected Map<String, List<ErrorHandler>> buildErrors(final VertxConfig config) {
-        Map<String, List<ErrorHandler>> errorMap = new HashMap<>();
-        List<ErrorHandler> errorHandlers;
-        ErrorHandler errorHandler;
-        String path;
-        for (RouteConfig r : config.getErrors()) {
-            path = r.getPath() != null && !r.getPath().isEmpty() ? r.getPath() : DEFAULT_ERROR;
-            errorHandlers = errorMap.get(path);
-            if (errorHandlers == null) {
-                errorHandlers = new ArrayList<>();
-                errorMap.put(r.getPath(), errorHandlers);
-            }
-            for (String name : r.getHandlers()) {
-                errorHandler = ErrorHandlers.getPlugin(name);
-                if (errorHandler != null) {
-                    errorHandlers.add(errorHandler);
-                }
-            }
-        }
-        return errorMap;
     }
 
     public void setConfig(VertxConfig config) {

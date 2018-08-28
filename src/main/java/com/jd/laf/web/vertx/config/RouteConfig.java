@@ -28,6 +28,8 @@ public class RouteConfig {
     //方法
     @XmlAttribute
     private RouteType type;
+    //超时时间
+    private Long timeout;
     //支持的消费内容
     @XmlAttribute
     private Set<String> consumes = new HashSet<>();
@@ -38,6 +40,10 @@ public class RouteConfig {
     @XmlAttribute
     @XmlList
     private List<String> handlers = new ArrayList<>(5);
+    //异常处理器
+    @XmlAttribute
+    @XmlList
+    private List<String> errors = new ArrayList<>(3);
 
     public RouteConfig() {
 
@@ -83,6 +89,14 @@ public class RouteConfig {
         this.type = type;
     }
 
+    public Long getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(Long timeout) {
+        this.timeout = timeout;
+    }
+
     public Set<String> getConsumes() {
         return consumes;
     }
@@ -107,13 +121,23 @@ public class RouteConfig {
         this.handlers = handlers;
     }
 
-    public boolean isEmpty() {
-        return handlers == null || handlers.isEmpty();
+    public List<String> getErrors() {
+        return errors;
     }
 
-    public void add(final String handler) {
+    public void setErrors(List<String> errors) {
+        this.errors = errors;
+    }
+
+    public void addHandler(final String handler) {
         if (handler != null && !handler.isEmpty()) {
             handlers.add(handler);
+        }
+    }
+
+    public void addError(final String error) {
+        if (error != null && !error.isEmpty()) {
+            errors.add(error);
         }
     }
 
