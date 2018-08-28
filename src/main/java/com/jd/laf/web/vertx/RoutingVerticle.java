@@ -24,6 +24,8 @@ import javax.validation.Validator;
 import javax.xml.bind.JAXBException;
 import java.io.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static com.jd.laf.web.vertx.RenderHandler.render;
@@ -35,7 +37,8 @@ import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
  */
 public class RoutingVerticle extends AbstractVerticle {
 
-    public static final String DEFAULT_ERROR = "";
+    protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
+
     //配置
     protected VertxConfig config;
     //参数
@@ -74,15 +77,34 @@ public class RoutingVerticle extends AbstractVerticle {
         //构建消息处理链
         buildConsumers(config);
         //启动服务
-        HttpServerOptions serverOptions = options == null ? new HttpServerOptions() : options;
-        httpServer = vertx.createHttpServer(serverOptions);
-        httpServer.requestHandler(router::accept).listen();
+        if (options == null) {
+            options = new HttpServerOptions();
+            options.setPort(8080);
+        }
+        httpServer = vertx.createHttpServer(options);
+        httpServer.requestHandler(router::accept).listen(event -> {
+                    if (event.succeeded()) {
+                        logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
+                    } else {
+                        logger.log(Level.SEVERE, String.format("failed starting http server on port %d",
+                                httpServer.actualPort()), event.cause());
+                    }
+                }
+        );
+
     }
 
     @Override
     public void stop() throws Exception {
         if (httpServer != null) {
-            httpServer.close();
+            httpServer.close(event -> {
+                if (event.succeeded()) {
+                    logger.info(String.format("success closing http server on port %d", httpServer.actualPort()));
+                } else {
+                    logger.log(Level.SEVERE, String.format("failed closing http server on port %d",
+                            httpServer.actualPort()), event.cause());
+                }
+            });
         }
     }
 
