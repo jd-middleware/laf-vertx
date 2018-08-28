@@ -24,15 +24,6 @@ public abstract class Renders {
     }
 
     /**
-     * 获取支持的插件类型
-     *
-     * @return
-     */
-    public static Set<String> getTypes() {
-        return getPlugins().keySet();
-    }
-
-    /**
      * 获取插件散列
      *
      * @return
