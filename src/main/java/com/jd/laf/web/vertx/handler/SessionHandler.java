@@ -18,7 +18,7 @@ import static com.jd.laf.web.vertx.Context.SESSION_NAME;
 public class SessionHandler implements RoutingHandler, ContextAware {
 
     public static final String SESSION = "session";
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

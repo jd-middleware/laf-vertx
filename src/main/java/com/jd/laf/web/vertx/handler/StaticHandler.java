@@ -15,7 +15,7 @@ import static com.jd.laf.web.vertx.Context.WEB_ROOT;
 public class StaticHandler implements RoutingHandler, ContextAware {
 
     public static final String STATIC = "static";
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

@@ -15,7 +15,7 @@ import static com.jd.laf.web.vertx.Context.UPLOAD_DIR;
 public class BodyHandler implements RoutingHandler, ContextAware {
 
     public static final String BODY = "body";
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

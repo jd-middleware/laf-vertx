@@ -17,7 +17,7 @@ public class FormLoginHandler implements RoutingHandler, ContextAware {
 
     public static final String FORM_LOGIN = "formLogin";
 
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

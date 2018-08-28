@@ -10,12 +10,12 @@ import io.vertx.ext.web.RoutingContext;
 import static com.jd.laf.web.vertx.Context.AUTH_PROVIDER;
 
 /**
- * 基础认证处理器资源
+ * 基础认证处理器
  */
 public class BasicAuthHandler implements RoutingHandler, ContextAware {
 
     public static final String BASIC_AUTH = "basicAuth";
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

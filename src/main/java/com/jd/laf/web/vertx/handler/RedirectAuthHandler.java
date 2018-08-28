@@ -18,7 +18,7 @@ public class RedirectAuthHandler implements RoutingHandler, ContextAware {
 
     public static final String REDIRECT_AUTH = "redirectAuth";
 
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

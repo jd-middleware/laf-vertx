@@ -12,7 +12,7 @@ import io.vertx.ext.web.RoutingContext;
 public class CookieHandler implements RoutingHandler, ContextAware {
 
     public static final String COOKIE = "cookie";
-    protected volatile Handler<RoutingContext> handler;
+    protected Handler<RoutingContext> handler;
 
     @Override
     public String type() {

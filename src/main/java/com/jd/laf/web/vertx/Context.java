@@ -74,6 +74,21 @@ public class Context implements Serializable, Cloneable, Contextual {
      */
     public static final String AUTH_PASSWORD_PARAM = "auth.passwordParam";
 
+    /**
+     * 模板引擎
+     */
+    public static final String TEMPLATE_ENGINE = "template.engine";
+
+    /**
+     * 模板目录
+     */
+    public static final String TEMPLATE_DIRECTORY = "template.directory";
+
+    /**
+     * 模板应答内容
+     */
+    public static final String TEMPLATE_CONTENT_TYPE = "template.contentType";
+
     // 参数
     protected ConcurrentHashMap<String, Object> parameters = new ConcurrentHashMap<String, Object>();
 
