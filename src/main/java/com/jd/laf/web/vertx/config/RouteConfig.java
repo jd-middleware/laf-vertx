@@ -19,15 +19,18 @@ public class RouteConfig {
     //名称，可用于继承
     @XmlAttribute
     private String name;
-    //是否是模板，模板不构建路由
+    //是否是路由
     @XmlAttribute
-    private boolean template;
+    private boolean route;
     //是否是正则表达式
     @XmlAttribute
     private boolean regex;
     //继承自
     @XmlAttribute
     private String inherit;
+    //模板名称
+    @XmlAttribute
+    private String template;
     //方法
     @XmlAttribute
     private RouteType type;
@@ -72,12 +75,12 @@ public class RouteConfig {
         this.name = name;
     }
 
-    public boolean isTemplate() {
-        return template;
+    public boolean isRoute() {
+        return route;
     }
 
-    public void setTemplate(boolean template) {
-        this.template = template;
+    public void setRoute(boolean route) {
+        this.route = route;
     }
 
     public boolean isRegex() {
@@ -94,6 +97,14 @@ public class RouteConfig {
 
     public void setInherit(String inherit) {
         this.inherit = inherit;
+    }
+
+    public String getTemplate() {
+        return template;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 
     public RouteType getType() {

@@ -52,7 +52,7 @@ public abstract class RoutingHandlers {
      *
      * @param context
      */
-    public static void setup(final Context context) {
+    public static void setup(final SystemContext context) {
         if (context == null) {
             return;
         }
@@ -60,8 +60,8 @@ public abstract class RoutingHandlers {
         RoutingHandler handler;
         for (Map.Entry<String, RoutingHandler> entry : getPlugins().entrySet()) {
             handler = entry.getValue();
-            if (handler instanceof ContextAware) {
-                ((ContextAware) handler).setup(context);
+            if (handler instanceof SystemAware) {
+                ((SystemAware) handler).setup(context);
             }
         }
     }

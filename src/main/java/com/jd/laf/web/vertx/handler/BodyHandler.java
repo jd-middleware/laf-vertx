@@ -1,18 +1,18 @@
 package com.jd.laf.web.vertx.handler;
 
-import com.jd.laf.web.vertx.Context;
-import com.jd.laf.web.vertx.ContextAware;
+import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.SystemAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
-import static com.jd.laf.web.vertx.Context.BODY_LIMIT;
-import static com.jd.laf.web.vertx.Context.UPLOAD_DIR;
+import static com.jd.laf.web.vertx.SystemContext.BODY_LIMIT;
+import static com.jd.laf.web.vertx.SystemContext.UPLOAD_DIR;
 
 /**
  * Body处理器
  */
-public class BodyHandler implements RoutingHandler, ContextAware {
+public class BodyHandler implements RoutingHandler, SystemAware {
 
     public static final String BODY = "body";
     protected Handler<RoutingContext> handler;
@@ -23,7 +23,7 @@ public class BodyHandler implements RoutingHandler, ContextAware {
     }
 
     @Override
-    public void setup(final Context context) {
+    public void setup(final SystemContext context) {
         io.vertx.ext.web.handler.BodyHandler target = io.vertx.ext.web.handler.BodyHandler.create();
         String uploadDir = context.getString(UPLOAD_DIR);
         if (uploadDir != null && !uploadDir.isEmpty()) {

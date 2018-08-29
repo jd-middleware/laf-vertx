@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx.handler;
 
-import com.jd.laf.web.vertx.Context;
-import com.jd.laf.web.vertx.ContextAware;
+import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.SystemAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
@@ -9,13 +9,13 @@ import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
 import io.vertx.ext.web.sstore.SessionStore;
 
-import static com.jd.laf.web.vertx.Context.SESSION_LOCAL;
-import static com.jd.laf.web.vertx.Context.SESSION_NAME;
+import static com.jd.laf.web.vertx.SystemContext.SESSION_LOCAL;
+import static com.jd.laf.web.vertx.SystemContext.SESSION_NAME;
 
 /**
  * 会话处理器资源
  */
-public class SessionHandler implements RoutingHandler, ContextAware {
+public class SessionHandler implements RoutingHandler, SystemAware {
 
     public static final String SESSION = "session";
     protected Handler<RoutingContext> handler;
@@ -26,7 +26,7 @@ public class SessionHandler implements RoutingHandler, ContextAware {
     }
 
     @Override
-    public void setup(final Context context) {
+    public void setup(final SystemContext context) {
         boolean localSession = context.getBoolean(SESSION_LOCAL, false);
         String session = context.getString(SESSION_NAME);
         SessionStore store = localSession ? (session == null || session.isEmpty() ?

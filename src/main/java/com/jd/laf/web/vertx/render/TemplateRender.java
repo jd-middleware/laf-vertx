@@ -1,21 +1,21 @@
 package com.jd.laf.web.vertx.render;
 
 import com.jd.laf.web.vertx.Command;
-import com.jd.laf.web.vertx.Context;
-import com.jd.laf.web.vertx.ContextAware;
+import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.SystemAware;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
 
-import static com.jd.laf.web.vertx.Context.TEMPLATE_DIRECTORY;
-import static com.jd.laf.web.vertx.Context.TEMPLATE_ENGINE;
+import static com.jd.laf.web.vertx.SystemContext.TEMPLATE_DIRECTORY;
+import static com.jd.laf.web.vertx.SystemContext.TEMPLATE_ENGINE;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_TEMPLATE_DIRECTORY;
 
 /**
  * 模板渲染
  */
-public class TemplateRender implements Render, ContextAware {
+public class TemplateRender implements Render, SystemAware {
 
 
     protected TemplateEngine engine;
@@ -37,7 +37,7 @@ public class TemplateRender implements Render, ContextAware {
     }
 
     @Override
-    public void setup(final Context context) {
+    public void setup(final SystemContext context) {
         engine = context.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
         templateDirectory = context.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
     }

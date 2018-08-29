@@ -14,5 +14,4 @@ public interface RoutingHandler extends Handler<RoutingContext> {
      * @return
      */
     String type();
-
 }

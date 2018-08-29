@@ -1,14 +1,14 @@
 package com.jd.laf.web.vertx;
 
 /**
- * 上下文感知
+ * 系统上下文感知
  */
-public interface ContextAware {
+public interface SystemAware {
 
     /**
      * 通过上下文来构建，单线程调用
      *
      * @param context 上下文
      */
-    void setup(Context context);
+    void setup(SystemContext context);
 }

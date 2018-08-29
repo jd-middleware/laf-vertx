@@ -1,18 +1,18 @@
 package com.jd.laf.web.vertx.handler;
 
-import com.jd.laf.web.vertx.Context;
-import com.jd.laf.web.vertx.ContextAware;
+import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.SystemAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
-import static com.jd.laf.web.vertx.Context.INDEX_PAGE;
-import static com.jd.laf.web.vertx.Context.WEB_ROOT;
+import static com.jd.laf.web.vertx.SystemContext.INDEX_PAGE;
+import static com.jd.laf.web.vertx.SystemContext.WEB_ROOT;
 
 /**
  * 静态资源
  */
-public class StaticHandler implements RoutingHandler, ContextAware {
+public class StaticHandler implements RoutingHandler, SystemAware {
 
     public static final String STATIC = "static";
     protected Handler<RoutingContext> handler;
@@ -23,7 +23,7 @@ public class StaticHandler implements RoutingHandler, ContextAware {
     }
 
     @Override
-    public void setup(final Context context) {
+    public void setup(final SystemContext context) {
         io.vertx.ext.web.handler.StaticHandler target = io.vertx.ext.web.handler.StaticHandler.create();
         String webRoot = context.getString(WEB_ROOT);
         if (webRoot != null && !webRoot.isEmpty()) {
