@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    <!--在动态模板里面引用静态css文件-->
-    <link rel="stylesheet" href="/css/style.css">
-</head>
+<%
+include("header.html"){}
+%>
 <body>
 <h1 th:text="${result}"></h1>
 </body>

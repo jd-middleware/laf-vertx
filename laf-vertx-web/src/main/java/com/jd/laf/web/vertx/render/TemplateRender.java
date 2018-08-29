@@ -2,6 +2,7 @@ package com.jd.laf.web.vertx.render;
 
 import com.jd.laf.web.vertx.SystemAware;
 import com.jd.laf.web.vertx.SystemContext;
+import io.vertx.core.file.FileSystemException;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
 
@@ -33,7 +34,12 @@ public class TemplateRender implements Render, SystemAware {
                 if (rs.succeeded()) {
                     context.response().end(rs.result());
                 } else {
-                    context.fail(rs.cause());
+                    Throwable e = rs.cause();
+                    if (e instanceof FileSystemException) {
+                        context.fail(e.getCause() != null ? e.getCause() : e);
+                    } else {
+                        context.fail(rs.cause());
+                    }
                 }
             });
         }
