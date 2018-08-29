@@ -260,10 +260,18 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param config 路由配置
      */
     protected void buildConsumes(final Route route, final RouteConfig config) {
-        if (config.getConsumes() != null) {
-            for (String type : config.getConsumes()) {
-                route.consumes(type);
-            }
+        switch (config.getType()) {
+            case PUT:
+            case POST:
+            case PATCH:
+                if (config.getConsumes() != null) {
+                    for (String type : config.getConsumes()) {
+                        route.consumes(type);
+                    }
+                }
+                break;
+            default:
+                break;
         }
     }
 

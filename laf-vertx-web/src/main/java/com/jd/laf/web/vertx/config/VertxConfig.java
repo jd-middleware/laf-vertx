@@ -150,10 +150,12 @@ public class VertxConfig {
                     if (cfg.getType() == null && parent.getType() != null) {
                         cfg.setType(parent.getType());
                     }
-                    if (cfg.getConsumes() == null && parent.getConsumes() != null) {
+                    if ((cfg.getConsumes() == null || cfg.getConsumes().isEmpty())
+                            && parent.getConsumes() != null && !parent.getConsumes().isEmpty()) {
                         cfg.setConsumes(parent.getConsumes());
                     }
-                    if (cfg.getProduces() == null && cfg.getProduces() != null) {
+                    if ((cfg.getProduces() == null || cfg.getProduces().isEmpty())
+                            && parent.getProduces() != null && !parent.getProduces().isEmpty()) {
                         cfg.setProduces(parent.getProduces());
                     }
                     //处理业务处理器

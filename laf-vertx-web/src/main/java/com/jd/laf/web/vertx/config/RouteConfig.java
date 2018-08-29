@@ -2,7 +2,6 @@ package com.jd.laf.web.vertx.config;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -42,10 +41,10 @@ public class RouteConfig {
     private Integer order;
     //支持的消费内容
     @XmlAttribute
-    private Set<String> consumes = new HashSet<>();
+    private Set<String> consumes;
     //支持的生产内容
     @XmlAttribute
-    private Set<String> produces = new HashSet<>();
+    private Set<String> produces;
     //处理器
     @XmlAttribute
     @XmlList
