@@ -16,6 +16,8 @@
 
     <modules>
         <module>laf-vertx-web</module>
+        <module>laf-vertx-web-pebble</module>
+        <module>laf-vertx-web-beetl</module>
     </modules>
 
     <properties>
@@ -25,6 +27,8 @@
         <vertx.version>3.5.1</vertx.version>
         <junit.version>4.12</junit.version>
         <slf4j.version>1.7.21</slf4j.version>
+        <hibernate-validator.version>6.0.9.Final</hibernate-validator.version>
+        <validation-api.version>2.0.1.Final</validation-api.version>
     </properties>
 
     <dependencyManagement>

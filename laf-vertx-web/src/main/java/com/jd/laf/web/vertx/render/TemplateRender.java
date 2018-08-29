@@ -25,6 +25,8 @@ public class TemplateRender implements Render, SystemAware {
         String template = context.get(TEMPLATE);
         if (template == null || template.isEmpty()) {
             context.fail(new FileNotFoundException("template is not found."));
+        } else if (engine == null) {
+            context.fail(new IllegalStateException("template engine is not found."));
         } else {
             context.response().putHeader(CONTENT_TYPE, TEXT_HTML);
             engine.render(context, templateDirectory, template, rs -> {

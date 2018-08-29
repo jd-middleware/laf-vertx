@@ -13,6 +13,7 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.templ.TemplateEngine;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -25,8 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.jd.laf.web.vertx.SystemContext.TEMPLATE;
-import static com.jd.laf.web.vertx.SystemContext.VALIDATOR;
+import static com.jd.laf.web.vertx.SystemContext.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
 import static com.jd.laf.web.vertx.handler.RenderHandler.render;
@@ -48,6 +48,8 @@ public class RoutingVerticle extends AbstractVerticle {
     protected HttpServerOptions options;
     //验证器
     protected Validator validator;
+    //模板引擎
+    protected TemplateEngine engine;
     protected HttpServer httpServer;
 
     @Override
@@ -55,18 +57,15 @@ public class RoutingVerticle extends AbstractVerticle {
         //构建配置数据
         config = config == null ? inherit(build(file)) : config;
 
-        if (validator == null) {
-            if (parameters != null) {
-                validator = (Validator) parameters.get(VALIDATOR);
-            }
-            if (validator == null) {
-                validator = Validation.buildDefaultValidatorFactory().getValidator();
-            }
-        }
-        parameters.put(VALIDATOR, validator);
+        SystemContext context = new SystemContext(vertx, parameters);
+
+        //创建验证器
+        buildValidator(context);
+        //创建模板引擎
+        buildTemplateEngine(context);
 
         //初始化插件
-        SystemContext context = new SystemContext(vertx, parameters);
+
         MessageHandlers.setup(context);
         RoutingHandlers.setup(context);
         Renders.setup(context);
@@ -105,6 +104,43 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
+    }
+
+    /**
+     * 构建模板引擎
+     *
+     * @param context
+     * @throws Exception
+     */
+    protected void buildTemplateEngine(SystemContext context) throws Exception {
+        if (engine == null) {
+            engine = (TemplateEngine) context.getObject(TEMPLATE_ENGINE);
+            if (engine == null) {
+                String type = (String) context.getString(TEMPLATE_TYPE);
+                if (type != null && !type.isEmpty()) {
+                    TemplateProvider provider = TemplateProviders.getPlugin(type);
+                    if (provider != null) {
+                        engine = provider.create(context);
+                    }
+                }
+            }
+        }
+        if (engine != null) {
+            context.put(TEMPLATE_ENGINE, engine);
+        }
+    }
+
+    /**
+     * 构建验证器
+     */
+    protected void buildValidator(final SystemContext context) {
+        if (validator == null) {
+            validator = (Validator) context.getObject(VALIDATOR);
+            if (validator == null) {
+                validator = Validation.buildDefaultValidatorFactory().getValidator();
+            }
+        }
+        context.put(VALIDATOR, validator);
     }
 
     /**
@@ -251,6 +287,10 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setValidator(Validator validator) {
         this.validator = validator;
+    }
+
+    public void setEngine(TemplateEngine engine) {
+        this.engine = engine;
     }
 
     public void setParameters(Map<String, Object> parameters) {

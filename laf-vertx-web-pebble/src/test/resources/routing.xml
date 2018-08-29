@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vertx>
+    <routes>
+        <route name="default" route="true" type="GET"
+               consumes="application/json"
+               produces="application/json"
+               handlers="context body {} render"/>
+        <route name="post" route="true" type="POST" inherit="default"/>
+        <route name="delete" route="true" type="DELETE" inherit="default"/>
+        <route path="/host" inherit="post" handlers="addHost"/>
+        <route path="/host/:id" inherit="delete" handlers="deleteHost"/>
+        <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
+        <route path="/hello1" inherit="default" template="hello" produces="text/html" handlers="helloWorld"/>
+    </routes>
+    <messages/>
+</vertx>

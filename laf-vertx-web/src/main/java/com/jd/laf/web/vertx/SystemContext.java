@@ -81,6 +81,11 @@ public class SystemContext {
     public static final String TEMPLATE_ENGINE = "template.engine";
 
     /**
+     * 模板引擎类型
+     */
+    public static final String TEMPLATE_TYPE = "template.type";
+
+    /**
      * 模板目录
      */
     public static final String TEMPLATE_DIRECTORY = "template.directory";
@@ -89,6 +94,16 @@ public class SystemContext {
      * 模板应答内容
      */
     public static final String TEMPLATE_CONTENT_TYPE = "template.contentType";
+
+    /**
+     * 模板文件扩展名
+     */
+    public static final String TEMPLATE_EXTENSION = "template.extension";
+
+    /**
+     * 模板文件缓存大小
+     */
+    public static final String TEMPLATE_CACHE_SIZE = "template.cache.size";
 
     // 参数
     protected Map<String, Object> parameters;
@@ -619,6 +634,18 @@ public class SystemContext {
     public Long getNatural(final String name, final Long def) {
         Long result = getLong(name, def);
         return result != null && result < 0 ? def : result;
+    }
+
+    /**
+     * 存取键值
+     *
+     * @param name
+     * @param obj
+     */
+    public void put(final String name, final Object obj) {
+        if (parameters != null) {
+            parameters.put(name, obj);
+        }
     }
 
 }
