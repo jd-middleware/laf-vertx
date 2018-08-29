@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.jd.laf.web.vertx.SystemContext.TEMPLATE;
 import static com.jd.laf.web.vertx.SystemContext.VALIDATOR;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
@@ -289,10 +290,23 @@ public class RoutingVerticle extends AbstractVerticle {
                 //验证
                 validate(clone);
                 //执行
-                Command.Result result = clone.execute();
+                Object obj = clone.execute();
+                Command.Result result = null;
+                if (obj != null) {
+                    if (obj instanceof Command.Result) {
+                        result = (Command.Result) obj;
+                    } else {
+                        result = new Command.Result(obj);
+                    }
+                }
                 if (result != null) {
                     //有返回结果
+                    if (result.getTemplate() != null && !result.getTemplate().isEmpty()) {
+                        //存放模板
+                        context.put(TEMPLATE, result.getTemplate());
+                    }
                     if (result.getKey() != null) {
+                        //存放实际的返回结果
                         context.put(result.getKey(), result.getResult());
                     }
                     switch (result.getType()) {
