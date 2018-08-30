@@ -4,6 +4,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -74,6 +75,17 @@ public class VertxConfig {
         public static VertxConfig build(final Reader reader) throws JAXBException {
             JAXBContext context = JAXBContext.newInstance(RouteConfig.class, RouteType.class, VertxConfig.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
+            unmarshaller.setAdapter(new XmlAdapter<String, List<String>>() {
+                @Override
+                public List<String> unmarshal(String v) throws Exception {
+                    return null;
+                }
+
+                @Override
+                public String marshal(List<String> v) throws Exception {
+                    return null;
+                }
+            });
             return (VertxConfig) unmarshaller.unmarshal(reader);
         }
 

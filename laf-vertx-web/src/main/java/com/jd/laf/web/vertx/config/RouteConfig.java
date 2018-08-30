@@ -1,6 +1,7 @@
 package com.jd.laf.web.vertx.config;
 
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -40,18 +41,12 @@ public class RouteConfig {
     @XmlAttribute
     private Integer order;
     //支持的消费内容
-    @XmlAttribute
     private Set<String> consumes;
     //支持的生产内容
-    @XmlAttribute
     private Set<String> produces;
     //处理器
-    @XmlAttribute
-    @XmlList
     private List<String> handlers = new ArrayList<>(5);
     //异常处理器
-    @XmlAttribute
-    @XmlList
     private List<String> errors = new ArrayList<>(3);
 
     public RouteConfig() {
@@ -130,6 +125,8 @@ public class RouteConfig {
         this.order = order;
     }
 
+    @XmlAttribute
+    @XmlJavaTypeAdapter(SetXmlAdapter.class)
     public Set<String> getConsumes() {
         return consumes;
     }
@@ -138,6 +135,8 @@ public class RouteConfig {
         this.consumes = consumes;
     }
 
+    @XmlAttribute
+    @XmlJavaTypeAdapter(SetXmlAdapter.class)
     public Set<String> getProduces() {
         return produces;
     }
@@ -146,6 +145,8 @@ public class RouteConfig {
         this.produces = produces;
     }
 
+    @XmlAttribute
+    @XmlJavaTypeAdapter(ListXmlAdapter.class)
     public List<String> getHandlers() {
         return handlers;
     }
@@ -154,6 +155,8 @@ public class RouteConfig {
         this.handlers = handlers;
     }
 
+    @XmlAttribute
+    @XmlJavaTypeAdapter(ListXmlAdapter.class)
     public List<String> getErrors() {
         return errors;
     }
