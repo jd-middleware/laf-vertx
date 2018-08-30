@@ -23,7 +23,7 @@ public class VertxConfig {
     List<RouteConfig> routes = new ArrayList<>(50);
     //消息处理器
     @XmlElementWrapper
-    @XmlElement(name = "messages")
+    @XmlElement(name = "route")
     List<RouteConfig> messages = new ArrayList<>(10);
 
     public VertxConfig() {
@@ -75,17 +75,6 @@ public class VertxConfig {
         public static VertxConfig build(final Reader reader) throws JAXBException {
             JAXBContext context = JAXBContext.newInstance(RouteConfig.class, RouteType.class, VertxConfig.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
-            unmarshaller.setAdapter(new XmlAdapter<String, List<String>>() {
-                @Override
-                public List<String> unmarshal(String v) throws Exception {
-                    return null;
-                }
-
-                @Override
-                public String marshal(List<String> v) throws Exception {
-                    return null;
-                }
-            });
             return (VertxConfig) unmarshaller.unmarshal(reader);
         }
 
