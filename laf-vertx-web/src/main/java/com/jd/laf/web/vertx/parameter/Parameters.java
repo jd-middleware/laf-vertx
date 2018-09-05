@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerRequest;
  */
 public class Parameters {
     //线程变量，避免频繁调用
-    protected static ThreadLocal<Container> local = new ThreadLocal<>();
+    protected static ThreadLocal<RequestParameter> local = new ThreadLocal<>();
 
     /**
      * 获取请求参数值
@@ -30,16 +30,27 @@ public class Parameters {
     }
 
     /**
+     * 获取表单参数值
+     *
+     * @param request 请求
+     * @return 参数值
+     */
+    public static Parameter form(final HttpServerRequest request) {
+        return get(request).form;
+    }
+
+    /**
      * 获取请求参数值
      *
      * @param request 请求
      * @return 参数值
      */
-    protected static Container get(final HttpServerRequest request) {
-        Container result = local.get();
+    public static RequestParameter get(final HttpServerRequest request) {
+        RequestParameter result = local.get();
         if (result == null) {
-            result = new Container(Parameter.valueOf(new QueryParamSupplier(request)),
-                    Parameter.valueOf(new HeaderParamSupplier(request)));
+            result = new RequestParameter(Parameter.valueOf(new QueryParamSupplier(request)),
+                    Parameter.valueOf(new HeaderParamSupplier(request)),
+                    Parameter.valueOf(new FormParamSupplier(request)));
             local.set(result);
         }
         return result;
@@ -48,15 +59,30 @@ public class Parameters {
     /**
      * 参数
      */
-    protected static class Container {
+    public static class RequestParameter {
         //请求参数
         Parameter request;
         //请求头参数
         Parameter header;
+        //表单参数
+        Parameter form;
 
-        public Container(Parameter request, Parameter header) {
+        public RequestParameter(Parameter request, Parameter header, Parameter form) {
             this.request = request;
             this.header = header;
+            this.form = form;
+        }
+
+        public Parameter request() {
+            return request;
+        }
+
+        public Parameter header() {
+            return header;
+        }
+
+        public Parameter form() {
+            return form;
         }
     }
 
