@@ -5,6 +5,7 @@ import com.jd.laf.binding.marshaller.JsonProviders;
 import com.jd.laf.binding.marshaller.XmlProviders;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.annotation.Body;
+import com.jd.laf.web.vertx.annotation.Body.BodyType;
 import io.vertx.ext.web.RoutingContext;
 
 import java.lang.reflect.Field;
@@ -18,8 +19,26 @@ public class BodyBinder implements Binder {
         Body annotation = (Body) context.getAnnotation();
         Field field = context.getField();
         RoutingContext ctx = (RoutingContext) context.getSource();
+
+        BodyType type = annotation.type();
+        if (type == BodyType.DETECT) {
+            String contentType = ctx.getAcceptableContentType();
+            if (contentType != null) {
+                contentType = contentType.toLowerCase();
+                if (contentType.indexOf("json") >= 0) {
+                    type = BodyType.JSON;
+                } else if (contentType.indexOf("xml") >= 0) {
+                    type = BodyType.XML;
+                } else {
+                    type = BodyType.TEXT;
+                }
+            } else {
+                type = BodyType.JSON;
+            }
+        }
+
         try {
-            switch (annotation.type()) {
+            switch (type) {
                 case JSON:
                     return context.bind(JsonProviders.getPlugin().getUnmarshaller().unmarshall(
                             ctx.getBodyAsString(), field.getType(), null));

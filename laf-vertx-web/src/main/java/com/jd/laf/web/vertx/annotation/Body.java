@@ -14,12 +14,16 @@ public @interface Body {
      *
      * @return
      */
-    BodyType type() default BodyType.JSON;
+    BodyType type() default BodyType.DETECT;
 
     /**
      * 数据类型
      */
     enum BodyType {
+        /**
+         * 自动检查
+         */
+        DETECT,
         /**
          * 普通文本
          */

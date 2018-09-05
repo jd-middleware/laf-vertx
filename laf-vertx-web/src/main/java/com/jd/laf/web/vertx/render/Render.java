@@ -9,6 +9,8 @@ public interface Render {
 
     String APPLICATION_JSON = "application/json";
 
+    String APPLICATION_XML = "application/xml";
+
     String TEXT_PLAIN = "text/plain";
 
     String TEXT_HTML = "text/html";
