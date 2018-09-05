@@ -4,6 +4,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.*;
+import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,7 +23,7 @@ public class VertxConfig {
     List<RouteConfig> routes = new ArrayList<>(50);
     //消息处理器
     @XmlElementWrapper
-    @XmlElement(name = "messages")
+    @XmlElement(name = "route")
     List<RouteConfig> messages = new ArrayList<>(10);
 
     public VertxConfig() {
