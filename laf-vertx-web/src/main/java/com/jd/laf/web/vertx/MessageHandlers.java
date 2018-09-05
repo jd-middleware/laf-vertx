@@ -1,5 +1,7 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.binding.Binding;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -47,12 +49,13 @@ public abstract class MessageHandlers {
         return plugins;
     }
 
+
     /**
      * 构建上下文
      *
      * @param context
      */
-    public static void setup(final SystemContext context) {
+    public static void setup(final SystemContext context) throws Exception {
         if (context == null) {
             return;
         }
@@ -60,6 +63,7 @@ public abstract class MessageHandlers {
         MessageHandler handler;
         for (Map.Entry<String, MessageHandler> entry : getPlugins().entrySet()) {
             handler = entry.getValue();
+            Binding.bind(context, handler);
             if (handler instanceof SystemAware) {
                 ((SystemAware) handler).setup(context);
             }

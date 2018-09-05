@@ -1,5 +1,7 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.binding.Binding;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -52,7 +54,7 @@ public abstract class RoutingHandlers {
      *
      * @param context
      */
-    public static void setup(final SystemContext context) {
+    public static void setup(final SystemContext context) throws Exception {
         if (context == null) {
             return;
         }
@@ -60,6 +62,8 @@ public abstract class RoutingHandlers {
         RoutingHandler handler;
         for (Map.Entry<String, RoutingHandler> entry : getPlugins().entrySet()) {
             handler = entry.getValue();
+            //植入上下文对象
+            Binding.bind(context, handler);
             if (handler instanceof SystemAware) {
                 ((SystemAware) handler).setup(context);
             }
