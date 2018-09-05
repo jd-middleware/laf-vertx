@@ -16,7 +16,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter query(final HttpServerRequest request) {
-        return get(request).request;
+        return get(request).query;
     }
 
     /**
@@ -61,20 +61,20 @@ public class Parameters {
      */
     public static class RequestParameter {
         //请求参数
-        Parameter request;
+        Parameter query;
         //请求头参数
         Parameter header;
         //表单参数
         Parameter form;
 
-        public RequestParameter(Parameter request, Parameter header, Parameter form) {
-            this.request = request;
+        public RequestParameter(Parameter query, Parameter header, Parameter form) {
+            this.query = query;
             this.header = header;
             this.form = form;
         }
 
-        public Parameter request() {
-            return request;
+        public Parameter query() {
+            return query;
         }
 
         public Parameter header() {
