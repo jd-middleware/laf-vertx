@@ -11,6 +11,6 @@ public @interface CookieParam {
     /**
      * 参数名称
      */
-    String value();
+    String value() default "";
 }
 

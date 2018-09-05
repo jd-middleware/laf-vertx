@@ -7,10 +7,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface PathParam {
-    /**
-     * 参数名称
-     */
-    String value() default "";
+public @interface CVertx {
 }
 
