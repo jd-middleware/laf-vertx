@@ -2,7 +2,6 @@ package com.jd.laf.web.vertx.config;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -15,27 +14,44 @@ public class ListXmlAdapter extends XmlAdapter<String, List<String>> {
     }
 
     @Override
-    public List<String> unmarshal(String vs) throws Exception {
-        List<String> list = new ArrayList<>();
-        if (vs != null && vs.length() > 0) {
-            String[] vals = vs.split(",");
-            for (String val : vals) {
-                list.add(val.trim());
+    public List<String> unmarshal(final String value) {
+        if (value == null) {
+            return null;
+        }
+        List<String> result = new ArrayList<>();
+        int start = 0;
+        for (int i = 0; i < value.length(); i++) {
+            switch (value.charAt(i)) {
+                case '\t':
+                case ' ':
+                case ',':
+                case ';':
+                    if (i > start) {
+                        result.add(value.substring(start, i));
+                    }
+                    start = i + 1;
+                    break;
             }
         }
-        return list;
+        if (start < value.length()) {
+            result.add(value.substring(start));
+        }
+        return result;
     }
 
     @Override
-    public String marshal(List<String> listVal) throws Exception {
+    public String marshal(final List<String> value) {
+        if (value == null) {
+            return null;
+        }
         StringBuilder sb = new StringBuilder();
-        for (String v : listVal) {
-            sb.append(",").append(v);
+        int count = 0;
+        for (String v : value) {
+            if (count++ > 0) {
+                sb.append(',');
+            }
+            sb.append(v);
         }
-        if (sb.length() > 1) {
-            return sb.substring(1);
-        } else {
-            return sb.toString();
-        }
+        return sb.toString();
     }
 }

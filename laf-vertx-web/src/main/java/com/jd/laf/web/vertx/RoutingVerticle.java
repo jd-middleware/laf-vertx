@@ -13,7 +13,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.templ.TemplateEngine;
 
 import javax.validation.ConstraintViolation;
@@ -189,7 +188,6 @@ public class RoutingVerticle extends AbstractVerticle {
             } else {
                 route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
             }
-            route.handler(BodyHandler.create());
             if (info.getOrder() != null) {
                 route.order(info.getOrder());
             }
