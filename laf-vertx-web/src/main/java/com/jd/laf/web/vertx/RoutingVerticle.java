@@ -4,6 +4,8 @@ import com.jd.laf.binding.Binding;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
+import com.jd.laf.web.vertx.message.CustomCodec;
+import com.jd.laf.web.vertx.message.CustomCodecs;
 import com.jd.laf.web.vertx.render.Renders;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
@@ -57,6 +59,9 @@ public class RoutingVerticle extends AbstractVerticle {
         //构建配置数据
         config = config == null ? inherit(build(file)) : config;
 
+        //注册消息编解码
+        registerCodec();
+
         SystemContext context = new SystemContext(vertx, parameters);
 
         //创建验证器
@@ -103,6 +108,15 @@ public class RoutingVerticle extends AbstractVerticle {
                             httpServer.actualPort()), event.cause());
                 }
             });
+        }
+    }
+
+    /**
+     * 注册消息编解码
+     */
+    protected void registerCodec() {
+        for (CustomCodec codec : CustomCodecs.getPlugins()) {
+            vertx.eventBus().registerDefaultCodec(codec.type(), codec);
         }
     }
 
