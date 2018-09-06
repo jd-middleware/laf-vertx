@@ -1,6 +1,8 @@
 package com.jd.laf.web.vertx.response;
 
-import static com.jd.laf.web.vertx.response.Response.INTERNAL_ERROR;
+import java.util.List;
+
+import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
 
 /**
  * 响应工具类
@@ -50,6 +52,41 @@ public abstract class Responses {
     }
 
     /**
+     * 分页成功响应
+     *
+     * @param pagination 分页
+     * @param data       数据
+     * @return
+     */
+    public static Response success(final Object pagination, final List<?> data) {
+        return new Response(data, pagination);
+    }
+
+    /**
+     * 分页成功响应
+     *
+     * @param code       业务响应码
+     * @param pagination 分页
+     * @param data       数据
+     * @return
+     */
+    public static Response success(final int code, final Object pagination, final List<?> data) {
+        return new Response(code, data, pagination);
+    }
+
+    /**
+     * 分页成功响应
+     *
+     * @param code       业务响应码
+     * @param pagination 分页
+     * @param data       数据
+     * @return
+     */
+    public static Response success(final int code, int status, final Object pagination, final List<?> data) {
+        return new Response(code, status, data, pagination);
+    }
+
+    /**
      * 异常响应
      *
      * @param code    代码
@@ -79,7 +116,7 @@ public abstract class Responses {
      * @return
      */
     public static Response error(Throwable throwable) {
-        return error(throwable, null, INTERNAL_ERROR, INTERNAL_ERROR);
+        return error(throwable, null, HTTP_INTERNAL_ERROR, HTTP_INTERNAL_ERROR);
     }
 
     /**
@@ -90,7 +127,7 @@ public abstract class Responses {
      * @return
      */
     public static Response error(Throwable throwable, ErrorSupplier supplier) {
-        return error(throwable, supplier, INTERNAL_ERROR, INTERNAL_ERROR);
+        return error(throwable, supplier, HTTP_INTERNAL_ERROR, HTTP_INTERNAL_ERROR);
     }
 
     /**
