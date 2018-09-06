@@ -16,11 +16,13 @@ public class JsonRender implements Render {
     public void render(final RoutingContext context) throws Exception {
         //获取结果
         Object result = context.get(Command.RESULT);
+        HttpServerResponse response = context.response();
+        response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
         if (result != null) {
             //数据不为空
-            HttpServerResponse response = context.response();
-            response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
             response.end(JsonProviders.getPlugin().getMarshaller().marshall(result));
+        } else {
+            response.end();
         }
     }
 
