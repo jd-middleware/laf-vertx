@@ -18,6 +18,6 @@ public interface ErrorSupplier {
      *
      * @return
      */
-    Class<?> type();
+    Class<? extends Throwable> type();
 
 }
