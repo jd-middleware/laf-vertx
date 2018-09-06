@@ -6,6 +6,8 @@ package com.jd.laf.web.vertx.parameter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * 参数工具类
@@ -34,6 +36,35 @@ public final class Parameter {
      */
     public String getString(final String key) {
         return supplier == null ? null : supplier.get(key);
+    }
+
+    /**
+     * 获取字符串数组参数值
+     *
+     * @param key       参数名称
+     * @param delimiter 分隔符
+     * @return 参数值
+     */
+    public String[] getStrings(final String key, final char delimiter) {
+        String value = getString(key);
+        if (value == null || value.isEmpty()) {
+            return null;
+        }
+        List<String> result = new LinkedList<String>();
+        int len = value.length();
+        int start = 0;
+        for (int i = 0; i < len; i++) {
+            if (value.charAt(i) == delimiter) {
+                if (i > start) {
+                    result.add(value.substring(start, i));
+                }
+                start = i + 1;
+            }
+        }
+        if (start < len) {
+            result.add(value.substring(start, len));
+        }
+        return result.toArray(new String[result.size()]);
     }
 
     /**
