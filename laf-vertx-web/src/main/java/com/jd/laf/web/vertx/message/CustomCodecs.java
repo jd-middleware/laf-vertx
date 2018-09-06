@@ -1,5 +1,7 @@
 package com.jd.laf.web.vertx.message;
 
+import io.vertx.core.Vertx;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -31,6 +33,28 @@ public abstract class CustomCodecs {
             }
         }
         return plugins;
+    }
+
+    /**
+     * 注册消息编解码
+     */
+    public static void registerCodec(final Vertx vertx) {
+        if (vertx != null) {
+            for (CustomCodec codec : getPlugins()) {
+                vertx.eventBus().registerDefaultCodec(codec.type(), codec);
+            }
+        }
+    }
+
+    /**
+     * 注销消息编解码
+     */
+    public static void unregisterCodec(final Vertx vertx) {
+        if (vertx != null) {
+            for (CustomCodec codec : getPlugins()) {
+                vertx.eventBus().unregisterDefaultCodec(codec.type());
+            }
+        }
     }
 
 }
