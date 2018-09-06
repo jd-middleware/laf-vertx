@@ -6,6 +6,7 @@ import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.message.CustomCodecs;
 import com.jd.laf.web.vertx.render.Renders;
+import com.jd.laf.web.vertx.service.Daemons;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -67,9 +68,10 @@ public class RoutingVerticle extends AbstractVerticle {
         buildValidator(context);
         //创建模板引擎
         buildTemplateEngine(context);
+        //启动Daemon服务
+        Daemons.start(context);
 
         //初始化插件
-
         MessageHandlers.setup(context);
         RoutingHandlers.setup(context);
         Renders.setup(context);
@@ -108,6 +110,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
+        Daemons.stop();
         CustomCodecs.unregisterCodec(vertx);
     }
 
