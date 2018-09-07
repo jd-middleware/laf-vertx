@@ -7,7 +7,7 @@ import io.vertx.core.http.HttpServerRequest;
  */
 public class Parameters {
     //线程变量，避免频繁调用
-    protected static ThreadLocal<RequestParameter> local = new ThreadLocal<>();
+    //protected static ThreadLocal<RequestParameter> local = new ThreadLocal<>();
 
     /**
      * 获取请求参数值
@@ -16,7 +16,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter query(final HttpServerRequest request) {
-        return get(request).query;
+        return Parameter.valueOf(new QueryParamSupplier(request));
     }
 
     /**
@@ -26,7 +26,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter header(final HttpServerRequest request) {
-        return get(request).header;
+        return Parameter.valueOf(new HeaderParamSupplier(request));
     }
 
     /**
@@ -36,7 +36,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter form(final HttpServerRequest request) {
-        return get(request).form;
+        return Parameter.valueOf(new FormParamSupplier(request));
     }
 
     /**
@@ -46,14 +46,9 @@ public class Parameters {
      * @return 参数值
      */
     public static RequestParameter get(final HttpServerRequest request) {
-        RequestParameter result = local.get();
-        if (result == null) {
-            result = new RequestParameter(Parameter.valueOf(new QueryParamSupplier(request)),
-                    Parameter.valueOf(new HeaderParamSupplier(request)),
-                    Parameter.valueOf(new FormParamSupplier(request)));
-            local.set(result);
-        }
-        return result;
+        return new RequestParameter(Parameter.valueOf(new QueryParamSupplier(request)),
+                Parameter.valueOf(new HeaderParamSupplier(request)),
+                Parameter.valueOf(new FormParamSupplier(request)));
     }
 
     /**
