@@ -2,6 +2,8 @@ package com.jd.laf.web.vertx.parameter;
 
 import io.vertx.core.http.HttpServerRequest;
 
+import static com.jd.laf.web.vertx.parameter.Parameter.valueOf;
+
 /**
  * 工具类
  */
@@ -16,7 +18,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter query(final HttpServerRequest request) {
-        return Parameter.valueOf(new QueryParamSupplier(request));
+        return valueOf(new QueryParamSupplier(request));
     }
 
     /**
@@ -26,7 +28,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter header(final HttpServerRequest request) {
-        return Parameter.valueOf(new HeaderParamSupplier(request));
+        return valueOf(new HeaderParamSupplier(request));
     }
 
     /**
@@ -36,7 +38,7 @@ public class Parameters {
      * @return 参数值
      */
     public static Parameter form(final HttpServerRequest request) {
-        return Parameter.valueOf(new FormParamSupplier(request));
+        return valueOf(new FormParamSupplier(request));
     }
 
     /**
@@ -46,9 +48,9 @@ public class Parameters {
      * @return 参数值
      */
     public static RequestParameter get(final HttpServerRequest request) {
-        return new RequestParameter(Parameter.valueOf(new QueryParamSupplier(request)),
-                Parameter.valueOf(new HeaderParamSupplier(request)),
-                Parameter.valueOf(new FormParamSupplier(request)));
+        return new RequestParameter(valueOf(new QueryParamSupplier(request)),
+                valueOf(new HeaderParamSupplier(request)),
+                valueOf(new FormParamSupplier(request)));
     }
 
     /**
