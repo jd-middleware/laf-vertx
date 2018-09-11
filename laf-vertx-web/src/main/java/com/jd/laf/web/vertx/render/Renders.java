@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx.render;
 
-import com.jd.laf.web.vertx.SystemContext;
 import com.jd.laf.web.vertx.SystemAware;
+import com.jd.laf.web.vertx.SystemContext;
 
 import java.util.*;
 
@@ -31,7 +31,7 @@ public abstract class Renders {
      *
      * @return
      */
-    protected static Map<String, Render> getPlugins() {
+    public static Map<String, Render> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (Renders.class) {
@@ -49,25 +49,6 @@ public abstract class Renders {
             }
         }
         return plugins;
-    }
-
-    /**
-     * 构建上下文
-     *
-     * @param context
-     */
-    public static void setup(final SystemContext context) {
-        if (context == null) {
-            return;
-        }
-
-        Render render;
-        for (Map.Entry<String, Render> entry : getPlugins().entrySet()) {
-            render = entry.getValue();
-            if (render instanceof SystemAware) {
-                ((SystemAware) render).setup(context);
-            }
-        }
     }
 
 }

@@ -46,9 +46,25 @@ public class SystemContext {
      */
     public static final String SESSION_LOCAL = "session.local";
     /**
-     * 本地会话名称
+     * 会话名称
      */
     public static final String SESSION_NAME = "session.name";
+    /**
+     * 会话的Cookie名称
+     */
+    public static final String SESSION_COOKIE_NAME = "session.cookie.name";
+    /**
+     * 会话超时时间
+     */
+    public static final String SESSION_TIMEOUT = "session.timeout";
+    /**
+     * 用户的键
+     */
+    public static final String USER_KEY = "userDetail";
+    /**
+     * 远程IP
+     */
+    public static final String REMOTE_IP = "remoteIp";
 
     /**
      * 认证提供者

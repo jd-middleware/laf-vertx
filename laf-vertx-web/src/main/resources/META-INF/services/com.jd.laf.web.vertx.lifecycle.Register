@@ -1,0 +1,5 @@
+com.jd.laf.web.vertx.lifecycle.CodecRegister
+com.jd.laf.web.vertx.lifecycle.DaemonRegister
+com.jd.laf.web.vertx.lifecycle.MessageRegister
+com.jd.laf.web.vertx.lifecycle.RenderRegister
+com.jd.laf.web.vertx.lifecycle.RoutingRegister

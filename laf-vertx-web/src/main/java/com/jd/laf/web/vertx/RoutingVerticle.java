@@ -4,9 +4,7 @@ import com.jd.laf.binding.Binding;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
-import com.jd.laf.web.vertx.message.CustomCodecs;
-import com.jd.laf.web.vertx.render.Renders;
-import com.jd.laf.web.vertx.service.Daemons;
+import com.jd.laf.web.vertx.lifecycle.Registers;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -59,22 +57,20 @@ public class RoutingVerticle extends AbstractVerticle {
         //构建配置数据
         config = config == null ? inherit(build(file)) : config;
 
-        //注册消息编解码
-        CustomCodecs.registerCodec(vertx);
-
-        SystemContext context = new SystemContext(vertx, parameters);
+        final SystemContext context = new SystemContext(vertx, parameters);
 
         //创建验证器
         buildValidator(context);
         //创建模板引擎
         buildTemplateEngine(context);
-        //启动Daemon服务
-        Daemons.start(context);
-
         //初始化插件
-        MessageHandlers.setup(context);
-        RoutingHandlers.setup(context);
-        Renders.setup(context);
+        Registers.register(vertx, context, o -> {
+            Binding.bind(context, o);
+            validate(validator, o);
+            if (o instanceof SystemAware) {
+                ((SystemAware) o).setup(context);
+            }
+        });
 
         Router router = Router.router(vertx);
         //构建业务处理链
@@ -110,8 +106,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
-        Daemons.stop();
-        CustomCodecs.unregisterCodec(vertx);
+        Registers.deregister(vertx);
     }
 
 
@@ -325,6 +320,30 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     /**
+     * 验证
+     *
+     * @param validator
+     * @param target
+     */
+    protected static void validate(final Validator validator, final Object target) {
+        if (validator == null || target == null) {
+            return;
+        }
+        Set<ConstraintViolation<Object>> constraints = validator.validate(target);
+        if (constraints != null && !constraints.isEmpty()) {
+            StringBuilder builder = new StringBuilder(100);
+            int count = 0;
+            for (ConstraintViolation<Object> violation : constraints) {
+                if (count++ > 0) {
+                    builder.append('\n');
+                }
+                builder.append(violation.getMessage());
+            }
+            throw new ValidationException(builder.toString());
+        }
+    }
+
+    /**
      * 命令处理器
      */
     protected static class CommandHandler implements Handler<RoutingContext> {
@@ -345,7 +364,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //绑定
                 Binding.bind(context, clone);
                 //验证
-                validate(clone);
+                validate(validator, clone);
                 //执行
                 Object obj = clone.execute();
                 Command.Result result = null;
@@ -387,26 +406,6 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             } catch (Exception e) {
                 context.fail(e);
-            }
-        }
-
-        /**
-         * 验证
-         *
-         * @param command
-         */
-        protected void validate(final Command command) {
-            Set<ConstraintViolation<Command>> constraints = validator.validate(command);
-            if (constraints != null && !constraints.isEmpty()) {
-                StringBuilder builder = new StringBuilder(100);
-                int count = 0;
-                for (ConstraintViolation<Command> violation : constraints) {
-                    if (count++ > 0) {
-                        builder.append('\n');
-                    }
-                    builder.append(violation.getMessage());
-                }
-                throw new ValidationException(builder.toString());
             }
         }
     }

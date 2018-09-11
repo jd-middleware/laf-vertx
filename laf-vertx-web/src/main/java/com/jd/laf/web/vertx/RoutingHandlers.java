@@ -33,7 +33,7 @@ public abstract class RoutingHandlers {
      *
      * @return
      */
-    protected static Map<String, RoutingHandler> getPlugins() {
+    public static Map<String, RoutingHandler> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (RoutingHandlers.class) {
@@ -47,27 +47,6 @@ public abstract class RoutingHandlers {
             }
         }
         return plugins;
-    }
-
-    /**
-     * 构建上下文
-     *
-     * @param context
-     */
-    public static void setup(final SystemContext context) throws Exception {
-        if (context == null) {
-            return;
-        }
-
-        RoutingHandler handler;
-        for (Map.Entry<String, RoutingHandler> entry : getPlugins().entrySet()) {
-            handler = entry.getValue();
-            //植入上下文对象
-            Binding.bind(context, handler);
-            if (handler instanceof SystemAware) {
-                ((SystemAware) handler).setup(context);
-            }
-        }
     }
 
 }
