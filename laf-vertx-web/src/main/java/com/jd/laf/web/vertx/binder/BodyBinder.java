@@ -8,7 +8,9 @@ import com.jd.laf.web.vertx.annotation.Body;
 import com.jd.laf.web.vertx.annotation.Body.BodyType;
 import io.vertx.ext.web.RoutingContext;
 
+import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
+import java.util.Properties;
 
 /**
  * Body绑定
@@ -29,6 +31,8 @@ public class BodyBinder implements Binder {
                     type = BodyType.JSON;
                 } else if (contentType.indexOf("xml") >= 0) {
                     type = BodyType.XML;
+                } else if (contentType.indexOf("properties") >= 0) {
+                    type = BodyType.PROPERTIES;
                 } else {
                     type = BodyType.TEXT;
                 }
@@ -45,6 +49,11 @@ public class BodyBinder implements Binder {
                 case XML:
                     return context.bind(XmlProviders.getPlugin().getUnmarshaller().unmarshall(
                             ctx.getBodyAsString(), field.getType(), null));
+                case PROPERTIES:
+                    byte[] data = ctx.getBody().getBytes();
+                    Properties properties = new Properties();
+                    properties.load(new ByteArrayInputStream(data));
+                    return context.bind(properties);
                 default:
                     return context.bind(ctx.getBody());
             }

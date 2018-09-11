@@ -36,6 +36,11 @@ public @interface Body {
          * XML格式
          */
         XML,
+        /**
+         * PEOPERTIES格式
+         */
+        PROPERTIES
+
     }
 }
 
