@@ -18,8 +18,6 @@ import io.vertx.ext.web.templ.TemplateEngine;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,16 +40,17 @@ public class RoutingVerticle extends AbstractVerticle {
     //配置
     protected VertxConfig config;
     //参数
-    protected ConcurrentMap<String, Object> parameters = new ConcurrentHashMap<>();
+    protected Map<String, Object> parameters;
     //资源文件
     protected String file = "routing.xml";
     //模板引擎
     protected TemplateEngine engine;
     protected HttpServer httpServer;
+    protected Environment environment;
 
     @Override
     public void start() throws Exception {
-        final Environment environment = new Environment(vertx, parameters);
+        environment = new Environment(vertx, parameters);
         //构建配置数据
         file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
         config = config == null ? inherit(build(file)) : config;
@@ -59,7 +58,7 @@ public class RoutingVerticle extends AbstractVerticle {
         //创建模板引擎
         buildTemplateEngine(environment);
         //初始化插件
-        Registrars.register(vertx, environment);
+        Registrars.register(environment);
 
         Router router = Router.router(vertx);
         //构建业务处理链
@@ -92,6 +91,7 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
+        environment = null;
     }
 
 
@@ -293,11 +293,7 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     public void setParameters(Map<String, Object> parameters) {
-        if (parameters != null) {
-            this.parameters = new ConcurrentHashMap<>(parameters);
-        } else {
-            this.parameters = new ConcurrentHashMap<>();
-        }
+        this.parameters = null;
     }
 
     public void setFile(String file) {

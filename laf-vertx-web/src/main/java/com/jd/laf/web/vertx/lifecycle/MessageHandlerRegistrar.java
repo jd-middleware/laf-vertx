@@ -13,7 +13,7 @@ import java.util.Map;
 public class MessageHandlerRegistrar implements Registrar {
 
     @Override
-    public void register(final Vertx vertx, final Environment environment) throws Exception {
+    public void register(final Environment environment) throws Exception {
         for (Map.Entry<String, MessageHandler> entry : MessageHandlers.getPlugins().entrySet()) {
             environment.setup(entry.getValue());
         }

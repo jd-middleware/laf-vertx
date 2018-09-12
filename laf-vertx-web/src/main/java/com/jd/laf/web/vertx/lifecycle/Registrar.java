@@ -13,11 +13,10 @@ public interface Registrar {
     /**
      * 初始化
      *
-     * @param vertx       vertx对象
      * @param environment 环境上下文
      * @throws Exception
      */
-    void register(Vertx vertx, Environment environment) throws Exception;
+    void register(Environment environment) throws Exception;
 
     /**
      * 注销

@@ -39,13 +39,12 @@ public abstract class Registrars {
     /**
      * 初始化
      *
-     * @param vertx       vertx对象
      * @param environment 环境上下文
      * @throws Exception
      */
-    public static void register(final Vertx vertx, final Environment environment) throws Exception {
+    public static void register(final Environment environment) throws Exception {
         for (Registrar plugin : getPlugins()) {
-            plugin.register(vertx, environment);
+            plugin.register(environment);
         }
     }
 

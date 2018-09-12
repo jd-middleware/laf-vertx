@@ -11,7 +11,7 @@ import io.vertx.core.Vertx;
 public class DaemonRegistrar implements Registrar {
 
     @Override
-    public void register(final Vertx vertx, final Environment environment) throws Exception {
+    public void register(final Environment environment) throws Exception {
         for (Daemon plugin : Daemons.getPlugins()) {
             environment.setup(plugin).start(environment);
         }

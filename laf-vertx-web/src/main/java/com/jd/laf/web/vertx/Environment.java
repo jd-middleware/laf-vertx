@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 /**
@@ -127,9 +128,17 @@ public class Environment {
 
     protected Vertx vertx;
 
+    public Environment() {
+        this(null, null);
+    }
+
+    public Environment(Map<String, Object> parameters) {
+        this(null, parameters);
+    }
+
     public Environment(Vertx vertx, Map<String, Object> parameters) {
         this.vertx = vertx;
-        this.parameters = parameters;
+        this.parameters = parameters == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parameters);
     }
 
     public Vertx getVertx() {
