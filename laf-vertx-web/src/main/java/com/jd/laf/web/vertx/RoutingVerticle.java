@@ -1,6 +1,8 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
+import com.jd.laf.binding.reflect.Reflect;
+import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
@@ -10,17 +12,20 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.jd.laf.binding.reflect.Fields.getFields;
 import static com.jd.laf.web.vertx.Environment.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
@@ -34,6 +39,7 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String ROUTING_CONFIG_FILE = "routing.file";
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final String HTTP_SERVER_OPTION_PREFIX = "http.server.";
+    public static final String HTTP_SERVER_OPTIONS = "http.server.options";
     public static final String HTTP_SERVER_PORT = "port";
     protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
 
@@ -124,21 +130,38 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param env
      */
-    protected HttpServerOptions buildHttpServerOptions(final Environment env) {
-        final Map<String, Object> map = new HashMap<>();
-        final int len = HTTP_SERVER_OPTION_PREFIX.length();
-        env.foreach((a, b) -> {
-            if (a.startsWith(HTTP_SERVER_OPTION_PREFIX)) {
-                map.put(a.substring(len), b);
+    protected HttpServerOptions buildHttpServerOptions(final Environment env) throws ReflectionException {
+        HttpServerOptions options = env.getObject(HTTP_SERVER_OPTIONS, HttpServerOptions.class);
+        if (options == null) {
+            final Map<String, Object> map = new HashMap<>();
+            final int len = HTTP_SERVER_OPTION_PREFIX.length();
+            env.foreach((a, b) -> {
+                if (a.startsWith(HTTP_SERVER_OPTION_PREFIX)) {
+                    map.put(a.substring(len), b);
+                }
+            });
+            Object value = map.get(HTTP_SERVER_PORT);
+            if (value == null) {
+                map.put(HTTP_SERVER_PORT, 8080);
             }
-        });
-        if (!map.containsKey(HTTP_SERVER_PORT)) {
-            map.put(HTTP_SERVER_PORT, 8080);
-        }else {
-            Integer port = Integer.valueOf(map.get(HTTP_SERVER_PORT).toString());
-            map.put(HTTP_SERVER_PORT, port);
+            options = new HttpServerOptions();
+
+            List<Field> fields = getFields(HttpServerOptions.class);
+            if (fields != null) {
+                //遍历字段，设置字段配置
+                for (Field field : fields) {
+                    if (Modifier.isFinal(field.getModifiers())
+                            || Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    value = map.get(field.getName());
+                    if (value != null) {
+                        Reflect.set(options, field, value);
+                    }
+                }
+            }
         }
-        return new HttpServerOptions(new JsonObject(map));
+        return options;
     }
 
     /**
