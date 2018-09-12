@@ -293,7 +293,7 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     public void setParameters(Map<String, Object> parameters) {
-        this.parameters = null;
+        this.parameters = parameters;
     }
 
     public void setFile(String file) {
