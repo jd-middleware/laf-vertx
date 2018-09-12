@@ -134,6 +134,9 @@ public class RoutingVerticle extends AbstractVerticle {
         });
         if (!map.containsKey(HTTP_SERVER_PORT)) {
             map.put(HTTP_SERVER_PORT, 8080);
+        }else {
+            Integer port = Integer.valueOf(map.get(HTTP_SERVER_PORT).toString());
+            map.put(HTTP_SERVER_PORT, port);
         }
         return new HttpServerOptions(new JsonObject(map));
     }
