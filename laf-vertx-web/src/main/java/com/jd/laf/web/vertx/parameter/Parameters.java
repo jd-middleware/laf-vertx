@@ -48,9 +48,7 @@ public class Parameters {
      * @return 参数值
      */
     public static RequestParameter get(final HttpServerRequest request) {
-        return new RequestParameter(valueOf(new QueryParamSupplier(request)),
-                valueOf(new HeaderParamSupplier(request)),
-                valueOf(new FormParamSupplier(request)));
+        return new RequestParameter(request);
     }
 
     /**
@@ -64,21 +62,30 @@ public class Parameters {
         //表单参数
         Parameter form;
 
-        public RequestParameter(Parameter query, Parameter header, Parameter form) {
-            this.query = query;
-            this.header = header;
-            this.form = form;
+        HttpServerRequest request;
+
+        public RequestParameter(HttpServerRequest request) {
+            this.request = request;
         }
 
         public Parameter query() {
+            if (query == null) {
+                query = valueOf(new QueryParamSupplier(request));
+            }
             return query;
         }
 
         public Parameter header() {
+            if (header == null) {
+                header = valueOf(new HeaderParamSupplier(request));
+            }
             return header;
         }
 
         public Parameter form() {
+            if (form == null) {
+                form = valueOf(new FormParamSupplier(request));
+            }
             return form;
         }
     }
