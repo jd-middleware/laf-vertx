@@ -3,12 +3,10 @@ package com.jd.laf.web.vertx.binder;
 import com.jd.laf.binding.binder.Binder;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.annotation.CookieParam;
-import io.vertx.core.MultiMap;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 
 import java.lang.reflect.Field;
-import java.util.*;
 
 /**
  * Cookie读取

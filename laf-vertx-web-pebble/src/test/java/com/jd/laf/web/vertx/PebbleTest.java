@@ -35,7 +35,7 @@ public class PebbleTest {
         client = WebClient.create(vertx);
 
         Map<String, Object> map = new HashMap<>();
-        map.put(SystemContext.TEMPLATE_TYPE, "pebble");
+        map.put(Environment.TEMPLATE_TYPE, "pebble");
         RoutingVerticle verticle = new RoutingVerticle();
         verticle.setParameters(map);
 

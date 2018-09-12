@@ -35,7 +35,7 @@ public class BeetlTest {
         client = WebClient.create(vertx);
 
         Map<String, Object> map = new HashMap<>();
-        map.put(SystemContext.TEMPLATE_TYPE, "beetl");
+        map.put(Environment.TEMPLATE_TYPE, "beetl");
         RoutingVerticle verticle = new RoutingVerticle();
         verticle.setParameters(map);
 

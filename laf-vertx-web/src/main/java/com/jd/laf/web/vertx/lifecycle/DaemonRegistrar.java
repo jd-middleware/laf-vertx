@@ -1,6 +1,6 @@
 package com.jd.laf.web.vertx.lifecycle;
 
-import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.service.Daemon;
 import com.jd.laf.web.vertx.service.Daemons;
 import io.vertx.core.Vertx;
@@ -8,13 +8,12 @@ import io.vertx.core.Vertx;
 /**
  * 服务注册器
  */
-public class DaemonRegister implements Register {
+public class DaemonRegistrar implements Registrar {
 
     @Override
-    public void register(final Vertx vertx, final SystemContext context, final Initializer initializer) throws Exception {
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Daemon plugin : Daemons.getPlugins()) {
-            initializer.accept(plugin);
-            plugin.start(context);
+            environment.setup(plugin).start(environment);
         }
     }
 
@@ -25,6 +24,6 @@ public class DaemonRegister implements Register {
 
     @Override
     public int order() {
-        return 1;
+        return HANDLER + 2;
     }
 }

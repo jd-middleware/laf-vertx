@@ -2,8 +2,8 @@ package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.binding.annotation.Value;
 import com.jd.laf.codec.Base64;
-import com.jd.laf.web.vertx.SystemAware;
-import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.EnvironmentAware;
+import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.security.UserDetail;
 import com.jd.laf.web.vertx.security.UserDetailProvider;
 import com.jd.ssa.domain.UserInfo;
@@ -22,8 +22,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.util.concurrent.ConcurrentMap;
 
-import static com.jd.laf.web.vertx.SystemContext.REMOTE_IP;
-import static com.jd.laf.web.vertx.SystemContext.USER_KEY;
+import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
+import static com.jd.laf.web.vertx.Environment.USER_KEY;
 import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
 import static com.jd.laf.web.vertx.response.Response.HTTP_MOVED_TEMP;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -31,7 +31,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * 单点登录
  */
-public class SsoLoginHandler extends RemoteIpHandler implements SystemAware {
+public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware {
 
     @Value("sso.cache.size")
     @Positive
@@ -61,7 +61,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements SystemAware {
     }
 
     @Override
-    public void setup(final SystemContext context) {
+    public void setup(final Environment environment) {
         cache = new ConcurrentLRUCache(ssoCacheSize);
     }
 

@@ -14,7 +14,7 @@ public interface TemplateProvider {
      * @return
      * @throws Exception
      */
-    TemplateEngine create(SystemContext context) throws Exception;
+    TemplateEngine create(Environment context) throws Exception;
 
     /**
      * 类型

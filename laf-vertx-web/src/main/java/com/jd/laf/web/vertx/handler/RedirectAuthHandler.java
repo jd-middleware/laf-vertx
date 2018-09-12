@@ -1,20 +1,20 @@
 package com.jd.laf.web.vertx.handler;
 
-import com.jd.laf.web.vertx.SystemContext;
-import com.jd.laf.web.vertx.SystemAware;
+import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.RoutingContext;
 
-import static com.jd.laf.web.vertx.SystemContext.*;
+import static com.jd.laf.web.vertx.Environment.*;
 import static io.vertx.ext.web.handler.RedirectAuthHandler.DEFAULT_LOGIN_REDIRECT_URL;
 import static io.vertx.ext.web.handler.RedirectAuthHandler.DEFAULT_RETURN_URL_PARAM;
 
 /**
  * 重定向认证处理器资源
  */
-public class RedirectAuthHandler implements RoutingHandler, SystemAware {
+public class RedirectAuthHandler implements RoutingHandler, EnvironmentAware {
 
     public static final String REDIRECT_AUTH = "redirectAuth";
 
@@ -26,10 +26,10 @@ public class RedirectAuthHandler implements RoutingHandler, SystemAware {
     }
 
     @Override
-    public void setup(final SystemContext context) {
-        AuthProvider authProvider = context.getObject(AUTH_PROVIDER, AuthProvider.class);
-        String redirectUrl = context.getString(AUTH_REDIRECT_URL, DEFAULT_LOGIN_REDIRECT_URL);
-        String returnUrlParam = context.getString(AUTH_RETURN_URL_PARAM, DEFAULT_RETURN_URL_PARAM);
+    public void setup(final Environment environment) {
+        AuthProvider authProvider = environment.getObject(AUTH_PROVIDER, AuthProvider.class);
+        String redirectUrl = environment.getString(AUTH_REDIRECT_URL, DEFAULT_LOGIN_REDIRECT_URL);
+        String returnUrlParam = environment.getString(AUTH_RETURN_URL_PARAM, DEFAULT_RETURN_URL_PARAM);
 
         handler = io.vertx.ext.web.handler.RedirectAuthHandler.create(authProvider, redirectUrl, returnUrlParam);
     }

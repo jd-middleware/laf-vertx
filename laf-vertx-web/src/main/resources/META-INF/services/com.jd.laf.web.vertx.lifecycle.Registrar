@@ -1,0 +1,5 @@
+com.jd.laf.web.vertx.lifecycle.CodecRegistrar
+com.jd.laf.web.vertx.lifecycle.DaemonRegistrar
+com.jd.laf.web.vertx.lifecycle.MessageHandlerRegistrar
+com.jd.laf.web.vertx.lifecycle.RenderRegistrar
+com.jd.laf.web.vertx.lifecycle.RoutingHandlerRegistrar

@@ -1,8 +1,8 @@
 package com.jd.laf.web.vertx.lifecycle;
 
+import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.MessageHandler;
 import com.jd.laf.web.vertx.MessageHandlers;
-import com.jd.laf.web.vertx.SystemContext;
 import io.vertx.core.Vertx;
 
 import java.util.Map;
@@ -10,12 +10,12 @@ import java.util.Map;
 /**
  * 消息处理器注册器
  */
-public class MessageRegister implements Register {
+public class MessageHandlerRegistrar implements Registrar {
 
     @Override
-    public void register(final Vertx vertx, final SystemContext context, final Initializer initializer) throws Exception {
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Map.Entry<String, MessageHandler> entry : MessageHandlers.getPlugins().entrySet()) {
-            initializer.accept(entry.getValue());
+            environment.setup(entry.getValue());
         }
     }
 
@@ -25,6 +25,6 @@ public class MessageRegister implements Register {
 
     @Override
     public int order() {
-        return 3;
+        return HANDLER;
     }
 }

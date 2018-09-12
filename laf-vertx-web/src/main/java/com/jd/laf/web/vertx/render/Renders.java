@@ -1,8 +1,5 @@
 package com.jd.laf.web.vertx.render;
 
-import com.jd.laf.web.vertx.SystemAware;
-import com.jd.laf.web.vertx.SystemContext;
-
 import java.util.*;
 
 /**

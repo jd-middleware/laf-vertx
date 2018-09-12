@@ -1,7 +1,5 @@
 package com.jd.laf.web.vertx;
 
-import com.jd.laf.binding.Binding;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;

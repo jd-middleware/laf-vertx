@@ -1,6 +1,6 @@
 package com.jd.laf.web.vertx.service;
 
-import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.Environment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public abstract class Daemons {
      * @param context
      * @throws Exception
      */
-    public static void start(final SystemContext context) throws Exception {
+    public static void start(final Environment context) throws Exception {
         for (Daemon daemon : getPlugins()) {
             daemon.start(context);
         }

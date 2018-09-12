@@ -43,8 +43,8 @@ public class RoutingVerticleTest {
         resolver.setPrefix("");
         resolver.setTemplateMode("HTML5");
         engine.getThymeleafTemplateEngine().setTemplateResolver(resolver);
-        map.put(SystemContext.TEMPLATE_ENGINE, engine);
-        map.put(SystemContext.TEMPLATE_DIRECTORY,"templates");
+        map.put(Environment.TEMPLATE_ENGINE, engine);
+        map.put(Environment.TEMPLATE_DIRECTORY, "templates");
         RoutingVerticle verticle = new RoutingVerticle();
         verticle.setParameters(map);
 

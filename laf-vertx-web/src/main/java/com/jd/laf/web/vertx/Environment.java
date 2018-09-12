@@ -1,5 +1,6 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.binding.Binding;
 import io.vertx.core.Vertx;
 
 import java.text.ParseException;
@@ -11,7 +12,7 @@ import java.util.function.BiConsumer;
 /**
  * 系统上下文
  */
-public class SystemContext {
+public class Environment {
 
     /**
      * WEB根路径
@@ -126,7 +127,7 @@ public class SystemContext {
 
     protected Vertx vertx;
 
-    public SystemContext(Vertx vertx, Map<String, Object> parameters) {
+    public Environment(Vertx vertx, Map<String, Object> parameters) {
         this.vertx = vertx;
         this.parameters = parameters;
     }
@@ -662,6 +663,23 @@ public class SystemContext {
         if (parameters != null) {
             parameters.put(name, obj);
         }
+    }
+
+    /**
+     * 绑定并且验证
+     *
+     * @param target
+     * @throws Exception
+     */
+    public <T> T setup(final T target) throws Exception {
+        if (target != null) {
+            Binding.bind(this, target);
+            Validates.validate(target);
+            if (target instanceof EnvironmentAware) {
+                ((EnvironmentAware) target).setup(this);
+            }
+        }
+        return target;
     }
 
 }

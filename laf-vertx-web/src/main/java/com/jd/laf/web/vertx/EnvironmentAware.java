@@ -3,12 +3,12 @@ package com.jd.laf.web.vertx;
 /**
  * 系统上下文感知
  */
-public interface SystemAware {
+public interface EnvironmentAware {
 
     /**
      * 通过上下文来构建，单线程调用
      *
-     * @param context 上下文
+     * @param environment 上下文
      */
-    void setup(SystemContext context);
+    void setup(Environment environment);
 }

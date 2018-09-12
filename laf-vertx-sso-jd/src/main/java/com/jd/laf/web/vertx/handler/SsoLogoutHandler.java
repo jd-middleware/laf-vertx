@@ -8,7 +8,7 @@ import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
-import static com.jd.laf.web.vertx.SystemContext.USER_KEY;
+import static com.jd.laf.web.vertx.Environment.USER_KEY;
 import static com.jd.laf.web.vertx.response.Response.HTTP_MOVED_TEMP;
 import static java.nio.charset.StandardCharsets.UTF_8;
 

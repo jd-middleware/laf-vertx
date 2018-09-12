@@ -205,13 +205,13 @@ public class Response {
     protected Object data;
 
     public Response() {
-        this.code=HTTP_OK;
-        this.status=HTTP_OK;
+        this.code = HTTP_OK;
+        this.status = HTTP_OK;
     }
 
     public Response(int code) {
-        this.code=code;
-        this.status=HTTP_OK;
+        this.code = code;
+        this.status = HTTP_OK;
     }
 
     public Response(Object data) {

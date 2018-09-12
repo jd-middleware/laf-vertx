@@ -4,29 +4,26 @@ import com.jd.laf.binding.Binding;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
-import com.jd.laf.web.vertx.lifecycle.Registers;
+import com.jd.laf.web.vertx.lifecycle.Registrars;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.ValidationException;
-import javax.validation.Validator;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.jd.laf.web.vertx.SystemContext.*;
+import static com.jd.laf.web.vertx.Environment.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
 import static com.jd.laf.web.vertx.handler.RenderHandler.render;
@@ -36,6 +33,10 @@ import static com.jd.laf.web.vertx.handler.RenderHandler.render;
  */
 public class RoutingVerticle extends AbstractVerticle {
 
+    public static final String ROUTING_CONFIG_FILE = "routing.file";
+    public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
+    public static final String HTTP_SERVER_OPTION_PREFIX = "http.server.";
+    public static final String HTTP_SERVER_PORT = "port";
     protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
 
     //配置
@@ -44,33 +45,21 @@ public class RoutingVerticle extends AbstractVerticle {
     protected ConcurrentMap<String, Object> parameters = new ConcurrentHashMap<>();
     //资源文件
     protected String file = "routing.xml";
-    //http选项
-    protected HttpServerOptions options;
-    //验证器
-    protected Validator validator;
     //模板引擎
     protected TemplateEngine engine;
     protected HttpServer httpServer;
 
     @Override
     public void start() throws Exception {
+        final Environment environment = new Environment(vertx, parameters);
         //构建配置数据
+        file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
         config = config == null ? inherit(build(file)) : config;
 
-        final SystemContext context = new SystemContext(vertx, parameters);
-
-        //创建验证器
-        buildValidator(context);
         //创建模板引擎
-        buildTemplateEngine(context);
+        buildTemplateEngine(environment);
         //初始化插件
-        Registers.register(vertx, context, o -> {
-            Binding.bind(context, o);
-            validate(validator, o);
-            if (o instanceof SystemAware) {
-                ((SystemAware) o).setup(context);
-            }
-        });
+        Registrars.register(vertx, environment);
 
         Router router = Router.router(vertx);
         //构建业务处理链
@@ -78,11 +67,7 @@ public class RoutingVerticle extends AbstractVerticle {
         //构建消息处理链
         buildConsumers(config);
         //启动服务
-        if (options == null) {
-            options = new HttpServerOptions();
-            options.setPort(8080);
-        }
-        httpServer = vertx.createHttpServer(options);
+        httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
         httpServer.requestHandler(router::accept).listen(event -> {
             if (event.succeeded()) {
                 logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
@@ -106,45 +91,51 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
-        Registers.deregister(vertx);
+        Registrars.deregister(vertx);
     }
 
 
     /**
      * 构建模板引擎
      *
-     * @param context
+     * @param env
      * @throws Exception
      */
-    protected void buildTemplateEngine(SystemContext context) throws Exception {
+    protected void buildTemplateEngine(final Environment env) throws Exception {
         if (engine == null) {
-            engine = (TemplateEngine) context.getObject(TEMPLATE_ENGINE);
+            engine = (TemplateEngine) env.getObject(TEMPLATE_ENGINE);
             if (engine == null) {
-                String type = (String) context.getString(TEMPLATE_TYPE);
+                String type = env.getString(TEMPLATE_TYPE);
                 if (type != null && !type.isEmpty()) {
                     TemplateProvider provider = TemplateProviders.getPlugin(type);
                     if (provider != null) {
-                        engine = provider.create(context);
+                        engine = provider.create(env);
                     }
                 }
             }
         }
         if (engine != null) {
-            context.put(TEMPLATE_ENGINE, engine);
+            env.put(TEMPLATE_ENGINE, engine);
         }
     }
 
     /**
-     * 构建验证器
+     * 构造Http服务选项
+     *
+     * @param env
      */
-    protected void buildValidator(final SystemContext context) {
-        if (validator == null) {
-            validator = (Validator) context.getObject(VALIDATOR);
-            if (validator == null) {
-                validator = Validation.buildDefaultValidatorFactory().getValidator();
+    protected HttpServerOptions buildHttpServerOptions(final Environment env) {
+        final Map<String, Object> map = new HashMap<>();
+        final int len = HTTP_SERVER_OPTION_PREFIX.length();
+        env.foreach((a, b) -> {
+            if (a.startsWith(HTTP_SERVER_OPTION_PREFIX)) {
+                map.put(a.substring(len), b);
             }
+        });
+        if (!map.containsKey(HTTP_SERVER_PORT)) {
+            map.put(HTTP_SERVER_PORT, 8080);
         }
-        context.put(VALIDATOR, validator);
+        return new HttpServerOptions(new JsonObject(map));
     }
 
     /**
@@ -249,7 +240,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //命令
                 command = Commands.getPlugin(name);
                 if (command != null) {
-                    route.handler(new CommandHandler(command, validator));
+                    route.handler(new CommandHandler(command));
                 } else {
                     logger.warning(String.format("handler %s is not found. ignore.", name));
                 }
@@ -297,50 +288,20 @@ public class RoutingVerticle extends AbstractVerticle {
         this.config = config;
     }
 
-    public void setValidator(Validator validator) {
-        this.validator = validator;
-    }
-
     public void setEngine(TemplateEngine engine) {
         this.engine = engine;
     }
 
     public void setParameters(Map<String, Object> parameters) {
         if (parameters != null) {
-            this.parameters.putAll(parameters);
+            this.parameters = new ConcurrentHashMap<>(parameters);
+        } else {
+            this.parameters = new ConcurrentHashMap<>();
         }
     }
 
     public void setFile(String file) {
         this.file = file;
-    }
-
-    public void setOptions(HttpServerOptions options) {
-        this.options = options;
-    }
-
-    /**
-     * 验证
-     *
-     * @param validator
-     * @param target
-     */
-    protected static void validate(final Validator validator, final Object target) {
-        if (validator == null || target == null) {
-            return;
-        }
-        Set<ConstraintViolation<Object>> constraints = validator.validate(target);
-        if (constraints != null && !constraints.isEmpty()) {
-            StringBuilder builder = new StringBuilder(100);
-            int count = 0;
-            for (ConstraintViolation<Object> violation : constraints) {
-                if (count++ > 0) {
-                    builder.append('\n');
-                }
-                builder.append(violation.getMessage());
-            }
-            throw new ValidationException(builder.toString());
-        }
     }
 
     /**
@@ -349,11 +310,9 @@ public class RoutingVerticle extends AbstractVerticle {
     protected static class CommandHandler implements Handler<RoutingContext> {
 
         protected Command command;
-        protected Validator validator;
 
-        public CommandHandler(Command command, Validator validator) {
+        public CommandHandler(Command command) {
             this.command = command;
-            this.validator = validator;
         }
 
         @Override
@@ -364,7 +323,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //绑定
                 Binding.bind(context, clone);
                 //验证
-                validate(validator, clone);
+                Validates.validate(clone);
                 //执行
                 Object obj = clone.execute();
                 Command.Result result = null;

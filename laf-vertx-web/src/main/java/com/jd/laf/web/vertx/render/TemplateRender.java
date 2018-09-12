@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx.render;
 
-import com.jd.laf.web.vertx.SystemAware;
-import com.jd.laf.web.vertx.SystemContext;
+import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
@@ -9,14 +9,14 @@ import io.vertx.ext.web.templ.TemplateEngine;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import static com.jd.laf.web.vertx.SystemContext.*;
+import static com.jd.laf.web.vertx.Environment.*;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_TEMPLATE_DIRECTORY;
 
 /**
  * 模板渲染
  */
-public class TemplateRender implements Render, SystemAware {
+public class TemplateRender implements Render, EnvironmentAware {
 
     protected TemplateEngine engine;
     protected String templateDirectory;
@@ -46,9 +46,9 @@ public class TemplateRender implements Render, SystemAware {
     }
 
     @Override
-    public void setup(final SystemContext context) {
-        engine = context.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
-        templateDirectory = context.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
+    public void setup(final Environment environment) {
+        engine = environment.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
+        templateDirectory = environment.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
         if (!templateDirectory.endsWith(File.separator)) {
             templateDirectory = templateDirectory + File.separator;
         }

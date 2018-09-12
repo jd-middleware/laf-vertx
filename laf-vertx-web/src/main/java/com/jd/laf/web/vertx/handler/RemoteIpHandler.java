@@ -4,7 +4,7 @@ import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 
-import static com.jd.laf.web.vertx.SystemContext.REMOTE_IP;
+import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 
 /**
  * 获取远程IP

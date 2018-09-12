@@ -1,8 +1,8 @@
 package com.jd.laf.web.vertx.lifecycle;
 
+import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.RoutingHandler;
 import com.jd.laf.web.vertx.RoutingHandlers;
-import com.jd.laf.web.vertx.SystemContext;
 import io.vertx.core.Vertx;
 
 import java.util.Map;
@@ -10,17 +10,17 @@ import java.util.Map;
 /**
  * 路由处理器注册器
  */
-public class RoutingRegister implements Register {
+public class RoutingHandlerRegistrar implements Registrar {
 
     @Override
-    public void register(final Vertx vertx, final SystemContext context, final Initializer initializer) throws Exception {
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Map.Entry<String, RoutingHandler> entry : RoutingHandlers.getPlugins().entrySet()) {
-            initializer.accept(entry.getValue());
+            environment.setup(entry.getValue());
         }
     }
 
     @Override
     public int order() {
-        return 2;
+        return HANDLER;
     }
 }
