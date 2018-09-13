@@ -33,26 +33,33 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware {
 
-    @Value("sso.cache.size")
+    @Value(value = "sso.cache.size", defaultValue = "10000")
     @Positive
-    protected int ssoCacheSize = 10000;
+    protected int ssoCacheSize;
     //单点登录的cookie名称
-    @Value("sso.cookie.name")
-    protected String ssoCookieName = "sso.jd.com";
-    @Value("sso.login.url")
-    protected String ssoLoginUrl = "http://ssa.jd.com/sso/login";
+
+    @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
+    protected String ssoCookieName;
+
+    @Value(value = "sso.login.url", defaultValue = "http://ssa.jd.com/sso/login")
+    protected String ssoLoginUrl;
+
     //应用域名
     @Value("app.domain.name")
     protected String appDomainName;
+
     @Value
     @NotNull
     protected SsoService ssoService;
+
     @Value
     @NotNull
     protected UserDetailProvider userDetailProvider;
-    @Value("user.session.key")
+
+    @Value(value = "user.session.key", defaultValue = "userDetail")
     @NotEmpty
-    protected String userSessionKey = "userDetail";
+    protected String userSessionKey;
+
     private ConcurrentMap<String, UserInfo> cache;
 
     @Override
