@@ -121,6 +121,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
         } catch (Exception e) {
             context.fail(e);
         }
+        context.next();
     }
 
     /**
