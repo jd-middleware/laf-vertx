@@ -16,12 +16,10 @@ import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.impl.HttpStatusException;
-import io.vertx.ext.web.impl.ConcurrentLRUCache;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-import java.util.concurrent.ConcurrentMap;
 
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
@@ -61,8 +59,6 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     @NotEmpty
     protected String userSessionKey;
 
-    private ConcurrentMap<String, UserInfo> cache;
-
     @Override
     public String type() {
         return "ssoLogin";
@@ -70,7 +66,6 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
 
     @Override
     public void setup(final Environment environment) {
-        cache = new ConcurrentLRUCache(ssoCacheSize);
     }
 
     @Override
@@ -91,12 +86,8 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                 Cookie cookie = context.getCookie(ssoCookieName);
                 String ticket = cookie == null ? null : cookie.getValue();
                 if (ticket != null && !ticket.isEmpty()) {
-                    //从缓存获取
-                    UserInfo userInfo = getFromCache(ticket);
-                    if (userInfo == null) {
-                        //从服务获取
-                        userInfo = ssoService.verifyTicket(ticket, domain, remoteIP);
-                    }
+                    //session已经做了缓存，直接从服务获取
+                    UserInfo userInfo = ssoService.verifyTicket(ticket, domain, remoteIP);
                     userDetail = userDetailProvider.create();
                     userDetail.setCode(userInfo.getUsername());
                     userDetail.setName(userInfo.getFullname());
@@ -144,20 +135,6 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
         String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
         context.response().putHeader(HttpHeaders.LOCATION, url).
                 setStatusCode(HTTP_MOVED_TEMP).end("Redirecting to " + url + ".");
-    }
-
-    protected UserInfo getFromCache(final String ticket) {
-        if (cache == null) {
-            return null;
-        } else {
-            UserInfo user = cache.get(ticket);
-            if (user != null && System.currentTimeMillis() > user.getExpire()) {
-                cache.remove(ticket);
-                return null;
-            } else {
-                return user;
-            }
-        }
     }
 
     protected static class CookieUser implements UserDetail {
