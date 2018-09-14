@@ -2,10 +2,11 @@ package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.binding.annotation.Value;
 import com.jd.laf.codec.Base64;
-import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.security.UserDetail;
 import com.jd.laf.web.vertx.security.UserDetailProvider;
+import com.jd.laf.web.vertx.security.UserDetailService;
 import com.jd.ssa.domain.UserInfo;
 import com.jd.ssa.exception.SsoException;
 import com.jd.ssa.service.SsoService;
@@ -96,7 +97,17 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                     userDetail.setMobile(userInfo.getMobile());
                     userDetail.setOrgId(userInfo.getOrgId());
                     userDetail.setOrgName(userInfo.getOrgName());
-                    userDetail = userDetailProvider.service().addUser(userDetail);
+                    //系统中查找用户
+                    UserDetailService detailService = userDetailProvider.service();
+                    UserDetail exists = detailService.findByCode(userDetail.getCode());
+                    if (exists == null) {
+                        //新用户，添加到系统中
+                        userDetail = detailService.addUser(userDetail);
+                    } else {
+                        //老用户，获取用户的ID以及角色
+                        userDetail.setId(exists.getId());
+                        userDetail.setRole(exists.getRole());
+                    }
                     //添加到cookie中
                     CookieUser cookieUser = new CookieUser(userDetail.getId(), userDetail.getName(), userDetail.getRole());
                     session.put(userSessionKey, cookieUser);
