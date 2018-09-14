@@ -42,5 +42,6 @@ public class SessionHandler implements RoutingHandler, EnvironmentAware {
     @Override
     public void handle(final RoutingContext context) {
         handler.handle(context);
+        context.next();
     }
 }

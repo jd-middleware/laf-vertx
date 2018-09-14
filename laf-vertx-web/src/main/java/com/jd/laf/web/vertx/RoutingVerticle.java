@@ -56,31 +56,36 @@ public class RoutingVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
-        environment = new Environment(vertx, parameters);
-        //构建配置数据
-        file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
-        config = config == null ? inherit(build(file)) : config;
+        try {
+            environment = new Environment(vertx, parameters);
+            //构建配置数据
+            file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
+            config = config == null ? inherit(build(file)) : config;
 
-        //创建模板引擎
-        buildTemplateEngine(environment);
-        //初始化插件
-        Registrars.register(environment);
+            //创建模板引擎
+            buildTemplateEngine(environment);
+            //初始化插件
+            Registrars.register(environment);
 
-        Router router = Router.router(vertx);
-        //构建业务处理链
-        buildHandlers(router, config);
-        //构建消息处理链
-        buildConsumers(config);
-        //启动服务
-        httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
-        httpServer.requestHandler(router::accept).listen(event -> {
-            if (event.succeeded()) {
-                logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
-            } else {
-                logger.log(Level.SEVERE, String.format("failed starting http server on port %d",
-                        httpServer.actualPort()), event.cause());
-            }
-        });
+            Router router = Router.router(vertx);
+            //构建业务处理链
+            buildHandlers(router, config);
+            //构建消息处理链
+            buildConsumers(config);
+            //启动服务
+            httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
+            httpServer.requestHandler(router::accept).listen(event -> {
+                if (event.succeeded()) {
+                    logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
+                } else {
+                    logger.log(Level.SEVERE, String.format("failed starting http server on port %d",
+                            httpServer.actualPort()), event.cause());
+                }
+            });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "routing verticle starting error ",e);
+            throw e;
+        }
 
     }
 
