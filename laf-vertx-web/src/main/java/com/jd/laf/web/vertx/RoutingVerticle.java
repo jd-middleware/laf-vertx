@@ -83,7 +83,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "routing verticle starting error ",e);
+            logger.log(Level.SEVERE, "routing verticle starting error ", e);
             throw e;
         }
 
@@ -194,37 +194,42 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param router 路由
      * @param config 配置
      */
-    protected void buildHandlers(final Router router, final VertxConfig config) {
+    protected void buildHandlers(final Router router, final VertxConfig config) throws Exception {
         Route route;
-        String path;
-        RouteType type;
+        String path = null;
+        RouteType type = null;
         for (RouteConfig info : config.getRoutes()) {
-            // 过滤掉模板
-            if (info.isRoute()) {
-                continue;
+            try {
+                // 过滤掉模板
+                if (info.isRoute()) {
+                    continue;
+                }
+                type = info.getType();
+                path = info.getPath();
+                path = path != null ? path.trim() : path;
+                //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
+                if (path == null || path.isEmpty()) {
+                    route = router.route();
+                } else if (!info.isRegex()) {
+                    route = type == null ? router.route(path) : router.route(type.getMethod(), path);
+                } else {
+                    route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
+                }
+                if (info.getOrder() != null) {
+                    route.order(info.getOrder());
+                }
+                // 设置能产生的内容
+                buildProduces(route, info);
+                // 设置能消费的内容
+                buildConsumes(route, info);
+                //设置异常处理链
+                buildErrors(route, info);
+                //设置业务处理链
+                buildHandlers(route, info);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, String.format("build handlers error on path %s, type %s", path, type), e);
+                throw e;
             }
-            type = info.getType();
-            path = info.getPath();
-            path = path != null ? path.trim() : path;
-            //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
-            if (path == null || path.isEmpty()) {
-                route = router.route();
-            } else if (!info.isRegex()) {
-                route = type == null ? router.route(path) : router.route(type.getMethod(), path);
-            } else {
-                route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
-            }
-            if (info.getOrder() != null) {
-                route.order(info.getOrder());
-            }
-            // 设置能产生的内容
-            buildProduces(route, info);
-            // 设置能消费的内容
-            buildConsumes(route, info);
-            //设置异常处理链
-            buildErrors(route, info);
-            //设置业务处理链
-            buildHandlers(route, info);
         }
     }
 
