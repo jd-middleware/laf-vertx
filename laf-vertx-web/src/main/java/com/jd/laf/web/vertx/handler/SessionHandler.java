@@ -28,7 +28,7 @@ public class SessionHandler implements RoutingHandler, EnvironmentAware {
 
     @Override
     public void setup(final Environment environment) {
-        boolean localSession = environment.getBoolean(SESSION_LOCAL, false);
+        boolean localSession = environment.getBoolean(SESSION_LOCAL, true);
         String sessionName = environment.getString(SESSION_NAME, DEFAULT_SESSION_NAME);
         String sessionCookieName = environment.getString(SESSION_COOKIE_NAME, DEFAULT_SESSION_COOKIE_NAME);
         long sessionTimeout = environment.getPositive(SESSION_TIMEOUT, DEFAULT_SESSION_TIMEOUT);
@@ -42,6 +42,5 @@ public class SessionHandler implements RoutingHandler, EnvironmentAware {
     @Override
     public void handle(final RoutingContext context) {
         handler.handle(context);
-        context.next();
     }
 }

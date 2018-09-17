@@ -71,16 +71,16 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     @Override
     public void handle(final RoutingContext context) {
         HttpServerRequest request = context.request();
-        /*Session session = context.session();
+        Session session = context.session();
         if (session == null) {
             context.fail(new HttpStatusException(HTTP_INTERNAL_ERROR, "No session - did you forget to include a SessionHandler?"));
             return;
-        }*/
+        }
         String remoteIP = getRemoteIP(request);
         context.put(REMOTE_IP, remoteIP);
         String domain = appDomainName == null || appDomainName.isEmpty() ? request.host() : appDomainName;
         try {
-            UserDetail userDetail = null;//session.get(userSessionKey);
+            UserDetail userDetail = session.get(userSessionKey);
             if (userDetail == null) {
                 //获取单点登录的cookie
                 Cookie cookie = context.getCookie(ssoCookieName);
@@ -108,7 +108,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                     }
                     //添加到cookie中
                     CookieUser cookieUser = new CookieUser(userDetail.getId(), userDetail.getName(), userDetail.getRole());
-                    //session.put(userSessionKey, cookieUser);
+                    session.put(userSessionKey, cookieUser);
                 } else {
                     //没有单点登录信息，重新定向到登录页面
                     redirect2Login(context);
