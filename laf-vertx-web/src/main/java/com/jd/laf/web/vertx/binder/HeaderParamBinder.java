@@ -14,11 +14,14 @@ public class HeaderParamBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         HeaderParam annotation = (HeaderParam) context.getAnnotation();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
         Field field = context.getField();
         String name = annotation.value();
         name = name == null || name.isEmpty() ? field.getName() : name;
-        return context.bind(ctx.request().getHeader(name));
+        return context.bind(((RoutingContext) source).request().getHeader(name));
     }
 
     @Override

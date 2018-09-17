@@ -15,11 +15,14 @@ public class SessionParamBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         SessionParam annotation = (SessionParam) context.getAnnotation();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
         Field field = context.getField();
         String name = annotation.value();
         name = name == null || name.isEmpty() ? field.getName() : name;
-        Session session = ctx.session();
+        Session session = ((RoutingContext) source).session();
         return session == null ? false : context.bind(session.get(name));
     }
 

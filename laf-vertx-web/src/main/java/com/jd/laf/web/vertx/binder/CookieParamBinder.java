@@ -15,11 +15,14 @@ public class CookieParamBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         CookieParam annotation = (CookieParam) context.getAnnotation();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
         Field field = context.getField();
         String name = annotation.value();
         name = name == null || name.isEmpty() ? field.getName() : name;
-        Cookie cookie = ctx.getCookie(name);
+        Cookie cookie = ((RoutingContext) source).getCookie(name);
         return cookie == null ? false : context.bind(cookie.getValue());
     }
 

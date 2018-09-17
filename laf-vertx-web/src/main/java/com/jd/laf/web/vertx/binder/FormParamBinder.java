@@ -16,12 +16,15 @@ public class FormParamBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         FormParam annotation = (FormParam) context.getAnnotation();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
         Field field = context.getField();
         String name = annotation.value();
         name = name == null || name.isEmpty() ? field.getName() : name;
         Class<?> type = field.getType();
-        MultiMap attributes = ctx.request().formAttributes();
+        MultiMap attributes = ((RoutingContext) source).request().formAttributes();
         if (Collection.class.isAssignableFrom(type)) {
             //集合
             return context.bind(attributes.getAll(name));

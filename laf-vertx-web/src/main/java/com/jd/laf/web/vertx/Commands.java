@@ -22,6 +22,16 @@ public abstract class Commands {
         if (name == null) {
             return null;
         }
+        //获取适合的插件
+        return getPlugins().get(name);
+    }
+
+    /**
+     * 获取插件
+     *
+     * @return
+     */
+    public static Map<String, Command> getPlugins() {
         if (plugins == null) {
             //加载插件
             synchronized (Commands.class) {
@@ -34,9 +44,7 @@ public abstract class Commands {
                 }
             }
         }
-
-        //获取适合的插件
-        return plugins.get(name);
+        return plugins;
     }
 
 }

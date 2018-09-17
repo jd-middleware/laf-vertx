@@ -1,6 +1,5 @@
 com.jd.laf.web.vertx.handler.BasicAuthHandler
 com.jd.laf.web.vertx.handler.BodyHandler
-com.jd.laf.web.vertx.handler.ContextHandler
 com.jd.laf.web.vertx.handler.CookieHandler
 com.jd.laf.web.vertx.handler.FormLoginHandler
 com.jd.laf.web.vertx.handler.RedirectAuthHandler

@@ -7,6 +7,8 @@ import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.lifecycle.Registrars;
+import com.jd.laf.web.vertx.pool.Pool;
+import com.jd.laf.web.vertx.pool.PoolFactories;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -69,7 +71,7 @@ public class RoutingVerticle extends AbstractVerticle {
 
             Router router = Router.router(vertx);
             //构建业务处理链
-            buildHandlers(router, config);
+            buildHandlers(router, config, environment);
             //构建消息处理链
             buildConsumers(config);
             //启动服务
@@ -83,7 +85,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "routing verticle starting error ",e);
+            logger.log(Level.SEVERE, "routing verticle starting error ", e);
             throw e;
         }
 
@@ -193,8 +195,10 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param router 路由
      * @param config 配置
+     * @param env    环境
+     * @throws Exception
      */
-    protected void buildHandlers(final Router router, final VertxConfig config) {
+    protected void buildHandlers(final Router router, final VertxConfig config, final Environment env) throws Exception {
         Route route;
         String path;
         RouteType type;
@@ -224,7 +228,7 @@ public class RoutingVerticle extends AbstractVerticle {
             //设置异常处理链
             buildErrors(route, info);
             //设置业务处理链
-            buildHandlers(route, info);
+            buildHandlers(route, info, environment);
         }
     }
 
@@ -253,8 +257,10 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param route  路由对象
      * @param config 路由配置
+     * @param env    环境
+     * @throws Exception
      */
-    protected void buildHandlers(final Route route, final RouteConfig config) {
+    protected void buildHandlers(final Route route, final RouteConfig config, final Environment env) throws Exception {
         RoutingHandler handler;
         Command command;
         //上下文处理
@@ -271,7 +277,25 @@ public class RoutingVerticle extends AbstractVerticle {
                 //命令
                 command = Commands.getPlugin(name);
                 if (command != null) {
-                    route.handler(new CommandHandler(command));
+                    //对象池
+                    int capacity = env.getInteger(COMMAND_POOL_CAPACITY, 500);
+                    int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 0);
+                    Pool<Command> pool = null;
+                    if (capacity > 0) {
+                        //构造对象池
+                        pool = PoolFactories.getPlugin().create(capacity);
+                        if (initializeSize > 0) {
+                            int min = Math.min(initializeSize, capacity);
+                            Command obj;
+                            //初始化对象池大小
+                            for (int i = 0; i < min; i++) {
+                                obj = command.getClass().newInstance();
+                                Binding.bind(env, obj);
+                                pool.release(obj);
+                            }
+                        }
+                    }
+                    route.handler(new CommandHandler(command, pool, config, environment));
                 } else {
                     logger.warning(String.format("handler %s is not found. ignore.", name));
                 }
@@ -335,19 +359,38 @@ public class RoutingVerticle extends AbstractVerticle {
      * 命令处理器
      */
     protected static class CommandHandler implements Handler<RoutingContext> {
-
+        //命令
         protected Command command;
+        //对象池
+        protected Pool<Command> pool;
+        //配置
+        protected RouteConfig config;
+        //环境
+        protected Environment environment;
 
-        public CommandHandler(Command command) {
+
+        public CommandHandler(Command command, Pool pool, RouteConfig config, Environment environment) {
             this.command = command;
+            this.config = config;
+            this.pool = pool;
+            this.environment = environment;
         }
 
         @Override
         public void handle(final RoutingContext context) {
+            Command clone = null;
             try {
+                if (config.getTemplate() != null && !config.getTemplate().isEmpty()) {
+                    context.put(TEMPLATE, config.getTemplate());
+                }
                 //克隆一份
-                Command clone = command.getClass().newInstance();
-                //绑定
+                clone = pool == null ? null : pool.get();
+                if (clone == null) {
+                    clone = command.getClass().newInstance();
+                    //使用环境绑定
+                    Binding.bind(environment, clone);
+                }
+                //使用上下文绑定
                 Binding.bind(context, clone);
                 //验证
                 Validates.validate(clone);
@@ -392,6 +435,10 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             } catch (Exception e) {
                 context.fail(e);
+            } finally {
+                if (pool != null && clone != null) {
+                    pool.release(clone);
+                }
             }
         }
     }

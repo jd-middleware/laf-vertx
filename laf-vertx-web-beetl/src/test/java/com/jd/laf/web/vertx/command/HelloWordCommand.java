@@ -17,4 +17,9 @@ public class HelloWordCommand implements Command {
     public String type() {
         return "helloWorld";
     }
+
+    @Override
+    public void clean() {
+        echo = null;
+    }
 }

@@ -20,7 +20,11 @@ public class BodyBinder implements Binder {
     public boolean bind(final Context context) throws ReflectionException {
         Body annotation = (Body) context.getAnnotation();
         Field field = context.getField();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
+        RoutingContext ctx = (RoutingContext) source;
 
         BodyType type = annotation.type();
         if (type == BodyType.DETECT) {

@@ -16,13 +16,16 @@ public class QueryParamBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         QueryParam annotation = (QueryParam) context.getAnnotation();
-        RoutingContext ctx = (RoutingContext) context.getSource();
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
         Field field = context.getField();
         String name = annotation.value();
         name = name == null || name.isEmpty() ? field.getName() : name;
 
         Class<?> type = field.getType();
-        MultiMap params = ctx.request().params();
+        MultiMap params = ((RoutingContext) source).request().params();
         if (Collection.class.isAssignableFrom(type)) {
             return context.bind(params.getAll(name));
         } else {

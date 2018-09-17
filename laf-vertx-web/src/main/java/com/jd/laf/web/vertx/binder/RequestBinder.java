@@ -11,8 +11,11 @@ import io.vertx.ext.web.RoutingContext;
 public class RequestBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
-        RoutingContext ctx = (RoutingContext) context.getSource();
-        return context.bind(ctx.request());
+        Object source = context.getSource();
+        if (!(source instanceof RoutingContext)) {
+            return false;
+        }
+        return context.bind(((RoutingContext) source).request());
     }
 
     @Override

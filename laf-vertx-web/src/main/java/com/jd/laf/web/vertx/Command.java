@@ -1,9 +1,11 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.web.vertx.pool.Cleanable;
+
 /**
  * 命令接口
  */
-public interface Command<T> {
+public interface Command<T> extends Cloneable, Cleanable {
 
     /**
      * 结果

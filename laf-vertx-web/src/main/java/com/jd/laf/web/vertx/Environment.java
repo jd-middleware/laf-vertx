@@ -44,6 +44,16 @@ public class Environment {
     public static final String TEMPLATE = "template";
 
     /**
+     * 命令对象池大小
+     */
+    public static final String COMMAND_POOL_CAPACITY = "command.pool.capacity";
+
+    /**
+     * 命令对象池初始化大小
+     */
+    public static final String COMMAND_POOL_INITIALIZE_SIZE = "command.pool.initialize.size";
+
+    /**
      * 本地会话
      */
     public static final String SESSION_LOCAL = "session.local";
