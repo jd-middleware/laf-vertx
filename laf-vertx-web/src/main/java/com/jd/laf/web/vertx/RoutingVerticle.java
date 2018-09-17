@@ -426,9 +426,9 @@ public class RoutingVerticle extends AbstractVerticle {
                             break;
                         case END:
                             //渲染输出
+                            render(context);
                             break;
                         case HOLD:
-                            render(context);
                             //挂住
                             break;
                         default:
