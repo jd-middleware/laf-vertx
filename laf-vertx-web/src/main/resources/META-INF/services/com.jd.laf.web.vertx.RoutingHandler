@@ -10,3 +10,4 @@ com.jd.laf.web.vertx.handler.StaticHandler
 com.jd.laf.web.vertx.handler.TemplateHandler
 com.jd.laf.web.vertx.handler.TimeoutHandler
 com.jd.laf.web.vertx.handler.UserSessionHandler
+com.jd.laf.web.vertx.handler.NewSessionHandler
