@@ -1,9 +1,14 @@
 package com.jd.laf.web.vertx.security;
 
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
+
+import java.nio.charset.StandardCharsets;
+
 /**
  * 用户详情接口
  */
-public interface UserDetail {
+public interface UserDetail extends ClusterSerializable {
 
     /**
      * 获取用户ID
@@ -116,4 +121,20 @@ public interface UserDetail {
      * @param role
      */
     void setRole(int role);
+
+    @Override
+    default void writeToBuffer(final Buffer buffer) {
+        byte[] nameBytes = getName().getBytes(StandardCharsets.UTF_8);
+        buffer.appendLong(getId()).appendInt(getRole()).appendInt(nameBytes.length).appendBytes(nameBytes);
+    }
+
+    @Override
+    default int readFromBuffer(final int pos, final Buffer buffer) {
+        setId(buffer.getLong(pos));
+        setRole(buffer.getInt(pos + 8));
+        int length = buffer.getInt(pos + 12);
+        byte[] bytes = buffer.getBytes(pos + 16, pos + 16 + length);
+        setName(new String(bytes, StandardCharsets.UTF_8));
+        return pos + 16 + length;
+    }
 }
