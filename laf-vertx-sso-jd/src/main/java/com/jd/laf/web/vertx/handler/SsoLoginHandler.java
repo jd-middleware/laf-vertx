@@ -10,10 +10,8 @@ import com.jd.laf.web.vertx.security.UserDetailService;
 import com.jd.ssa.domain.UserInfo;
 import com.jd.ssa.exception.SsoException;
 import com.jd.ssa.service.SsoService;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
@@ -22,9 +20,6 @@ import io.vertx.ext.web.handler.impl.HttpStatusException;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
-
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
@@ -112,8 +107,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                         userDetail.setRole(exists.getRole());
                     }
                     //添加到cookie中
-                    CookieUser cookieUser = new CookieUser(userDetail.getId(), userDetail.getName(), userDetail.getRole());
-                    session.put(userSessionKey, cookieUser);
+                    session.put(userSessionKey, userDetail);
                 } else {
                     //没有单点登录信息，重新定向到登录页面
                     redirect2Login(context);
@@ -140,120 +134,6 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
         String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
         context.response().putHeader(HttpHeaders.LOCATION, url).
                 setStatusCode(HTTP_MOVED_TEMP).end("Redirecting to " + url + ".");
-    }
-
-    protected static class CookieUser implements UserDetail, ClusterSerializable {
-
-        protected long id;
-
-        protected String name;
-
-        protected int role;
-
-        public CookieUser() {
-        }
-
-        public CookieUser(long id, String name, int role) {
-            this.id = id;
-            this.name = name;
-            this.role = role;
-        }
-
-        @Override
-        public void writeToBuffer(Buffer buffer) {
-            byte[] nameBytes = name.getBytes(StandardCharsets.UTF_8);
-            buffer.appendLong(id).appendInt(role).appendInt(nameBytes.length).appendBytes(nameBytes);
-        }
-
-        @Override
-        public int readFromBuffer(int pos, Buffer buffer) {
-            this.id = buffer.getLong(pos);
-            this.role = buffer.getInt(pos + 8);
-            int length = buffer.getInt(pos + 12);
-            byte[] bytes = buffer.getBytes(pos + 16, pos + 16 + length);
-            this.name = new String(bytes, StandardCharsets.UTF_8);
-            return pos + 16 + length;
-        }
-
-        @Override
-        public long getId() {
-            return id;
-        }
-
-        @Override
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        @Override
-        public String getCode() {
-            return null;
-        }
-
-        @Override
-        public void setCode(String code) {
-
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String getOrgId() {
-            return null;
-        }
-
-        @Override
-        public void setOrgId(String orgId) {
-
-        }
-
-        @Override
-        public String getOrgName() {
-            return null;
-        }
-
-        @Override
-        public void setOrgName(String orgName) {
-
-        }
-
-        @Override
-        public String getEmail() {
-            return null;
-        }
-
-        @Override
-        public void setEmail(String email) {
-
-        }
-
-        @Override
-        public String getMobile() {
-            return null;
-        }
-
-        @Override
-        public void setMobile(String mobile) {
-
-        }
-
-        @Override
-        public int getRole() {
-            return role;
-        }
-
-        @Override
-        public void setRole(int role) {
-            this.role = role;
-        }
     }
 
 }
