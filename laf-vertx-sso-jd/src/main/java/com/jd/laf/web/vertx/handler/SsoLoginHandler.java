@@ -169,10 +169,10 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
         public int readFromBuffer(int pos, Buffer buffer) {
             this.id = buffer.getLong(pos);
             this.role = buffer.getInt(pos + 8);
-            int p = buffer.getInt(pos + 12);
-            byte[] bytes = buffer.getBytes(pos + 16, pos + 16 + p);
+            int length = buffer.getInt(pos + 12);
+            byte[] bytes = buffer.getBytes(pos + 16, pos + 16 + length);
             this.name = new String(bytes, StandardCharsets.UTF_8);
-            return pos + 16 + p;
+            return pos + 16 + length;
         }
 
         @Override
