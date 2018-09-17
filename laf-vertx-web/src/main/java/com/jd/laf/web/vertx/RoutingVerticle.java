@@ -221,14 +221,19 @@ public class RoutingVerticle extends AbstractVerticle {
             if (info.getOrder() != null) {
                 route.order(info.getOrder());
             }
-            // 设置能产生的内容
-            buildProduces(route, info);
-            // 设置能消费的内容
-            buildConsumes(route, info);
-            //设置异常处理链
-            buildErrors(route, info);
-            //设置业务处理链
-            buildHandlers(route, info, environment);
+            try {
+                // 设置能产生的内容
+                buildProduces(route, info);
+                // 设置能消费的内容
+                buildConsumes(route, info);
+                //设置异常处理链
+                buildErrors(route, info);
+                //设置业务处理链
+                buildHandlers(route, info, environment);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, String.format("build handlers error on path %s, type %s", path, type), e);
+                throw e;
+            }
         }
     }
 
