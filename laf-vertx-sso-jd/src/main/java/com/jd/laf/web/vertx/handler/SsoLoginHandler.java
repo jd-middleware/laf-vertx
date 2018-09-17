@@ -10,8 +10,10 @@ import com.jd.laf.web.vertx.security.UserDetailService;
 import com.jd.ssa.domain.UserInfo;
 import com.jd.ssa.exception.SsoException;
 import com.jd.ssa.service.SsoService;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.shareddata.impl.ClusterSerializable;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
@@ -20,6 +22,9 @@ import io.vertx.ext.web.handler.impl.HttpStatusException;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
@@ -137,7 +142,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                 setStatusCode(HTTP_MOVED_TEMP).end("Redirecting to " + url + ".");
     }
 
-    protected static class CookieUser implements UserDetail {
+    protected static class CookieUser implements UserDetail, ClusterSerializable {
 
         protected long id;
 
@@ -152,6 +157,22 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
             this.id = id;
             this.name = name;
             this.role = role;
+        }
+
+        @Override
+        public void writeToBuffer(Buffer buffer) {
+            byte[] nameBytes = name.getBytes(StandardCharsets.UTF_8);
+            buffer.appendLong(id).appendInt(role).appendBytes(nameBytes);
+        }
+
+        @Override
+        public int readFromBuffer(int pos, Buffer buffer) {
+            this.id = buffer.getLong(pos);
+            this.role = buffer.getInt(pos + 8);
+            int p = buffer.getInt(pos + 12);
+            byte[] bytes = buffer.getBytes(pos + 16, pos + 16+p);
+            this.name = new String(bytes, StandardCharsets.UTF_8);
+            return pos + 16+p;
         }
 
         @Override
