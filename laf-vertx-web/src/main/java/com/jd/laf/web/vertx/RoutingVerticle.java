@@ -284,7 +284,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (command != null) {
                     //对象池
                     int capacity = env.getInteger(COMMAND_POOL_CAPACITY, 500);
-                    int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 0);
+                    int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
                     Pool<Command> pool = null;
                     if (capacity > 0) {
                         //构造对象池
