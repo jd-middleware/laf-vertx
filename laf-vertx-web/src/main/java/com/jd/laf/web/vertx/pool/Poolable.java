@@ -1,9 +1,9 @@
 package com.jd.laf.web.vertx.pool;
 
 /**
- * 清理接口
+ * 对象可池化接口
  */
-public interface Cleanable {
+public interface Poolable {
 
     /**
      * 清理数据

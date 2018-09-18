@@ -26,8 +26,8 @@ public class LinkedQueuePool<T> implements Pool<T> {
     @Override
     public void release(T t) {
         if (t != null) {
-            if (t instanceof Cleanable) {
-                ((Cleanable) t).clean();
+            if (t instanceof Poolable) {
+                ((Poolable) t).clean();
             }
             queue.offer(t);
         }

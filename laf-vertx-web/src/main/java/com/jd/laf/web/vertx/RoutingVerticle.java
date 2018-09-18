@@ -9,6 +9,7 @@ import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.lifecycle.Registrars;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.PoolFactories;
+import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -297,23 +298,28 @@ public class RoutingVerticle extends AbstractVerticle {
                 //命令
                 command = Commands.getPlugin(name);
                 if (command != null) {
-                    //对象池
-                    int capacity = env.getInteger(COMMAND_POOL_CAPACITY, 500);
-                    int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
                     Pool<Command> pool = null;
-                    if (capacity > 0) {
-                        //构造对象池
-                        pool = PoolFactories.getPlugin().create(capacity);
-                        if (initializeSize > 0) {
-                            int min = Math.min(initializeSize, capacity);
-                            Command obj;
-                            //初始化对象池大小
-                            for (int i = 0; i < min; i++) {
-                                obj = command.getClass().newInstance();
-                                Binding.bind(env, obj);
-                                pool.release(obj);
+                    //判断命令是否需要池化
+                    if (command instanceof Poolable) {
+                        //对象池
+                        int capacity = env.getInteger(COMMAND_POOL_CAPACITY, 500);
+                        int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
+                        if (capacity > 0) {
+                            //构造对象池
+                            pool = PoolFactories.getPlugin().create(capacity);
+                            if (initializeSize > 0) {
+                                int min = Math.min(initializeSize, capacity);
+                                Command obj;
+                                //初始化对象池大小
+                                for (int i = 0; i < min; i++) {
+                                    obj = command.getClass().newInstance();
+                                    Binding.bind(env, obj);
+                                    pool.release(obj);
+                                }
                             }
                         }
+                    } else {
+                        pool = null;
                     }
                     route.handler(new CommandHandler(command, pool));
                 } else {
