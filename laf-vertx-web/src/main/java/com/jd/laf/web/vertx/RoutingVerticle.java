@@ -6,6 +6,7 @@ import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
+import com.jd.laf.web.vertx.context.RoutingContextWrapper;
 import com.jd.laf.web.vertx.lifecycle.Registrars;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.PoolFactories;
@@ -272,9 +273,10 @@ public class RoutingVerticle extends AbstractVerticle {
         for (String name : config.getHandlers()) {
             handler = RoutingHandlers.getPlugin(name);
             if (handler != null) {
+                //TODO handler的模板没有设置进去
                 if (handler instanceof RouteAware) {
-                    //感知路由配置，创建新对象
-                    handler = ((RouteAware<RoutingHandler>) handler).create();
+                    //感知路由配置，复制一份对象，确保环境初始化的设置
+                    handler = ((RouteAware) handler).clone();
                     ((RouteAware) handler).setup(config);
                 }
                 route.handler(handler);
@@ -373,7 +375,6 @@ public class RoutingVerticle extends AbstractVerticle {
         //环境
         protected Environment environment;
 
-
         public CommandHandler(Command command, Pool pool, RouteConfig config, Environment environment) {
             this.command = command;
             this.config = config;
@@ -385,18 +386,13 @@ public class RoutingVerticle extends AbstractVerticle {
         public void handle(final RoutingContext context) {
             Command clone = null;
             try {
-                if (config.getTemplate() != null && !config.getTemplate().isEmpty()) {
-                    context.put(TEMPLATE, config.getTemplate());
-                }
                 //克隆一份
                 clone = pool == null ? null : pool.get();
                 if (clone == null) {
                     clone = command.getClass().newInstance();
-                    //使用环境绑定
-                    Binding.bind(environment, clone);
                 }
-                //使用上下文绑定
-                Binding.bind(context, clone);
+                //使用上下文和环境绑定，减少Map对象复制
+                Binding.bind(new RoutingContextWrapper(context, environment), clone);
                 //验证
                 Validates.validate(clone);
                 //执行
@@ -414,6 +410,8 @@ public class RoutingVerticle extends AbstractVerticle {
                     if (result.getTemplate() != null && !result.getTemplate().isEmpty()) {
                         //存放模板
                         context.put(TEMPLATE, result.getTemplate());
+                    } else if (config.getTemplate() != null && !config.getTemplate().isEmpty()) {
+                        context.put(TEMPLATE, config.getTemplate());
                     }
                     if (result.getKey() != null) {
                         //存放实际的返回结果
@@ -447,5 +445,6 @@ public class RoutingVerticle extends AbstractVerticle {
             }
         }
     }
+
 
 }

@@ -5,7 +5,7 @@ import com.jd.laf.web.vertx.config.RouteConfig;
 /**
  * 路由配置感知
  */
-public interface RouteAware<T> {
+public interface RouteAware<T extends RoutingHandler> extends Cloneable {
 
     /**
      * 根据路由配置进行设置
@@ -19,6 +19,6 @@ public interface RouteAware<T> {
      *
      * @return
      */
-    T create();
+    T clone();
 
 }

@@ -26,8 +26,12 @@ public class TimeoutHandler implements RoutingHandler, RouteAware<TimeoutHandler
     }
 
     @Override
-    public TimeoutHandler create() {
-        return new TimeoutHandler();
+    public TimeoutHandler clone() {
+        try {
+            return (TimeoutHandler) super.clone();
+        } catch (CloneNotSupportedException e) {
+            return null;
+        }
     }
 
     @Override

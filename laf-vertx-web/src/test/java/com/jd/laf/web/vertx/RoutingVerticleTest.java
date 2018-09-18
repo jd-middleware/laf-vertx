@@ -1,5 +1,6 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.web.vertx.service.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.unit.TestContext;
@@ -45,6 +46,7 @@ public class RoutingVerticleTest {
         engine.getThymeleafTemplateEngine().setTemplateResolver(resolver);
         map.put(Environment.TEMPLATE_ENGINE, engine);
         map.put(Environment.TEMPLATE_DIRECTORY, "templates");
+        map.put("userService", new UserService());
         RoutingVerticle verticle = new RoutingVerticle();
         verticle.setParameters(map);
 

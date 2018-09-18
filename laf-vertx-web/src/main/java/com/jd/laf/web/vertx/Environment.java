@@ -178,8 +178,8 @@ public class Environment {
      * @param name 参数名称
      * @return 参数对象
      */
-    public Object getObject(final String name) {
-        return parameters == null ? null : parameters.get(name);
+    public <T> T getObject(final String name) {
+        return (T) (parameters == null ? null : parameters.get(name));
     }
 
     /**
