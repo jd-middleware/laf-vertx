@@ -71,7 +71,7 @@ public class RoutingVerticle extends AbstractVerticle {
             //初始化插件
             Registrars.register(environment);
 
-            Router router = new MyRouter(vertx, environment);
+            Router router = createRouter();
             //构建业务处理链
             buildHandlers(router, config, environment);
             //构建消息处理链
@@ -91,6 +91,15 @@ public class RoutingVerticle extends AbstractVerticle {
             throw e;
         }
 
+    }
+
+    /**
+     * 创建路由管理器
+     *
+     * @return
+     */
+    protected Router createRouter() {
+        return new MyRouter(vertx, environment);
     }
 
     @Override
@@ -306,7 +315,7 @@ public class RoutingVerticle extends AbstractVerticle {
                             }
                         }
                     }
-                    route.handler(new CommandHandler(command, pool, config, environment));
+                    route.handler(new CommandHandler(command, pool));
                 } else {
                     logger.warning(String.format("handler %s is not found. ignore.", name));
                 }
@@ -374,16 +383,10 @@ public class RoutingVerticle extends AbstractVerticle {
         protected Command command;
         //对象池
         protected Pool<Command> pool;
-        //配置
-        protected RouteConfig config;
-        //环境
-        protected Environment environment;
 
-        public CommandHandler(Command command, Pool pool, RouteConfig config, Environment environment) {
+        public CommandHandler(Command command, Pool pool) {
             this.command = command;
-            this.config = config;
             this.pool = pool;
-            this.environment = environment;
         }
 
         @Override
@@ -414,8 +417,6 @@ public class RoutingVerticle extends AbstractVerticle {
                     if (result.getTemplate() != null && !result.getTemplate().isEmpty()) {
                         //存放模板
                         context.put(TEMPLATE, result.getTemplate());
-                    } else if (config.getTemplate() != null && !config.getTemplate().isEmpty()) {
-                        context.put(TEMPLATE, config.getTemplate());
                     }
                     if (result.getKey() != null) {
                         //存放实际的返回结果
