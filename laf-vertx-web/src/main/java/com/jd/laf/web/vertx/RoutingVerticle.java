@@ -6,7 +6,6 @@ import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
-import com.jd.laf.web.vertx.context.RoutingContextWrapper;
 import com.jd.laf.web.vertx.lifecycle.Registrars;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.PoolFactories;
@@ -18,6 +17,8 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.impl.MyRoute;
+import io.vertx.ext.web.impl.MyRouter;
 import io.vertx.ext.web.templ.TemplateEngine;
 
 import java.lang.reflect.Field;
@@ -70,7 +71,7 @@ public class RoutingVerticle extends AbstractVerticle {
             //初始化插件
             Registrars.register(environment);
 
-            Router router = Router.router(vertx);
+            Router router = new MyRouter(vertx, environment);
             //构建业务处理链
             buildHandlers(router, config, environment);
             //构建消息处理链
@@ -222,6 +223,10 @@ public class RoutingVerticle extends AbstractVerticle {
             if (info.getOrder() != null) {
                 route.order(info.getOrder());
             }
+            //设置路由配置
+            if (route instanceof MyRoute) {
+                ((MyRoute) route).setConfig(info);
+            }
             try {
                 // 设置能产生的内容
                 buildProduces(route, info);
@@ -273,7 +278,6 @@ public class RoutingVerticle extends AbstractVerticle {
         for (String name : config.getHandlers()) {
             handler = RoutingHandlers.getPlugin(name);
             if (handler != null) {
-                //TODO handler的模板没有设置进去
                 if (handler instanceof RouteAware) {
                     //感知路由配置，复制一份对象，确保环境初始化的设置
                     handler = ((RouteAware) handler).clone();
@@ -391,8 +395,8 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (clone == null) {
                     clone = command.getClass().newInstance();
                 }
-                //使用上下文和环境绑定，减少Map对象复制
-                Binding.bind(new RoutingContextWrapper(context, environment), clone);
+                //使用上下文和环境绑定
+                Binding.bind(context, clone);
                 //验证
                 Validates.validate(clone);
                 //执行
