@@ -23,7 +23,17 @@ public interface Command<T> extends Cloneable {
      *
      * @return
      */
-    String type();
+    default String type() {
+        String name = this.getClass().getSimpleName();
+        int length = name.length();
+        if (name.endsWith("Command")) {
+            length -= 7;
+        }
+        char[] chars = new char[length];
+        name.getChars(0, length, chars, 0);
+        chars[0] = Character.toLowerCase(chars[0]);
+        return new String(chars);
+    }
 
     /**
      * 返回结果
