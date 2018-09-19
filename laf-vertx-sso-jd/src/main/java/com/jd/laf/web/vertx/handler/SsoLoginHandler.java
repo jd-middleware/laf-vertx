@@ -24,7 +24,7 @@ import javax.validation.constraints.Positive;
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
 import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
-import static com.jd.laf.web.vertx.response.Response.HTTP_MOVED_TEMP;
+import static com.jd.laf.web.vertx.response.Response.HTTP_UNAUTHORIZED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -39,6 +39,9 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
 
     @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
     protected String ssoCookieName;
+
+    @Value(value = "sso.login.url", defaultValue = "http://ssa.jd.com/sso/login")
+    protected String ssoLoginUrl;
 
     //应用域名
     @Value("app.domain.name")
@@ -107,7 +110,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                     session.put(userSessionKey, userDetail);
                 } else {
                     //没有单点登录信息，重新定向到登录页面
-                    context.next();
+                    redirect2Login(context);
                     return;
                 }
             }
@@ -115,13 +118,22 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
             context.put(USER_KEY, userDetail);
         } catch (SsoException e) {
             //单独登录认证错误，重新定向到登录页面
-            context.next();
-            //redirect2Login(context);
+            redirect2Login(context);
         } catch (Exception e) {
             context.fail(e);
         }
         context.next();
     }
 
+    /**
+     * 重定向登录页面
+     *
+     * @param context
+     */
+    protected void redirect2Login(final RoutingContext context) {
+        String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
+        context.response().putHeader(HttpHeaders.LOCATION, url).
+                setStatusCode(HTTP_UNAUTHORIZED).end("Redirecting to " + url + ".");
+    }
 
 }
