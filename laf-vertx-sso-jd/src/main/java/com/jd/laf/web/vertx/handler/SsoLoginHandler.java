@@ -24,8 +24,6 @@ import javax.validation.constraints.Positive;
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
 import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
-import static com.jd.laf.web.vertx.response.Response.HTTP_UNAUTHORIZED;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 单点登录
@@ -58,6 +56,9 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     @Value(value = "user.session.key", defaultValue = "userDetail")
     @NotEmpty
     protected String userSessionKey;
+
+    @Value(value = "sso.nologin.end.status", defaultValue = "401")
+    protected int noLoginEndStatus;
 
     @Override
     public String type() {
@@ -133,7 +134,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     protected void redirect2Login(final RoutingContext context) {
         String url = ssoLoginUrl;
         context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(HTTP_UNAUTHORIZED).end("Redirecting to " + url + ".");
+                setStatusCode(noLoginEndStatus).end("Redirecting to " + url + ".");
     }
 
 }

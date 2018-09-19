@@ -1,7 +1,6 @@
 package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.binding.annotation.Value;
-import com.jd.laf.codec.Base64;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.Cookie;
@@ -9,8 +8,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
-import static com.jd.laf.web.vertx.response.Response.HTTP_UNAUTHORIZED;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 单点注销
@@ -26,6 +23,8 @@ public class SsoLogoutHandler implements RoutingHandler {
     protected String appLogoutUrl;
     @Value("app.index.url")
     protected String appIndexUrl;
+    @Value(value = "sso.nologin.end.status", defaultValue = "401")
+    protected int noLoginEndStatus;
 
     @Override
     public String type() {
@@ -59,6 +58,6 @@ public class SsoLogoutHandler implements RoutingHandler {
             }
         }
         context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(HTTP_UNAUTHORIZED).end("Redirecting to " + url + ".");
+                setStatusCode(noLoginEndStatus).end("Redirecting to " + url + ".");
     }
 }
