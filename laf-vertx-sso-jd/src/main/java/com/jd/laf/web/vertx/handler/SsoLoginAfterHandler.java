@@ -16,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * Created by yangyang36 on 2018/9/18.
  */
-public class SsoLonginAfterHandler implements RoutingHandler, EnvironmentAware {
+public class SsoLoginAfterHandler implements RoutingHandler, EnvironmentAware {
 
     @Value(value = "sso.login.url", defaultValue = "http://ssa.jd.com/sso/login")
     protected String ssoLoginUrl;
@@ -28,7 +28,7 @@ public class SsoLonginAfterHandler implements RoutingHandler, EnvironmentAware {
 
     @Override
     public String type() {
-        return "ssoLonginAfter";
+        return "ssoLoginAfter";
     }
 
     @Override
