@@ -40,9 +40,6 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
     protected String ssoCookieName;
 
-    @Value(value = "sso.login.url", defaultValue = "http://ssa.jd.com/sso/login")
-    protected String ssoLoginUrl;
-
     //应用域名
     @Value("app.domain.name")
     protected String appDomainName;
@@ -110,7 +107,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
                     session.put(userSessionKey, userDetail);
                 } else {
                     //没有单点登录信息，重新定向到登录页面
-                    redirect2Login(context);
+                    context.next();
                     return;
                 }
             }
@@ -118,22 +115,13 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
             context.put(USER_KEY, userDetail);
         } catch (SsoException e) {
             //单独登录认证错误，重新定向到登录页面
-            redirect2Login(context);
+            context.next();
+            //redirect2Login(context);
         } catch (Exception e) {
             context.fail(e);
         }
         context.next();
     }
 
-    /**
-     * 重定向登录页面
-     *
-     * @param context
-     */
-    protected void redirect2Login(final RoutingContext context) {
-        String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
-        context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(HTTP_MOVED_TEMP).end("Redirecting to " + url + ".");
-    }
 
 }

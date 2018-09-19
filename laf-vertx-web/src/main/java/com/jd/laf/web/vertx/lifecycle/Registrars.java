@@ -4,11 +4,15 @@ import com.jd.laf.web.vertx.Environment;
 import io.vertx.core.Vertx;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 注册器插件管理器
  */
 public abstract class Registrars {
+
+    protected static Logger logger = Logger.getLogger(Registrars.class.getName());
 
     //类对应的绑定器
     protected static volatile List<Registrar> plugins;
@@ -44,7 +48,11 @@ public abstract class Registrars {
      */
     public static void register(final Environment environment) throws Exception {
         for (Registrar plugin : getPlugins()) {
-            plugin.register(environment);
+            try {
+                plugin.register(environment);
+            }catch (Exception e){
+                logger.log(Level.SEVERE, String.format("register plugin %s error ",plugin.getClass()), e);
+            }
         }
     }
 
