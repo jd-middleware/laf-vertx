@@ -7,6 +7,8 @@ import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
+import javax.validation.constraints.NotEmpty;
+
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
 
 /**
@@ -25,6 +27,9 @@ public class SsoLogoutHandler implements RoutingHandler {
     protected String appIndexUrl;
     @Value(value = "sso.redirect.status", defaultValue = "401")
     protected int ssoRedirectStatus;
+    @Value(value = "user.session.key", defaultValue = "userDetail")
+    @NotEmpty
+    protected String userSessionKey;
 
     @Override
     public String type() {
@@ -37,6 +42,7 @@ public class SsoLogoutHandler implements RoutingHandler {
         Session session = context.session();
         if (session != null) {
             session.remove(USER_KEY);
+            session.remove(userSessionKey);
         }
         //清理单点登录cookie
         context.addCookie(Cookie.cookie(ssoCookieName, null));
