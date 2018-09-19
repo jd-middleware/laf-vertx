@@ -55,7 +55,7 @@ public class SsoLogoutHandler implements RoutingHandler {
         if (url == null || url.isEmpty()) {
             url = ssoLoginUrl;
             if (appIndexUrl != null && !appIndexUrl.isEmpty()) {
-                url = url + "?ReturnUrl=" + Base64.encode(appIndexUrl.getBytes(UTF_8));
+                url = url + "?ReturnUrl=" + appIndexUrl;
             }
         }
         context.response().putHeader(HttpHeaders.LOCATION, url).

@@ -131,7 +131,7 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
      * @param context
      */
     protected void redirect2Login(final RoutingContext context) {
-        String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
+        String url = ssoLoginUrl + "?ReturnUrl=" + context.request().uri();
         context.response().putHeader(HttpHeaders.LOCATION, url).
                 setStatusCode(HTTP_UNAUTHORIZED).end("Redirecting to " + url + ".");
     }
