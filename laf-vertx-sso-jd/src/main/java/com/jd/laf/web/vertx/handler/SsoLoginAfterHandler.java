@@ -10,7 +10,7 @@ import io.vertx.core.http.HttpHeaders;
 import io.vertx.ext.web.RoutingContext;
 
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
-import static com.jd.laf.web.vertx.response.Response.HTTP_MOVED_TEMP;
+import static com.jd.laf.web.vertx.response.Response.HTTP_UNAUTHORIZED;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
@@ -48,6 +48,6 @@ public class SsoLoginAfterHandler implements RoutingHandler, EnvironmentAware {
     protected void redirect2Login(final RoutingContext context) {
         String url = ssoLoginUrl + "?ReturnUrl=" + Base64.encode(context.request().uri().getBytes(UTF_8));
         context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(HTTP_MOVED_TEMP).end("Redirecting to " + url + ".");
+                setStatusCode(HTTP_UNAUTHORIZED).end("Redirecting to " + url + ".");
     }
 }
