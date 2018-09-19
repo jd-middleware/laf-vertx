@@ -23,8 +23,8 @@ public class SsoLogoutHandler implements RoutingHandler {
     protected String appLogoutUrl;
     @Value("app.index.url")
     protected String appIndexUrl;
-    @Value(value = "sso.nologin.end.status", defaultValue = "401")
-    protected int noLoginEndStatus;
+    @Value(value = "sso.redirect.status", defaultValue = "401")
+    protected int ssoRedirectStatus;
 
     @Override
     public String type() {
@@ -58,6 +58,6 @@ public class SsoLogoutHandler implements RoutingHandler {
             }
         }
         context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(noLoginEndStatus).end("Redirecting to " + url + ".");
+                setStatusCode(ssoRedirectStatus).end("Redirecting to " + url + ".");
     }
 }

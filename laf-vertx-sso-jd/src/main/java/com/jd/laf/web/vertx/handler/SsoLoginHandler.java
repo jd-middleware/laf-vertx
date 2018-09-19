@@ -1,7 +1,6 @@
 package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.binding.annotation.Value;
-import com.jd.laf.codec.Base64;
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.security.UserDetail;
@@ -30,35 +29,28 @@ import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
  */
 public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware {
 
-    @Value(value = "sso.cache.size", defaultValue = "10000")
-    @Positive
-    protected int ssoCacheSize;
     //单点登录的cookie名称
-
     @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
     protected String ssoCookieName;
-
     @Value(value = "sso.login.url", defaultValue = "http://ssa.jd.com/sso/login")
     protected String ssoLoginUrl;
-
     //应用域名
     @Value("app.domain.name")
     protected String appDomainName;
-
+    @Value(value = "user.session.key", defaultValue = "userDetail")
+    @NotEmpty
+    protected String userSessionKey;
+    @Value(value = "sso.redirect.status", defaultValue = "401")
+    protected int ssoRedirectStatus;
+    @Value(value = "sso.redirect.returnUrl", defaultValue = "false")
+    protected boolean ssoRedirectReturnUrl;
     @Value
     @NotNull
     protected SsoService ssoService;
-
     @Value
     @NotNull
     protected UserDetailProvider userDetailProvider;
 
-    @Value(value = "user.session.key", defaultValue = "userDetail")
-    @NotEmpty
-    protected String userSessionKey;
-
-    @Value(value = "sso.nologin.end.status", defaultValue = "401")
-    protected int noLoginEndStatus;
 
     @Override
     public String type() {
@@ -133,8 +125,12 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
      */
     protected void redirect2Login(final RoutingContext context) {
         String url = ssoLoginUrl;
+        //带上ReturnUrl
+        if (ssoRedirectReturnUrl) {
+            url = url + "?ReturnUrl=" + context.request().absoluteURI();
+        }
         context.response().putHeader(HttpHeaders.LOCATION, url).
-                setStatusCode(noLoginEndStatus).end("Redirecting to " + url + ".");
+                setStatusCode(ssoRedirectStatus).end("Redirecting to " + url + ".");
     }
 
 }
