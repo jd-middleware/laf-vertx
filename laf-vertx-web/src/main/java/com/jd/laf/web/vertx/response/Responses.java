@@ -48,7 +48,7 @@ public abstract class Responses {
      * @return
      */
     public static Response success(int code, int status, Object data) {
-        return new Response(code, status, null, data);
+        return new Response(code, status, data, null);
     }
 
     /**
