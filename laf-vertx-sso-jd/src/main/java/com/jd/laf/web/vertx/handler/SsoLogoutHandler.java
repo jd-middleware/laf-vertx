@@ -45,7 +45,7 @@ public class SsoLogoutHandler implements RoutingHandler {
             session.remove(userSessionKey);
         }
         //清理单点登录cookie
-        context.addCookie(Cookie.cookie(ssoCookieName, null));
+        context.removeCookie(ssoCookieName);
         //重定向到注销页面
         redirect2Login(context);
     }
