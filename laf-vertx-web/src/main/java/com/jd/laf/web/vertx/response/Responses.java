@@ -106,7 +106,7 @@ public abstract class Responses {
      * @return
      */
     public static Response error(int code, int status, String message) {
-        return new Response(code, status, message, null);
+        return new Response(code, status, message);
     }
 
     /**
