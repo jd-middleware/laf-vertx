@@ -29,7 +29,7 @@ public class ExceptionHandler implements ErrorHandler {
         Response response = Responses.error(throwable);
         try {
             context.response()
-                    .setStatusCode(response.getStatus())
+                    .setStatusCode(response.getStatus()).putHeader("Content-Type", "application/json;charset=UTF-8")
                     .end(JsonProviders.getPlugin().getMarshaller().marshall(response));
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
