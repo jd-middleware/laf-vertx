@@ -35,7 +35,6 @@ public class SsoLoginHandler extends RemoteIpHandler {
     @Value("app.domain.name")
     protected String appDomainName;
     @Value(value = "user.session.key", defaultValue = "userDetail")
-    @NotEmpty
     protected String userSessionKey;
     @Value(value = "sso.redirect.status", defaultValue = "401")
     protected int ssoRedirectStatus;
