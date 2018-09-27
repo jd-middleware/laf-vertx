@@ -8,158 +8,151 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 
 /**
  * 系统上下文
  */
-public class Environment {
+public interface Environment {
 
     /**
      * WEB根路径
      */
-    public static final String WEB_ROOT = "web.root";
+    String WEB_ROOT = "web.root";
 
     /**
      * 默认页
      */
-    public static final String INDEX_PAGE = "web.indexPage";
+    String INDEX_PAGE = "web.indexPage";
 
     /**
      * Body大小限制
      */
-    public static final String BODY_LIMIT = "web.bodyLimit";
+    String BODY_LIMIT = "web.bodyLimit";
 
     /**
      * 上传目录
      */
-    public static final String UPLOAD_DIR = "web.uploadDir";
+    String UPLOAD_DIR = "web.uploadDir";
     /**
      * 验证器
      */
-    public static final String VALIDATOR = "validator";
+    String VALIDATOR = "validator";
     /**
      * 模板
      */
-    public static final String TEMPLATE = "template";
+    String TEMPLATE = "template";
 
     /**
      * 命令对象池大小
      */
-    public static final String COMMAND_POOL_CAPACITY = "command.pool.capacity";
+    String COMMAND_POOL_CAPACITY = "command.pool.capacity";
 
     /**
      * 命令对象池初始化大小
      */
-    public static final String COMMAND_POOL_INITIALIZE_SIZE = "command.pool.initialize.size";
+    String COMMAND_POOL_INITIALIZE_SIZE = "command.pool.initialize.size";
 
     /**
      * 本地会话
      */
-    public static final String SESSION_LOCAL = "session.local";
+    String SESSION_LOCAL = "session.local";
     /**
      * 会话名称
      */
-    public static final String SESSION_NAME = "session.name";
+    String SESSION_NAME = "session.name";
     /**
      * 会话的Cookie名称
      */
-    public static final String SESSION_COOKIE_NAME = "session.cookie.name";
+    String SESSION_COOKIE_NAME = "session.cookie.name";
     /**
      * 会话超时时间
      */
-    public static final String SESSION_TIMEOUT = "session.timeout";
+    String SESSION_TIMEOUT = "session.timeout";
     /**
      * 用户的键
      */
-    public static final String USER_KEY = "userDetail";
+    String USER_KEY = "userDetail";
     /**
      * 远程IP
      */
-    public static final String REMOTE_IP = "remoteIp";
+    String REMOTE_IP = "remoteIp";
 
     /**
      * 认证提供者
      */
-    public static final String AUTH_PROVIDER = "auth.provider";
+    String AUTH_PROVIDER = "auth.provider";
 
     /**
      * 认证重定向URL
      */
-    public static final String AUTH_REDIRECT_URL = "auth.redirect.url";
+    String AUTH_REDIRECT_URL = "auth.redirect.url";
 
     /**
      * 认证跳回的URL参数
      */
-    public static final String AUTH_RETURN_URL_PARAM = "auth.return.urlParam";
+    String AUTH_RETURN_URL_PARAM = "auth.return.urlParam";
 
     /**
      * 用户参数
      */
-    public static final String AUTH_USER_PARAM = "auth.userParam";
+    String AUTH_USER_PARAM = "auth.userParam";
 
     /**
      * 密码参数
      */
-    public static final String AUTH_PASSWORD_PARAM = "auth.passwordParam";
+    String AUTH_PASSWORD_PARAM = "auth.passwordParam";
 
     /**
      * 模板引擎
      */
-    public static final String TEMPLATE_ENGINE = "template.engine";
+    String TEMPLATE_ENGINE = "template.engine";
 
     /**
      * 模板引擎类型
      */
-    public static final String TEMPLATE_TYPE = "template.type";
+    String TEMPLATE_TYPE = "template.type";
 
     /**
      * 模板目录
      */
-    public static final String TEMPLATE_DIRECTORY = "template.directory";
+    String TEMPLATE_DIRECTORY = "template.directory";
 
     /**
      * 模板应答内容
      */
-    public static final String TEMPLATE_CONTENT_TYPE = "template.contentType";
+    String TEMPLATE_CONTENT_TYPE = "template.contentType";
 
     /**
      * 模板文件扩展名
      */
-    public static final String TEMPLATE_EXTENSION = "template.extension";
+    String TEMPLATE_EXTENSION = "template.extension";
 
     /**
      * 模板文件缓存大小
      */
-    public static final String TEMPLATE_CACHE_SIZE = "template.cache.size";
+    String TEMPLATE_CACHE_SIZE = "template.cache.size";
 
-    // 参数
-    protected Map<String, Object> parameters;
+    /**
+     * 获取Vertx
+     *
+     * @return
+     */
+    Vertx getVertx();
 
-    protected Vertx vertx;
+    /**
+     * 设置Vertx
+     *
+     * @param vertx
+     */
+    void setVertx(Vertx vertx);
 
-    public Environment() {
-        this(null, null);
-    }
-
-    public Environment(Map<String, Object> parameters) {
-        this(null, parameters);
-    }
-
-    public Environment(Vertx vertx, Map<String, Object> parameters) {
-        this.vertx = vertx;
-        this.parameters = parameters == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parameters);
-    }
-
-    public Vertx getVertx() {
-        return vertx;
-    }
-
-    public void foreach(final BiConsumer<String, Object> consumer) {
-        if (parameters != null && consumer != null) {
-            parameters.forEach(consumer);
-        }
-    }
+    /**
+     * 获取对象参数
+     *
+     * @param name 参数名称
+     * @return 参数对象
+     */
+    <T> T getObject(String name);
 
     /**
      * 获取指定类型的参数
@@ -168,18 +161,8 @@ public class Environment {
      * @param clazz 类型
      * @return 参数对象
      */
-    public <T> T getObject(final String name, final Class<T> clazz) {
+    default <T> T getObject(final String name, final Class<T> clazz) {
         return (T) getObject(name);
-    }
-
-    /**
-     * 获取对象参数
-     *
-     * @param name 参数名称
-     * @return 参数对象
-     */
-    public <T> T getObject(final String name) {
-        return (T) (parameters == null ? null : parameters.get(name));
     }
 
     /**
@@ -188,7 +171,7 @@ public class Environment {
      * @param name 名称
      * @return 字符串参数
      */
-    public String getString(final String name) {
+    default String getString(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -203,7 +186,7 @@ public class Environment {
      * @param def  默认值
      * @return 字符串参数
      */
-    public String getString(final String name, final String def) {
+    default String getString(final String name, final String def) {
         String value = getString(name);
         return value == null || value.isEmpty() ? def : value;
     }
@@ -214,7 +197,7 @@ public class Environment {
      * @param name 名称
      * @return 浮点数参数
      */
-    public Byte getByte(final String name) {
+    default Byte getByte(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -241,7 +224,7 @@ public class Environment {
      * @param def  默认值
      * @return 浮点数参数
      */
-    public Byte getByte(final String name, final Byte def) {
+    default Byte getByte(final String name, final Byte def) {
         Byte result = getByte(name);
         return result == null ? def : result;
     }
@@ -252,7 +235,7 @@ public class Environment {
      * @param name 名称
      * @return 浮点数参数
      */
-    public Short getShort(final String name) {
+    default Short getShort(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -279,7 +262,7 @@ public class Environment {
      * @param def  默认值
      * @return 浮点数参数
      */
-    public Short getShort(final String name, final Short def) {
+    default Short getShort(final String name, final Short def) {
         Short result = getShort(name);
         return result == null ? def : result;
     }
@@ -290,7 +273,7 @@ public class Environment {
      * @param name 名称
      * @return 整数
      */
-    public Integer getInteger(final String name) {
+    default Integer getInteger(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -317,7 +300,7 @@ public class Environment {
      * @param def  默认值
      * @return 整数
      */
-    public Integer getInteger(final String name, final Integer def) {
+    default Integer getInteger(final String name, final Integer def) {
         Integer result = getInteger(name);
         return result == null ? def : result;
     }
@@ -328,7 +311,7 @@ public class Environment {
      * @param name 名称
      * @return 长整形参数
      */
-    public Long getLong(final String name) {
+    default Long getLong(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -355,7 +338,7 @@ public class Environment {
      * @param def  默认值
      * @return 长整形参数
      */
-    public Long getLong(final String name, final Long def) {
+    default Long getLong(final String name, final Long def) {
         Long result = getLong(name);
         return result == null ? def : result;
     }
@@ -366,7 +349,7 @@ public class Environment {
      * @param name 名称
      * @return 浮点数参数
      */
-    public Float getFloat(final String name) {
+    default Float getFloat(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -393,7 +376,7 @@ public class Environment {
      * @param def  默认值
      * @return 浮点数参数
      */
-    public Float getFloat(final String name, final Float def) {
+    default Float getFloat(final String name, final Float def) {
         Float result = getFloat(name);
         return result == null ? def : result;
     }
@@ -404,7 +387,7 @@ public class Environment {
      * @param name 名称
      * @return 浮点数参数
      */
-    public Double getDouble(final String name) {
+    default Double getDouble(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -431,7 +414,7 @@ public class Environment {
      * @param def  默认值
      * @return 浮点数参数
      */
-    public Double getDouble(final String name, final Double def) {
+    default Double getDouble(final String name, final Double def) {
         Double result = getDouble(name);
         return result == null ? def : result;
     }
@@ -442,7 +425,7 @@ public class Environment {
      * @param name 名称
      * @return 布尔值
      */
-    public Boolean getBoolean(final String name) {
+    default Boolean getBoolean(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -475,7 +458,7 @@ public class Environment {
      * @param def  默认值
      * @return 布尔值
      */
-    public Boolean getBoolean(final String name, final Boolean def) {
+    default Boolean getBoolean(final String name, final Boolean def) {
         Boolean result = getBoolean(name);
         return result == null ? def : result;
     }
@@ -486,7 +469,7 @@ public class Environment {
      * @param name 参数名称
      * @return 参数值
      */
-    public Date getDate(final String name) {
+    default Date getDate(final String name) {
         Object result = getObject(name);
         if (result == null) {
             return null;
@@ -512,7 +495,7 @@ public class Environment {
      * @param def  默认值
      * @return 参数值
      */
-    public Date getDate(final String name, final Date def) {
+    default Date getDate(final String name, final Date def) {
         Date result = getDate(name);
         return result == null ? def : result;
     }
@@ -524,8 +507,8 @@ public class Environment {
      * @param format 日期格式
      * @return 参数值
      */
-    public Date getDate(final String name, final SimpleDateFormat format) {
-        Object result = parameters.get(name);
+    default Date getDate(final String name, final SimpleDateFormat format) {
+        Object result = getObject(name);
         if (result == null) {
             return null;
         } else if (result instanceof Date) {
@@ -553,7 +536,7 @@ public class Environment {
      * @param def    默认值
      * @return 参数值
      */
-    public Date getDate(final String name, final SimpleDateFormat format, final Date def) {
+    default Date getDate(final String name, final SimpleDateFormat format, final Date def) {
         Date result = getDate(name, format);
         return result == null ? def : result;
     }
@@ -566,7 +549,7 @@ public class Environment {
      * @param def    默认值
      * @return 参数值
      */
-    public Date getDate(final String name, final String format, final String def) {
+    default Date getDate(final String name, final String format, final String def) {
         SimpleDateFormat sdf = format == null || format.isEmpty() ? null : new SimpleDateFormat(format);
         Date result = getDate(name, sdf);
         try {
@@ -583,7 +566,7 @@ public class Environment {
      * @param def  默认值
      * @return 正整数
      */
-    public Byte getPositive(final String name, final Byte def) {
+    default Byte getPositive(final String name, final Byte def) {
         Byte result = getByte(name, def);
         return result != null && result <= 0 ? def : result;
     }
@@ -595,7 +578,7 @@ public class Environment {
      * @param def  默认值
      * @return 正整数
      */
-    public Short getPositive(final String name, final Short def) {
+    default Short getPositive(final String name, final Short def) {
         Short result = getShort(name, def);
         return result != null && result <= 0 ? def : result;
     }
@@ -607,7 +590,7 @@ public class Environment {
      * @param def  默认值
      * @return 正整数
      */
-    public Integer getPositive(final String name, final Integer def) {
+    default Integer getPositive(final String name, final Integer def) {
         Integer result = getInteger(name, def);
         return result != null && result <= 0 ? def : result;
     }
@@ -619,7 +602,7 @@ public class Environment {
      * @param def  默认值
      * @return 长正整数
      */
-    public Long getPositive(final String name, final Long def) {
+    default Long getPositive(final String name, final Long def) {
         Long result = getLong(name, def);
         return result != null && result <= 0 ? def : result;
     }
@@ -631,7 +614,7 @@ public class Environment {
      * @param def  默认值
      * @return 自然数
      */
-    public Short getNatural(final String name, final Short def) {
+    default Short getNatural(final String name, final Short def) {
         Short result = getShort(name, def);
         return result != null && result < 0 ? def : result;
     }
@@ -643,7 +626,7 @@ public class Environment {
      * @param def  默认值
      * @return 自然数
      */
-    public Byte getNatural(final String name, final Byte def) {
+    default Byte getNatural(final String name, final Byte def) {
         Byte result = getByte(name, def);
         return result != null && result < 0 ? def : result;
     }
@@ -655,7 +638,7 @@ public class Environment {
      * @param def  默认值
      * @return 自然数
      */
-    public Integer getNatural(final String name, final Integer def) {
+    default Integer getNatural(final String name, final Integer def) {
         Integer result = getInteger(name, def);
         return result != null && result < 0 ? def : result;
     }
@@ -667,7 +650,7 @@ public class Environment {
      * @param def  默认值
      * @return 自然数
      */
-    public Long getNatural(final String name, final Long def) {
+    default Long getNatural(final String name, final Long def) {
         Long result = getLong(name, def);
         return result != null && result < 0 ? def : result;
     }
@@ -678,11 +661,7 @@ public class Environment {
      * @param name
      * @param obj
      */
-    public void put(final String name, final Object obj) {
-        if (parameters != null) {
-            parameters.put(name, obj);
-        }
-    }
+    void put(final String name, final Object obj);
 
     /**
      * 绑定并且验证
@@ -690,7 +669,7 @@ public class Environment {
      * @param target
      * @throws Exception
      */
-    public <T> T setup(final T target) throws Exception {
+    default <T> T setup(final T target) throws Exception {
         if (target != null) {
             Binding.bind(this, target);
             Validates.validate(target);
@@ -700,5 +679,48 @@ public class Environment {
         }
         return target;
     }
+
+    /**
+     * 基于MAP的上下文
+     */
+    class MapEnvironment implements Environment {
+
+        // 参数
+        protected Map<String, Object> parameters;
+
+        protected Vertx vertx;
+
+        public MapEnvironment() {
+            this(null);
+        }
+
+        public MapEnvironment(Map<String, Object> parameters) {
+            this.parameters = parameters == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parameters);
+        }
+
+        @Override
+        public Vertx getVertx() {
+            return vertx;
+        }
+
+        @Override
+        public void setVertx(Vertx vertx) {
+            this.vertx = vertx;
+        }
+
+        @Override
+        public <T> T getObject(final String name) {
+            return (T) (parameters == null ? null : parameters.get(name));
+        }
+
+        @Override
+        public void put(final String name, final Object obj) {
+            if (parameters != null) {
+                parameters.put(name, obj);
+            }
+        }
+
+    }
+
 
 }

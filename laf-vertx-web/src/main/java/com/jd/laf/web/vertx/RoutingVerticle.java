@@ -24,7 +24,6 @@ import io.vertx.ext.web.templ.TemplateEngine;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -45,11 +44,12 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final String HTTP_SERVER_OPTION_PREFIX = "http.server.";
     public static final String HTTP_SERVER_OPTIONS = "http.server.options";
-    public static final String HTTP_SERVER_PORT = "port";
     protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
 
     //配置
     protected VertxConfig config;
+    //注入的环境
+    protected Environment environment;
     //参数
     protected Map<String, Object> parameters;
     //资源文件
@@ -57,28 +57,30 @@ public class RoutingVerticle extends AbstractVerticle {
     //模板引擎
     protected TemplateEngine engine;
     protected HttpServer httpServer;
-    protected Environment environment;
+    //环境
+    protected Environment env;
 
     @Override
     public void start() throws Exception {
         try {
-            environment = new Environment(vertx, parameters);
+            env = environment != null ? environment : new Environment.MapEnvironment(parameters);
+            env.setVertx(vertx);
             //构建配置数据
-            file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
+            file = env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
             config = config == null ? inherit(build(file)) : config;
 
             //创建模板引擎
-            buildTemplateEngine(environment);
+            buildTemplateEngine(env);
             //初始化插件
-            Registrars.register(environment);
+            Registrars.register(env);
 
             Router router = createRouter();
             //构建业务处理链
-            buildHandlers(router, config, environment);
+            buildHandlers(router, config, env);
             //构建消息处理链
             buildConsumers(config);
             //启动服务
-            httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
+            httpServer = vertx.createHttpServer(buildHttpServerOptions(env));
             httpServer.requestHandler(router::accept).listen(event -> {
                 if (event.succeeded()) {
                     logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
@@ -100,7 +102,7 @@ public class RoutingVerticle extends AbstractVerticle {
      * @return
      */
     protected Router createRouter() {
-        return new MyRouter(vertx, environment);
+        return new MyRouter(vertx, env);
     }
 
     @Override
@@ -116,7 +118,7 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
-        environment = null;
+        env = null;
     }
 
 
@@ -128,7 +130,7 @@ public class RoutingVerticle extends AbstractVerticle {
      */
     protected void buildTemplateEngine(final Environment env) throws Exception {
         if (engine == null) {
-            engine = (TemplateEngine) env.getObject(TEMPLATE_ENGINE);
+            engine = env.getObject(TEMPLATE_ENGINE);
             if (engine == null) {
                 String type = env.getString(TEMPLATE_TYPE);
                 if (type != null && !type.isEmpty()) {
@@ -152,28 +154,17 @@ public class RoutingVerticle extends AbstractVerticle {
     protected HttpServerOptions buildHttpServerOptions(final Environment env) throws ReflectionException {
         HttpServerOptions options = env.getObject(HTTP_SERVER_OPTIONS, HttpServerOptions.class);
         if (options == null) {
-            final Map<String, Object> map = new HashMap<>();
-            final int len = HTTP_SERVER_OPTION_PREFIX.length();
-            env.foreach((a, b) -> {
-                if (a.startsWith(HTTP_SERVER_OPTION_PREFIX)) {
-                    map.put(a.substring(len), b);
-                }
-            });
-            Object value = map.get(HTTP_SERVER_PORT);
-            if (value == null) {
-                map.put(HTTP_SERVER_PORT, 8080);
-            }
-            options = new HttpServerOptions();
-
+            options = new HttpServerOptions().setPort(8080);
             List<Field> fields = getFields(HttpServerOptions.class);
             if (fields != null) {
+                Object value;
                 //遍历字段，设置字段配置
                 for (Field field : fields) {
                     if (Modifier.isFinal(field.getModifiers())
                             || Modifier.isStatic(field.getModifiers())) {
                         continue;
                     }
-                    value = map.get(field.getName());
+                    value = env.getObject(HTTP_SERVER_OPTION_PREFIX + field.getName());
                     if (value != null) {
                         Reflect.set(options, field, value);
                     }
@@ -245,7 +236,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //设置异常处理链
                 buildErrors(route, info);
                 //设置业务处理链
-                buildHandlers(route, info, environment);
+                buildHandlers(route, info, this.env);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, String.format("build handlers error on path %s, type %s", path, type), e);
                 throw e;
@@ -371,6 +362,10 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setEngine(TemplateEngine engine) {
         this.engine = engine;
+    }
+
+    public void setEnvironment(Environment environment) {
+        this.env = environment;
     }
 
     public void setParameters(Map<String, Object> parameters) {
