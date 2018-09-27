@@ -8,7 +8,7 @@ import com.jd.laf.web.vertx.service.UserService;
 
 import javax.validation.constraints.NotNull;
 
-public class HelloWordCommand implements Command, Poolable {
+public class HelloWorldCommand implements Command, Poolable {
 
     @QueryParam("echo")
     String echo;
@@ -18,7 +18,7 @@ public class HelloWordCommand implements Command, Poolable {
 
     @Override
     public Result execute() throws Exception {
-        return new Result(echo == null ? "hello word!" : echo);
+        return new Result(echo == null ? "hello world!" : echo);
     }
 
     @Override

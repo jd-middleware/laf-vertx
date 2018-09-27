@@ -1,1 +1,1 @@
-com.jd.laf.web.vertx.command.HelloWordCommand
+com.jd.laf.web.vertx.command.HelloWorldCommand

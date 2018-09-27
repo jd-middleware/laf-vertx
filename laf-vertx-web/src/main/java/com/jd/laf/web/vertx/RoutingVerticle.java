@@ -57,13 +57,11 @@ public class RoutingVerticle extends AbstractVerticle {
     //模板引擎
     protected TemplateEngine engine;
     protected HttpServer httpServer;
-    //环境
-    protected Environment env;
 
     @Override
     public void start() throws Exception {
         try {
-            env = environment != null ? environment : new Environment.MapEnvironment(parameters);
+            Environment env = environment != null ? environment : new Environment.MapEnvironment(parameters);
             env.setVertx(vertx);
             //构建配置数据
             file = env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
@@ -74,7 +72,7 @@ public class RoutingVerticle extends AbstractVerticle {
             //初始化插件
             Registrars.register(env);
 
-            Router router = createRouter();
+            Router router = createRouter(env);
             //构建业务处理链
             buildHandlers(router, config, env);
             //构建消息处理链
@@ -99,10 +97,11 @@ public class RoutingVerticle extends AbstractVerticle {
     /**
      * 创建路由管理器
      *
+     * @param environment 环境
      * @return
      */
-    protected Router createRouter() {
-        return new MyRouter(vertx, env);
+    protected Router createRouter(final Environment environment) {
+        return new MyRouter(vertx, environment);
     }
 
     @Override
@@ -118,41 +117,40 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
-        env = null;
     }
 
 
     /**
      * 构建模板引擎
      *
-     * @param env
+     * @param environment
      * @throws Exception
      */
-    protected void buildTemplateEngine(final Environment env) throws Exception {
+    protected void buildTemplateEngine(final Environment environment) throws Exception {
         if (engine == null) {
-            engine = env.getObject(TEMPLATE_ENGINE);
+            engine = environment.getObject(TEMPLATE_ENGINE);
             if (engine == null) {
-                String type = env.getString(TEMPLATE_TYPE);
+                String type = environment.getString(TEMPLATE_TYPE);
                 if (type != null && !type.isEmpty()) {
                     TemplateProvider provider = TemplateProviders.getPlugin(type);
                     if (provider != null) {
-                        engine = provider.create(env);
+                        engine = provider.create(environment);
                     }
                 }
             }
         }
         if (engine != null) {
-            env.put(TEMPLATE_ENGINE, engine);
+            environment.put(TEMPLATE_ENGINE, engine);
         }
     }
 
     /**
      * 构造Http服务选项
      *
-     * @param env
+     * @param environment
      */
-    protected HttpServerOptions buildHttpServerOptions(final Environment env) throws ReflectionException {
-        HttpServerOptions options = env.getObject(HTTP_SERVER_OPTIONS, HttpServerOptions.class);
+    protected HttpServerOptions buildHttpServerOptions(final Environment environment) throws ReflectionException {
+        HttpServerOptions options = environment.getObject(HTTP_SERVER_OPTIONS, HttpServerOptions.class);
         if (options == null) {
             options = new HttpServerOptions().setPort(8080);
             List<Field> fields = getFields(HttpServerOptions.class);
@@ -164,7 +162,7 @@ public class RoutingVerticle extends AbstractVerticle {
                             || Modifier.isStatic(field.getModifiers())) {
                         continue;
                     }
-                    value = env.getObject(HTTP_SERVER_OPTION_PREFIX + field.getName());
+                    value = environment.getObject(HTTP_SERVER_OPTION_PREFIX + field.getName());
                     if (value != null) {
                         Reflect.set(options, field, value);
                     }
@@ -196,12 +194,12 @@ public class RoutingVerticle extends AbstractVerticle {
     /**
      * 构造处理链
      *
-     * @param router 路由
-     * @param config 配置
-     * @param env    环境
+     * @param router      路由
+     * @param config      配置
+     * @param environment 环境
      * @throws Exception
      */
-    protected void buildHandlers(final Router router, final VertxConfig config, final Environment env) throws Exception {
+    protected void buildHandlers(final Router router, final VertxConfig config, final Environment environment) throws Exception {
         Route route;
         String path;
         RouteType type;
@@ -236,7 +234,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //设置异常处理链
                 buildErrors(route, info);
                 //设置业务处理链
-                buildHandlers(route, info, this.env);
+                buildHandlers(route, info, environment);
             } catch (Exception e) {
                 logger.log(Level.SEVERE, String.format("build handlers error on path %s, type %s", path, type), e);
                 throw e;
@@ -267,12 +265,12 @@ public class RoutingVerticle extends AbstractVerticle {
     /**
      * 构建路由处理器
      *
-     * @param route  路由对象
-     * @param config 路由配置
-     * @param env    环境
+     * @param route       路由对象
+     * @param config      路由配置
+     * @param environment 环境
      * @throws Exception
      */
-    protected void buildHandlers(final Route route, final RouteConfig config, final Environment env) throws Exception {
+    protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) throws Exception {
         RoutingHandler handler;
         Command command;
         //上下文处理
@@ -293,8 +291,8 @@ public class RoutingVerticle extends AbstractVerticle {
                     //判断命令是否需要池化
                     if (command instanceof Poolable) {
                         //对象池
-                        int capacity = env.getInteger(COMMAND_POOL_CAPACITY, 500);
-                        int initializeSize = env.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
+                        int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
+                        int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
                         if (capacity > 0) {
                             //构造对象池
                             pool = PoolFactories.getPlugin().create(capacity);
@@ -304,7 +302,7 @@ public class RoutingVerticle extends AbstractVerticle {
                                 //初始化对象池大小
                                 for (int i = 0; i < min; i++) {
                                     obj = command.getClass().newInstance();
-                                    Binding.bind(env, obj);
+                                    Binding.bind(environment, obj);
                                     pool.release(obj);
                                 }
                             }
@@ -312,7 +310,7 @@ public class RoutingVerticle extends AbstractVerticle {
                     } else {
                         pool = null;
                     }
-                    route.handler(new CommandHandler(command, pool));
+                    route.handler(new CommandHandler(command, pool, environment));
                 } else {
                     logger.warning(String.format("handler %s is not found. ignore.", name));
                 }
@@ -365,7 +363,7 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     public void setEnvironment(Environment environment) {
-        this.env = environment;
+        this.environment = environment;
     }
 
     public void setParameters(Map<String, Object> parameters) {
@@ -384,10 +382,13 @@ public class RoutingVerticle extends AbstractVerticle {
         protected Command command;
         //对象池
         protected Pool<Command> pool;
+        //环境
+        protected Environment environment;
 
-        public CommandHandler(Command command, Pool pool) {
+        public CommandHandler(Command command, Pool<Command> pool, Environment environment) {
             this.command = command;
             this.pool = pool;
+            this.environment = environment;
         }
 
         @Override
@@ -397,9 +398,13 @@ public class RoutingVerticle extends AbstractVerticle {
                 //克隆一份
                 clone = pool == null ? null : pool.get();
                 if (clone == null) {
+                    //构造新对象
                     clone = command.getClass().newInstance();
                 }
-                //使用上下文和环境绑定
+                //使用环境和当前上下文进行绑定
+                //理论上只有新创建的对象才需要使用环境和上下文同时绑定，对象池中的对象已经使用环境绑定过了
+                //但是，有可能开发人员在清理的代码里面不小心清理了环境绑定的对象
+                //避免出错，所以都重新绑定一次
                 Binding.bind(context, clone);
                 //验证
                 Validates.validate(clone);
