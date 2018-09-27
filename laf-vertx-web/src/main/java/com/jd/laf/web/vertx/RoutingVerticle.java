@@ -292,25 +292,22 @@ public class RoutingVerticle extends AbstractVerticle {
                     if (command instanceof Poolable) {
                         //对象池
                         int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
-                        int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, capacity);
+                        int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
                         if (capacity > 0) {
                             //构造对象池
                             pool = PoolFactories.getPlugin().create(capacity);
                             if (initializeSize > 0) {
                                 int min = Math.min(initializeSize, capacity);
-                                Command obj;
                                 //初始化对象池大小
                                 for (int i = 0; i < min; i++) {
-                                    obj = command.getClass().newInstance();
-                                    Binding.bind(environment, obj);
-                                    pool.release(obj);
+                                    pool.release(command.getClass().newInstance());
                                 }
                             }
                         }
                     } else {
                         pool = null;
                     }
-                    route.handler(new CommandHandler(command, pool, environment));
+                    route.handler(new CommandHandler(command, pool));
                 } else {
                     logger.warning(String.format("handler %s is not found. ignore.", name));
                 }
@@ -382,13 +379,10 @@ public class RoutingVerticle extends AbstractVerticle {
         protected Command command;
         //对象池
         protected Pool<Command> pool;
-        //环境
-        protected Environment environment;
 
-        public CommandHandler(Command command, Pool<Command> pool, Environment environment) {
+        public CommandHandler(Command command, Pool<Command> pool) {
             this.command = command;
             this.pool = pool;
-            this.environment = environment;
         }
 
         @Override
