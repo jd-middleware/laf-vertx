@@ -13,8 +13,9 @@ public interface EnvironmentAware {
      *
      * @param vertx
      * @param environment 环境
+     * @throws Exception
      */
-    void setup(Vertx vertx, Environment environment);
+    void setup(Vertx vertx, Environment environment) throws Exception;
 
     /**
      * 绑定并且验证

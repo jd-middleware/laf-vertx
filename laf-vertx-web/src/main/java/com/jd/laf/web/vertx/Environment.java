@@ -639,14 +639,6 @@ public interface Environment {
     }
 
     /**
-     * 存取键值
-     *
-     * @param name
-     * @param obj
-     */
-    void put(final String name, final Object obj);
-
-    /**
      * 基于MAP的上下文
      */
     class MapEnvironment implements Environment {
@@ -666,13 +658,6 @@ public interface Environment {
         @Override
         public <T> T getObject(final String name) {
             return (T) (parameters == null ? null : parameters.get(name));
-        }
-
-        @Override
-        public void put(final String name, final Object obj) {
-            if (parameters != null) {
-                parameters.put(name, obj);
-            }
         }
 
     }

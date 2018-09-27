@@ -66,8 +66,6 @@ public class RoutingVerticle extends AbstractVerticle {
             file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
             config = config == null ? inherit(build(file)) : config;
 
-            //创建模板引擎
-            buildTemplateEngine(environment);
             //初始化插件
             Registrars.register(vertx, environment);
 
@@ -116,31 +114,6 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
-    }
-
-
-    /**
-     * 构建模板引擎
-     *
-     * @param environment
-     * @throws Exception
-     */
-    protected void buildTemplateEngine(final Environment environment) throws Exception {
-        if (engine == null) {
-            engine = environment.getObject(TEMPLATE_ENGINE);
-            if (engine == null) {
-                String type = environment.getString(TEMPLATE_TYPE);
-                if (type != null && !type.isEmpty()) {
-                    TemplateProvider provider = TemplateProviders.getPlugin(type);
-                    if (provider != null) {
-                        engine = provider.create(vertx, environment);
-                    }
-                }
-            }
-        }
-        if (engine != null) {
-            environment.put(TEMPLATE_ENGINE, engine);
-        }
     }
 
     /**
