@@ -3,14 +3,14 @@ package com.jd.laf.web.vertx.security;
 /**
  * 用户服务
  */
-public interface UserDetailService {
+public interface UserDetailService<M extends UserDetail> {
 
     /**
-     * 添加应用
+     * 添加用户
      *
      * @param detail
      */
-    UserDetail addUser(UserDetail detail);
+    M addUser(M detail);
 
     /**
      * 根据ID查找
@@ -18,7 +18,7 @@ public interface UserDetailService {
      * @param id
      * @return
      */
-    UserDetail findById(long id);
+    M findById(long id);
 
     /**
      * 根据代码查找
@@ -26,5 +26,5 @@ public interface UserDetailService {
      * @param code
      * @return
      */
-    UserDetail findByCode(String code);
+    M findByCode(String code);
 }
