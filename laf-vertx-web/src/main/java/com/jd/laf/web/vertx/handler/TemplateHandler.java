@@ -29,13 +29,11 @@ public class TemplateHandler implements RoutingHandler, EnvironmentAware {
         TemplateEngine engine = environment.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
         if (engine == null) {
             String type = environment.getString(TEMPLATE_TYPE, "beetl");
-            if (type != null && !type.isEmpty()) {
-                TemplateProvider provider = TemplateProviders.getPlugin(type);
-                if (provider != null) {
-                    engine = provider.create(vertx, environment);
-                } else {
-                    throw new IllegalStateException("template engine is not found. " + type);
-                }
+            TemplateProvider provider = TemplateProviders.getPlugin(type);
+            if (provider != null) {
+                engine = provider.create(vertx, environment);
+            } else {
+                throw new IllegalStateException("template engine is not found. " + type);
             }
         }
         String templateDirectory = environment.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
