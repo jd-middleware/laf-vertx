@@ -1,5 +1,6 @@
 package com.jd.laf.vertx.spring.boot.clustermanager;
 
+import com.jd.laf.vertx.spring.boot.VertxAutoConfiguration;
 import io.vertx.core.spi.cluster.ClusterManager;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -7,7 +8,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import com.jd.laf.vertx.spring.boot.VertxAutoConfiguration;
 
 
 @Configuration

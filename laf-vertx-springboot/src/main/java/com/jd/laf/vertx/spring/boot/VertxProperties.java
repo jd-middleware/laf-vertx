@@ -1,5 +1,7 @@
 package com.jd.laf.vertx.spring.boot;
 
+import com.jd.laf.vertx.spring.SpringVertx;
+import com.jd.laf.vertx.spring.VertxConfigurer;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.dns.AddressResolverOptions;
@@ -12,8 +14,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
-import com.jd.laf.vertx.spring.SpringVertx;
-import com.jd.laf.vertx.spring.VertxConfigurer;
 
 import java.io.*;
 import java.util.List;

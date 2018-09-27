@@ -1,15 +1,15 @@
 package com.jd.laf.vertx.spring.events;
 
+import com.jd.laf.vertx.spring.VertxListener;
 import io.vertx.core.Context;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import com.jd.laf.vertx.spring.VertxListener;
 
 import java.util.function.Supplier;
 

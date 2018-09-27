@@ -1,9 +1,9 @@
 package com.jd.laf.vertx.spring;
 
 import io.vertx.core.Verticle;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.VerticleFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 
 

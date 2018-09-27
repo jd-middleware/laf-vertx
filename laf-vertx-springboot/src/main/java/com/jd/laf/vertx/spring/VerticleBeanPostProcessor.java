@@ -2,8 +2,8 @@ package com.jd.laf.vertx.spring;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
