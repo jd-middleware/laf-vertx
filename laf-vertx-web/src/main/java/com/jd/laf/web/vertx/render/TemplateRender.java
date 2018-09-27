@@ -2,6 +2,7 @@ package com.jd.laf.web.vertx.render;
 
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
+import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
@@ -46,7 +47,7 @@ public class TemplateRender implements Render, EnvironmentAware {
     }
 
     @Override
-    public void setup(final Environment environment) {
+    public void setup(final Vertx vertx, final Environment environment) {
         engine = environment.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
         templateDirectory = environment.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
         if (!templateDirectory.endsWith(File.separator)) {

@@ -43,15 +43,16 @@ public abstract class Registrars {
     /**
      * 初始化
      *
+     * @param vertx
      * @param environment 环境上下文
      * @throws Exception
      */
-    public static void register(final Environment environment) throws Exception {
+    public static void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Registrar plugin : getPlugins()) {
             try {
-                plugin.register(environment);
-            }catch (Exception e){
-                logger.log(Level.SEVERE, String.format("register plugin %s error ",plugin.getClass()), e);
+                plugin.register(vertx, environment);
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, String.format("register plugin %s error ", plugin.getClass()), e);
             }
         }
     }

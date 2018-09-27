@@ -4,6 +4,7 @@ import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.sstore.ClusteredSessionStore;
 import io.vertx.ext.web.sstore.LocalSessionStore;
@@ -27,13 +28,13 @@ public class SessionHandler implements RoutingHandler, EnvironmentAware {
     }
 
     @Override
-    public void setup(final Environment environment) {
+    public void setup(final Vertx vertx, final Environment environment) {
         boolean localSession = environment.getBoolean(SESSION_LOCAL, true);
         String sessionName = environment.getString(SESSION_NAME, DEFAULT_SESSION_NAME);
         String sessionCookieName = environment.getString(SESSION_COOKIE_NAME, DEFAULT_SESSION_COOKIE_NAME);
         long sessionTimeout = environment.getPositive(SESSION_TIMEOUT, DEFAULT_SESSION_TIMEOUT);
-        SessionStore store = localSession ? LocalSessionStore.create(environment.getVertx(), sessionName) :
-                ClusteredSessionStore.create(environment.getVertx(), sessionName);
+        SessionStore store = localSession ? LocalSessionStore.create(vertx, sessionName) :
+                ClusteredSessionStore.create(vertx, sessionName);
         handler = io.vertx.ext.web.handler.SessionHandler.create(store).
                 setSessionCookieName(sessionCookieName).
                 setSessionTimeout(sessionTimeout);

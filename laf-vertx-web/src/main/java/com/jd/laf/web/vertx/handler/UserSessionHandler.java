@@ -4,6 +4,7 @@ import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.auth.AuthProvider;
 import io.vertx.ext.web.RoutingContext;
 
@@ -23,7 +24,7 @@ public class UserSessionHandler implements RoutingHandler, EnvironmentAware {
     }
 
     @Override
-    public void setup(final Environment environment) {
+    public void setup(final Vertx vertx, final Environment environment) {
         AuthProvider authProvider = environment.getObject(AUTH_PROVIDER, AuthProvider.class);
         handler = io.vertx.ext.web.handler.UserSessionHandler.create(authProvider);
     }

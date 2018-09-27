@@ -4,6 +4,7 @@ import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.templ.TemplateEngine;
 
@@ -26,7 +27,7 @@ public class TemplateHandler implements RoutingHandler, EnvironmentAware {
     }
 
     @Override
-    public void setup(final Environment environment) {
+    public void setup(final Vertx vertx, final Environment environment) {
         TemplateEngine engine = environment.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
         String templateDirectory = environment.getString(TEMPLATE_DIRECTORY, DEFAULT_TEMPLATE_DIRECTORY);
         String contentType = environment.getString(TEMPLATE_CONTENT_TYPE, DEFAULT_CONTENT_TYPE);

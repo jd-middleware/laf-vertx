@@ -4,6 +4,7 @@ import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 
 import static com.jd.laf.web.vertx.Environment.INDEX_PAGE;
@@ -23,7 +24,7 @@ public class StaticHandler implements RoutingHandler, EnvironmentAware {
     }
 
     @Override
-    public void setup(final Environment environment) {
+    public void setup(final Vertx vertx, final Environment environment) {
         io.vertx.ext.web.handler.StaticHandler target = io.vertx.ext.web.handler.StaticHandler.create();
         String webRoot = environment.getString(WEB_ROOT);
         if (webRoot != null && !webRoot.isEmpty()) {

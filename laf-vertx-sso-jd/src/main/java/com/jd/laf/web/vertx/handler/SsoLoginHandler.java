@@ -1,8 +1,6 @@
 package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.binding.annotation.Value;
-import com.jd.laf.web.vertx.Environment;
-import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.security.UserDetail;
 import com.jd.laf.web.vertx.security.UserDetailProvider;
 import com.jd.laf.web.vertx.security.UserDetailService;
@@ -18,7 +16,6 @@ import io.vertx.ext.web.handler.impl.HttpStatusException;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
 
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
@@ -27,7 +24,7 @@ import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
 /**
  * 单点登录
  */
-public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware {
+public class SsoLoginHandler extends RemoteIpHandler {
 
     //单点登录的cookie名称
     @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
@@ -51,14 +48,9 @@ public class SsoLoginHandler extends RemoteIpHandler implements EnvironmentAware
     @NotNull
     protected UserDetailProvider userDetailProvider;
 
-
     @Override
     public String type() {
         return "ssoLogin";
-    }
-
-    @Override
-    public void setup(final Environment environment) {
     }
 
     @Override

@@ -49,7 +49,7 @@ public class RoutingVerticle extends AbstractVerticle {
     //配置
     protected VertxConfig config;
     //注入的环境
-    protected Environment environment;
+    protected Environment env;
     //参数
     protected Map<String, Object> parameters;
     //资源文件
@@ -61,24 +61,23 @@ public class RoutingVerticle extends AbstractVerticle {
     @Override
     public void start() throws Exception {
         try {
-            Environment env = environment != null ? environment : new Environment.MapEnvironment(parameters);
-            env.setVertx(vertx);
+            Environment environment = env != null ? env : new Environment.MapEnvironment(parameters);
             //构建配置数据
-            file = env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
+            file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
             config = config == null ? inherit(build(file)) : config;
 
             //创建模板引擎
-            buildTemplateEngine(env);
+            buildTemplateEngine(environment);
             //初始化插件
-            Registrars.register(env);
+            Registrars.register(vertx, environment);
 
-            Router router = createRouter(env);
+            Router router = createRouter(environment);
             //构建业务处理链
-            buildHandlers(router, config, env);
+            buildHandlers(router, config, environment);
             //构建消息处理链
             buildConsumers(config);
             //启动服务
-            httpServer = vertx.createHttpServer(buildHttpServerOptions(env));
+            httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
             httpServer.requestHandler(router::accept).listen(event -> {
                 if (event.succeeded()) {
                     logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
@@ -134,7 +133,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (type != null && !type.isEmpty()) {
                     TemplateProvider provider = TemplateProviders.getPlugin(type);
                     if (provider != null) {
-                        engine = provider.create(environment);
+                        engine = provider.create(vertx, environment);
                     }
                 }
             }
@@ -359,8 +358,8 @@ public class RoutingVerticle extends AbstractVerticle {
         this.engine = engine;
     }
 
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
+    public void setEnv(Environment env) {
+        this.env = env;
     }
 
     public void setParameters(Map<String, Object> parameters) {
