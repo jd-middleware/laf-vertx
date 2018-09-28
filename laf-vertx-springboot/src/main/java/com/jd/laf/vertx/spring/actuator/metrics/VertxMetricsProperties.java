@@ -6,12 +6,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "vertx.metrics")
 public class VertxMetricsProperties extends AbstractPartMetricsProperties {
 
-    private final EventBusMetricsProperties eventBus = new EventBusMetricsProperties();
-    private final PoolMetricsProperties pool = new PoolMetricsProperties();
-    private final NetMetricsProperties net = new NetMetricsProperties();
-    private final HttpMetricsProperties http = new HttpMetricsProperties();
-    private final DatagramSocketProperties datagramSocket = new DatagramSocketProperties();
-
+    protected final EventBusMetricsProperties eventBus = new EventBusMetricsProperties();
+    protected final PoolMetricsProperties pool = new PoolMetricsProperties();
+    protected final NetMetricsProperties net = new NetMetricsProperties();
+    protected final HttpMetricsProperties http = new HttpMetricsProperties();
+    protected final DatagramSocketProperties datagramSocket = new DatagramSocketProperties();
 
     public VertxMetricsProperties() {
         super("vertx");
@@ -37,7 +36,6 @@ public class VertxMetricsProperties extends AbstractPartMetricsProperties {
         return datagramSocket;
     }
 
-
     public static class EventBusMetricsProperties extends AbstractPartMetricsProperties {
 
         public EventBusMetricsProperties() {
@@ -45,14 +43,12 @@ public class VertxMetricsProperties extends AbstractPartMetricsProperties {
         }
     }
 
-
     public static class PoolMetricsProperties extends AbstractPartMetricsProperties {
 
         public PoolMetricsProperties() {
             super("pool");
         }
     }
-
 
     public static class NetMetricsProperties {
 

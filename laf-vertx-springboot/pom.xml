@@ -31,6 +31,12 @@
             <artifactId>spring-boot-actuator</artifactId>
             <version>${spring-boot.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${spring-boot.version}</version>
+            <optional>true</optional>
+        </dependency>
 
         <dependency>
             <groupId>io.vertx</groupId>
@@ -41,7 +47,7 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-zookeeper</artifactId>
             <version>${vertx.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
@@ -53,13 +59,13 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-infinispan</artifactId>
             <version>${vertx.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>
             <artifactId>vertx-infinispan</artifactId>
             <version>${vertx.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
 
@@ -67,7 +73,7 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-ignite</artifactId>
             <version>${vertx.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.ignite</groupId>
@@ -84,14 +90,14 @@
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-core</artifactId>
             <version>${ignite.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-spring</artifactId>
             <version>${ignite.version}</version>
-            <scope>provided</scope>
+            <optional>true</optional>
             <exclusions>
                 <exclusion>
                     <groupId>org.springframework</groupId>

@@ -11,10 +11,9 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(VertxMetricsProperties.class)
 public class VertxMetricsConfiguration {
 
-    private final CounterService counterService;
-    private final GaugeService gaugeService;
-    private final VertxMetricsProperties metricsProperties;
-
+    protected final CounterService counterService;
+    protected final GaugeService gaugeService;
+    protected final VertxMetricsProperties metricsProperties;
 
     public VertxMetricsConfiguration(CounterService counterService, GaugeService gaugeService,
                                      VertxMetricsProperties metricsProperties) {
@@ -22,7 +21,6 @@ public class VertxMetricsConfiguration {
         this.gaugeService = gaugeService;
         this.metricsProperties = metricsProperties;
     }
-
 
     @Bean
     public VertxActuatorMetrics vertxActuatorMetrics() {

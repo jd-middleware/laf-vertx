@@ -1,5 +1,9 @@
 package com.jd.laf.vertx.spring.boot;
 
+import com.jd.laf.vertx.spring.SpringVertx;
+import com.jd.laf.vertx.spring.VerticleDeploymentConfiguration;
+import com.jd.laf.vertx.spring.VertxConfiguration;
+import com.jd.laf.vertx.spring.actuator.metrics.VertxMetricsConfiguration;
 import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -8,10 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import com.jd.laf.vertx.spring.SpringVertx;
-import com.jd.laf.vertx.spring.VerticleDeploymentConfiguration;
-import com.jd.laf.vertx.spring.VertxConfiguration;
-import com.jd.laf.vertx.spring.actuator.metrics.VertxMetricsConfiguration;
 
 
 @Configuration

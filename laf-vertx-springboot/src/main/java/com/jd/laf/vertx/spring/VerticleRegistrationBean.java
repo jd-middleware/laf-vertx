@@ -6,7 +6,9 @@ import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
 
-@SuppressWarnings("unused")
+/**
+ * 执行器注册Bean
+ */
 public class VerticleRegistrationBean implements VerticleRegistration, BeanNameAware, Ordered {
 
     private Verticle verticle;
@@ -19,52 +21,43 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
     public VerticleRegistrationBean() {
     }
 
-
     public VerticleRegistrationBean(Verticle verticle) {
         this.verticle = verticle;
     }
 
-
     public VerticleRegistrationBean(String verticleName) {
         this.verticleName = verticleName;
     }
-
 
     public VerticleRegistrationBean(Verticle verticle, DeploymentOptions deploymentOptions) {
         this(verticle);
         this.deploymentOptions = deploymentOptions;
     }
 
-
     public VerticleRegistrationBean(String verticleName, DeploymentOptions deploymentOptions) {
         this(verticleName);
         this.deploymentOptions = deploymentOptions;
     }
-
 
     @Override
     public Verticle getVerticle() {
         return verticle;
     }
 
-
     public VerticleRegistrationBean setVerticle(Verticle verticle) {
         this.verticle = verticle;
         return this;
     }
-
 
     @Override
     public String getVerticleName() {
         return verticleName;
     }
 
-
     public VerticleRegistrationBean setVerticleName(String verticleName) {
         this.verticleName = verticleName;
         return this;
     }
-
 
     @Override
     public DeploymentOptions getDeploymentOptions() {
@@ -77,12 +70,10 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
         return null;
     }
 
-
     public VerticleRegistrationBean setDeploymentOptions(DeploymentOptions deploymentOptions) {
         this.deploymentOptions = deploymentOptions;
         return this;
     }
-
 
     @Override
     public int getOrder() {
@@ -95,29 +86,24 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
         return 0;
     }
 
-
     public VerticleRegistrationBean setOrder(int order) {
         this.order = order;
         return this;
     }
 
-
     public String getName() {
         return name;
     }
-
 
     public VerticleRegistration setName(String name) {
         this.name = name;
         return this;
     }
 
-
     @Override
     public void setBeanName(String beanName) {
         this.beanName = beanName;
     }
-
 
     @Override
     public String toString() {

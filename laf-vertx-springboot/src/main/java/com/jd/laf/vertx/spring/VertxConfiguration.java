@@ -3,9 +3,9 @@ package com.jd.laf.vertx.spring;
 
 import com.jd.laf.vertx.spring.events.EventPublishingVertxListener;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,7 +58,9 @@ public class VertxConfiguration {
             List<VertxConfigurer> sortedConfigurers = new ArrayList<>(configurers);
             AnnotationAwareOrderComparator.sort(sortedConfigurers);
             for (VertxConfigurer configurer : sortedConfigurers) {
-                logger.debug("Applying configurer: {}", configurer);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Applying configurer: {}", configurer);
+                }
                 configurer.configure(builder);
             }
         }
@@ -74,9 +76,9 @@ public class VertxConfiguration {
     }
 
 
-    private static class ClusterManagerConfigurer implements VertxConfigurer, Ordered {
+    protected static class ClusterManagerConfigurer implements VertxConfigurer, Ordered {
 
-        private final ClusterManager clusterManager;
+        protected final ClusterManager clusterManager;
 
         public ClusterManagerConfigurer(ClusterManager clusterManager) {
             this.clusterManager = clusterManager;

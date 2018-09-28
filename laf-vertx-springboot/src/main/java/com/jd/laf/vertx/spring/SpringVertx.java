@@ -2,12 +2,12 @@ package com.jd.laf.vertx.spring;
 
 import com.jd.laf.vertx.spring.metrics.DispatchingVertxMetricsFactory;
 import io.vertx.core.*;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.spi.VertxFactory;
 import io.vertx.core.spi.VertxMetricsFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.SmartLifecycle;
@@ -21,25 +21,27 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
-@SuppressWarnings("unused")
+/**
+ * 在Spring的生命周期启动Vertx
+ */
 public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
 
     public static final String DEFAULT_VERTICLE_FACTORY_PREFIX = "spring";
 
     private final Logger logger = LoggerFactory.getLogger(SpringVertx.class);
 
-    private final VertxFactory factory;
-    private final VertxOptions options;
-    private final List<VerticleRegistration> verticleRegistrations;
-    private final String verticleFactoryPrefix;
-    private final int startupPhase;
-    private final boolean autoStartup;
+    protected final VertxFactory factory;
+    protected final VertxOptions options;
+    protected final List<VerticleRegistration> verticleRegistrations;
+    protected final List<VertxListener> listeners;
+    protected final String verticleFactoryPrefix;
+    protected final int startupPhase;
+    protected final boolean autoStartup;
 
-    private final Object startMonitor = new Object();
-    private BeanFactory beanFactory;
+    protected final Object startMonitor = new Object();
+    protected BeanFactory beanFactory;
 
-    private volatile Vertx vertx;
-
+    protected volatile Vertx vertx;
 
     public SpringVertx(VertxFactory factory, VertxOptions options,
                        Collection<VerticleRegistration> verticleRegistrations,
@@ -48,95 +50,104 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         this.factory = factory;
         this.options = new VertxOptions(options);
         this.verticleRegistrations = new ArrayList<>(verticleRegistrations);
+        this.listeners = new ArrayList<>(listeners);
         this.verticleFactoryPrefix = verticleFactoryPrefix;
         this.startupPhase = startupPhase;
         this.autoStartup = autoStartup;
     }
-
 
     @Override
     public final boolean isAutoStartup() {
         return autoStartup;
     }
 
-
     @Override
     public final int getPhase() {
         return startupPhase;
     }
-
 
     @Override
     public final boolean isRunning() {
         return vertx != null;
     }
 
-
     @Override
     public synchronized void start() {
         if (vertx == null) {
             synchronized (startMonitor) {
                 if (vertx == null) {
-                    CompletableFuture<Vertx> vertxStartedFuture = new CompletableFuture<>();
-                    CompletableFuture<Vertx> vertxReadyFuture = vertxStartedFuture;
-
-                    if (options.isClustered()) {
-                        factory.clusteredVertx(options, ar -> {
-                            if (ar.succeeded()) {
-                                vertxStartedFuture.complete(ar.result());
-                            } else {
-                                vertxStartedFuture.completeExceptionally(ar.cause());
-                            }
-                        });
-                    } else {
-                        Vertx vertx = factory.vertx(options);
-                        vertxStartedFuture.complete(vertx);
-                    }
-
-                    if (verticleFactoryPrefix != null) {
-                        vertxReadyFuture = vertxReadyFuture.thenApply(vertx -> {
-                            SpringVerticleFactory verticleFactory = new SpringVerticleFactory(verticleFactoryPrefix, beanFactory);
-                            logger.debug("Registering VerticleFactory: {}", verticleFactory);
-                            vertx.registerVerticleFactory(verticleFactory);
-                            return vertx;
-                        });
-                    }
-
-                    if (!verticleRegistrations.isEmpty()) {
-
-                        // Group all verticle registrations by order. Verticles with the same order will be
-                        // deployed simultaneously.
-                        SortedMap<Integer, List<VerticleRegistration>> registrationGroups = verticleRegistrations.stream()
-                                .collect(Collectors.groupingBy(SpringVertx::getVerticleOrder, TreeMap::new, Collectors.toList()));
-
-                        for (Map.Entry<Integer, List<VerticleRegistration>> entry : registrationGroups.entrySet()) {
-                            int order = entry.getKey();
-                            List<VerticleRegistration> registrations = entry.getValue();
-                            vertxReadyFuture = vertxReadyFuture.thenCompose(vertx ->
-                                    deployVerticleGroup(vertx, order, registrations));
-                        }
-                    } else {
-                        logger.debug("No verticle registrations set; no verticles will be deployed after startup.");
-                    }
-
-                    try {
-                        this.vertx = vertxReadyFuture.join();
-                        logger.info("Vert.x startup complete");
-
-                    } catch (CompletionException ex) {
-                        if (ex.getCause() instanceof RuntimeException) {
-                            throw (RuntimeException) ex.getCause();
-                        } else {
-                            throw ex;
-                        }
-                    }
+                    doStart();
                 }
             }
         }
     }
 
+    protected void doStart() {
+        CompletableFuture<Vertx> vertxStartedFuture = new CompletableFuture<>();
+        CompletableFuture<Vertx> vertxReadyFuture = vertxStartedFuture;
 
-    private static int getVerticleOrder(VerticleRegistration registration) {
+        //创建vertx
+        if (options.isClustered()) {
+            factory.clusteredVertx(options, ar -> {
+                if (ar.succeeded()) {
+                    vertxStartedFuture.complete(ar.result());
+                } else {
+                    vertxStartedFuture.completeExceptionally(ar.cause());
+                }
+            });
+        } else {
+            Vertx vertx = factory.vertx(options);
+            vertxStartedFuture.complete(vertx);
+        }
+
+        //注册Spring的执行器工厂
+        if (verticleFactoryPrefix != null) {
+            vertxReadyFuture = vertxReadyFuture.thenApply(vertx -> {
+                SpringVerticleFactory verticleFactory = new SpringVerticleFactory(verticleFactoryPrefix, beanFactory);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Registering VerticleFactory: {}", verticleFactory);
+                }
+                vertx.registerVerticleFactory(verticleFactory);
+                return vertx;
+            });
+        }
+
+        //按照顺序部署执行器
+        if (!verticleRegistrations.isEmpty()) {
+            // Group all verticle registrations by order. Verticles with the same order will be
+            // deployed simultaneously.
+            SortedMap<Integer, List<VerticleRegistration>> registrationGroups = verticleRegistrations.stream()
+                    .collect(Collectors.groupingBy(SpringVertx::getVerticleOrder, TreeMap::new, Collectors.toList()));
+
+            for (Map.Entry<Integer, List<VerticleRegistration>> entry : registrationGroups.entrySet()) {
+                int order = entry.getKey();
+                List<VerticleRegistration> registrations = entry.getValue();
+                vertxReadyFuture = vertxReadyFuture.thenCompose(vertx ->
+                        deployVerticleGroup(vertx, order, registrations));
+            }
+        } else {
+            logger.debug("No verticle registrations set; no verticles will be deployed after startup.");
+        }
+
+        try {
+            this.vertx = vertxReadyFuture.join();
+            logger.info("Vert.x startup complete");
+        } catch (CompletionException ex) {
+            if (ex.getCause() instanceof RuntimeException) {
+                throw (RuntimeException) ex.getCause();
+            } else {
+                throw ex;
+            }
+        }
+    }
+
+    /**
+     * 获取执行器注册顺序
+     *
+     * @param registration
+     * @return
+     */
+    protected static int getVerticleOrder(final VerticleRegistration registration) {
         if (registration instanceof Ordered) {
             return ((Ordered) registration).getOrder();
         } else {
@@ -144,9 +155,16 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         }
     }
 
-
-    private CompletableFuture<Vertx> deployVerticleGroup(Vertx vertx, int order,
-                                                         Collection<VerticleRegistration> registrations) {
+    /**
+     * 部署执行器
+     *
+     * @param vertx         vertx对象
+     * @param order         顺序
+     * @param registrations 该顺序下的执行器注册信息集合
+     * @return
+     */
+    protected CompletableFuture<Vertx> deployVerticleGroup(final Vertx vertx, final int order,
+                                                           final Collection<VerticleRegistration> registrations) {
         logger.info("Deploying verticles with order {}", order);
 
         @SuppressWarnings("unchecked")
@@ -161,8 +179,14 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                 .thenApply(any -> vertx);
     }
 
-
-    private CompletableFuture<Void> deployVerticle(Vertx vertx, VerticleRegistration registration) {
+    /**
+     * 部署单个执行器
+     *
+     * @param vertx
+     * @param registration
+     * @return
+     */
+    protected CompletableFuture<Void> deployVerticle(final Vertx vertx, final VerticleRegistration registration) {
 
         Verticle verticle = registration.getVerticle();
         String verticleName = registration.getVerticleName();
@@ -177,7 +201,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             deploymentOptions = new DeploymentOptions();
         }
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        final CompletableFuture<Void> future = new CompletableFuture<>();
         Handler<AsyncResult<String>> resultHandler = ar -> {
             if (ar.succeeded()) {
                 logger.info("Successfully deployed verticle \"{}\" with deployment ID \"{}\"", registration, ar.result());
@@ -189,8 +213,10 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         };
 
         if (verticle != null) {
+            //根据实例部署
             vertx.deployVerticle(verticle, deploymentOptions, resultHandler);
         } else {
+            //根据名称部署
             vertx.deployVerticle(verticleFactoryPrefix + ":" + verticleName, deploymentOptions, resultHandler);
         }
         return future;
@@ -198,7 +224,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
 
 
     @Override
-    public void stop(Runnable callback) {
+    public void stop(final Runnable callback) {
         Vertx vertx = this.vertx;
         if (vertx != null) {
             logger.debug("Shutting down Vert.x instance");
@@ -236,7 +262,11 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         this.beanFactory = beanFactory;
     }
 
-
+    /**
+     * 构造器
+     *
+     * @return
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -259,7 +289,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
-
         public Builder options(Consumer<VertxOptions> optionsSpec) {
             if (this.options == null) {
                 this.options = new VertxOptions();
@@ -268,12 +297,10 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
-
         public Builder options(VertxOptions options) {
             this.options = new VertxOptions(options);
             return this;
         }
-
 
         public Builder clusterManager(ClusterManager clusterManager) {
             return options(opt -> {
@@ -283,78 +310,87 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             });
         }
 
-
         public Builder verticleFactoryPrefix(String prefix) {
             this.verticleFactoryPrefix = prefix;
             return this;
         }
 
-
-        public Builder verticle(Verticle verticle) {
-            return verticle(new VerticleRegistrationBean(verticle));
+        public Builder verticle(final Verticle verticle) {
+            if (verticle != null) {
+                return verticle(new VerticleRegistrationBean(verticle));
+            }
+            return this;
         }
 
-
-        public Builder verticle(Verticle verticle, DeploymentOptions options) {
-            return verticle(new VerticleRegistrationBean(verticle, options));
+        public Builder verticle(final Verticle verticle, final DeploymentOptions options) {
+            if (verticle != null) {
+                return verticle(new VerticleRegistrationBean(verticle, options));
+            }
+            return this;
         }
-
 
         public Builder verticle(VerticleRegistration verticleRegistration) {
-            this.verticleRegistrations.add(verticleRegistration);
-            return this;
-        }
-
-
-        public Builder verticles(Iterable<? extends Verticle> verticles) {
-            for (Verticle verticle : verticles) {
-                this.verticle(verticle);
+            if (verticleRegistration != null) {
+                this.verticleRegistrations.add(verticleRegistration);
             }
             return this;
         }
 
-
-        public Builder verticles(Verticle... verticles) {
-            return verticles(Arrays.asList(verticles));
-        }
-
-
-        public Builder verticleRegistrations(Iterable<? extends VerticleRegistration> verticleRegistrations) {
-            for (VerticleRegistration registration : verticleRegistrations) {
-                this.verticle(registration);
+        public Builder verticles(final Iterable<? extends Verticle> verticles) {
+            if (verticles != null) {
+                for (Verticle verticle : verticles) {
+                    this.verticle(verticle);
+                }
             }
             return this;
         }
 
-
-        public Builder verticleRegistrations(VerticleRegistration... verticleRegistrations) {
-            return verticleRegistrations(Arrays.asList(verticleRegistrations));
-        }
-
-
-        public Builder listener(VertxListener listener) {
-            this.listeners.add(listener);
+        public Builder verticles(final Verticle... verticles) {
+            if (verticles != null) {
+                return verticles(Arrays.asList(verticles));
+            }
             return this;
         }
 
+        public Builder verticleRegistrations(final Iterable<? extends VerticleRegistration> verticleRegistrations) {
+            if (verticleRegistrations != null) {
+                for (VerticleRegistration registration : verticleRegistrations) {
+                    this.verticle(registration);
+                }
+            }
+            return this;
+        }
+
+        public Builder verticleRegistrations(final VerticleRegistration... verticleRegistrations) {
+            if (verticleRegistrations != null) {
+                return verticleRegistrations(Arrays.asList(verticleRegistrations));
+            }
+            return this;
+        }
+
+        public Builder listener(final VertxListener listener) {
+            if (listener != null) {
+                this.listeners.add(listener);
+            }
+            return this;
+        }
 
         public Builder metricsFactory(VertxMetricsFactory metricsFactory) {
-            this.metricsFactories.add(metricsFactory);
+            if (metricsFactory != null) {
+                this.metricsFactories.add(metricsFactory);
+            }
             return this;
         }
 
-
-        public Builder startupPhase(int startupPhase) {
+        public Builder startupPhase(final int startupPhase) {
             this.startupPhase = startupPhase;
             return this;
         }
 
-
-        public Builder autoStartup(boolean autoStartup) {
+        public Builder autoStartup(final boolean autoStartup) {
             this.autoStartup = autoStartup;
             return this;
         }
-
 
         private VertxOptions getOrCreateOptions() {
             if (options == null) {
@@ -362,7 +398,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             }
             return options;
         }
-
 
         public SpringVertx build() {
 

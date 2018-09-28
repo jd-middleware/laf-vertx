@@ -17,12 +17,14 @@ import org.springframework.boot.actuate.metrics.CounterService;
 import org.springframework.boot.actuate.metrics.GaugeService;
 import org.springframework.util.StopWatch;
 
-
+/**
+ * 指标
+ */
 public class VertxActuatorMetrics implements VertxMetricsFactory {
 
-    private final CounterService counterService;
-    private final GaugeService gaugeService;
-    private final VertxMetricsProperties properties;
+    protected final CounterService counterService;
+    protected final GaugeService gaugeService;
+    protected final VertxMetricsProperties properties;
 
     public VertxActuatorMetrics(CounterService counterService, GaugeService gaugeService,
                                 VertxMetricsProperties properties) {
@@ -31,18 +33,16 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         this.gaugeService = gaugeService;
     }
 
-
     @Override
     public VertxMetrics metrics(Vertx vertx, VertxOptions options) {
         return new VertxMetricsImpl(counterService, gaugeService, properties);
     }
 
-
-    private static abstract class AbstractPartMetrics<P extends AbstractPartMetricsProperties> implements Metrics {
+    public static abstract class AbstractPartMetrics<P extends AbstractPartMetricsProperties> implements Metrics {
         protected final P properties;
         protected final CounterService counterService;
         protected final GaugeService gaugeService;
-        private final String prefix;
+        protected final String prefix;
 
         public AbstractPartMetrics(CounterService counterService, GaugeService gaugeService, P properties) {
             this.properties = properties;
@@ -53,7 +53,6 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
             this.counterService.increment("instances.active");
             this.counterService.increment("instances.total");
         }
-
 
         @Override
         public boolean isEnabled() {
@@ -66,8 +65,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class VertxMetricsImpl extends AbstractPartMetrics<VertxMetricsProperties> implements VertxMetrics {
+    public static class VertxMetricsImpl extends AbstractPartMetrics<VertxMetricsProperties> implements VertxMetrics {
 
         public VertxMetricsImpl(CounterService counterService, GaugeService gaugeService,
                                 VertxMetricsProperties properties) {
@@ -138,8 +136,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class EventBusMetricsImpl
+    public static class EventBusMetricsImpl
             extends AbstractPartMetrics<VertxMetricsProperties.EventBusMetricsProperties>
             implements EventBusMetrics<Object> {
 
@@ -251,8 +248,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class PoolMetricsImpl
+    public static class PoolMetricsImpl
             extends AbstractPartMetrics<VertxMetricsProperties.PoolMetricsProperties>
             implements PoolMetrics<StopWatch> {
 
@@ -298,8 +294,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static abstract class AbstractNetworkPartMetrics<P extends AbstractPartMetricsProperties>
+    public static abstract class AbstractNetworkPartMetrics<P extends AbstractPartMetricsProperties>
             extends AbstractPartMetrics<P> implements NetworkMetrics<StopWatch> {
 
         public AbstractNetworkPartMetrics(CounterService counterService, GaugeService gaugeService,
@@ -320,8 +315,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static abstract class AbstractTcpPartMetrics<P extends AbstractPartMetricsProperties>
+    public static abstract class AbstractTcpPartMetrics<P extends AbstractPartMetricsProperties>
             extends AbstractNetworkPartMetrics<P> implements TCPMetrics<StopWatch> {
 
         public AbstractTcpPartMetrics(CounterService counterService, GaugeService gaugeService, P properties) {
@@ -344,8 +338,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class HttpServerMetricsImpl
+    public static class HttpServerMetricsImpl
             extends AbstractTcpPartMetrics<VertxMetricsProperties.HttpServerMetricsProperties>
             implements HttpServerMetrics<StopWatch, StopWatch, StopWatch> {
 
@@ -432,8 +425,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class HttpClientMetricsImpl
+    public static class HttpClientMetricsImpl
             extends AbstractTcpPartMetrics<VertxMetricsProperties.HttpClientMetricsProperties>
             implements HttpClientMetrics<StopWatch, StopWatch, StopWatch, StopWatch, StopWatch> {
 
@@ -539,8 +531,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class NetServerMetricsImpl
+    public static class NetServerMetricsImpl
             extends AbstractTcpPartMetrics<VertxMetricsProperties.NetServerMetricsProperties>
             implements TCPMetrics<StopWatch> {
 
@@ -550,8 +541,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class NetClientMetricsImpl
+    public static class NetClientMetricsImpl
             extends AbstractTcpPartMetrics<VertxMetricsProperties.NetClientMetricsProperties>
             implements TCPMetrics<StopWatch> {
 
@@ -561,8 +551,7 @@ public class VertxActuatorMetrics implements VertxMetricsFactory {
         }
     }
 
-
-    private static class DatagramSocketMetricsImpl
+    public static class DatagramSocketMetricsImpl
             extends AbstractPartMetrics<VertxMetricsProperties.DatagramSocketProperties>
             implements DatagramSocketMetrics {
 

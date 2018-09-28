@@ -3,7 +3,9 @@ package com.jd.laf.vertx.spring.events;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 
-
+/**
+ * 启动事件
+ */
 public final class VertxStartedEvent extends AbstractVertxEvent {
 
     private final VertxOptions options;
