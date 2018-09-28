@@ -1,8 +1,5 @@
 package com.jd.laf.web.vertx;
 
-import com.jd.laf.binding.Binding;
-import io.vertx.core.Vertx;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -131,20 +128,6 @@ public interface Environment {
      * 模板文件缓存大小
      */
     String TEMPLATE_CACHE_SIZE = "template.cache.size";
-
-    /**
-     * 获取Vertx
-     *
-     * @return
-     */
-    Vertx getVertx();
-
-    /**
-     * 设置Vertx
-     *
-     * @param vertx
-     */
-    void setVertx(Vertx vertx);
 
     /**
      * 获取对象参数
@@ -656,31 +639,6 @@ public interface Environment {
     }
 
     /**
-     * 存取键值
-     *
-     * @param name
-     * @param obj
-     */
-    void put(final String name, final Object obj);
-
-    /**
-     * 绑定并且验证
-     *
-     * @param target
-     * @throws Exception
-     */
-    default <T> T setup(final T target) throws Exception {
-        if (target != null) {
-            Binding.bind(this, target);
-            Validates.validate(target);
-            if (target instanceof EnvironmentAware) {
-                ((EnvironmentAware) target).setup(this);
-            }
-        }
-        return target;
-    }
-
-    /**
      * 基于MAP的上下文
      */
     class MapEnvironment implements Environment {
@@ -688,7 +646,6 @@ public interface Environment {
         // 参数
         protected Map<String, Object> parameters;
 
-        protected Vertx vertx;
 
         public MapEnvironment() {
             this(null);
@@ -699,25 +656,8 @@ public interface Environment {
         }
 
         @Override
-        public Vertx getVertx() {
-            return vertx;
-        }
-
-        @Override
-        public void setVertx(Vertx vertx) {
-            this.vertx = vertx;
-        }
-
-        @Override
         public <T> T getObject(final String name) {
             return (T) (parameters == null ? null : parameters.get(name));
-        }
-
-        @Override
-        public void put(final String name, final Object obj) {
-            if (parameters != null) {
-                parameters.put(name, obj);
-            }
         }
 
     }

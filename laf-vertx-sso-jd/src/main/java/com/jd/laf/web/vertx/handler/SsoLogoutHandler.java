@@ -28,7 +28,6 @@ public class SsoLogoutHandler implements RoutingHandler {
     @Value(value = "sso.redirect.status", defaultValue = "401")
     protected int ssoRedirectStatus;
     @Value(value = "user.session.key", defaultValue = "userDetail")
-    @NotEmpty
     protected String userSessionKey;
 
     @Override

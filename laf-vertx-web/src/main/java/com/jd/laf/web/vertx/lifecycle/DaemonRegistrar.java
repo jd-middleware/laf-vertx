@@ -1,6 +1,7 @@
 package com.jd.laf.web.vertx.lifecycle;
 
 import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.service.Daemon;
 import com.jd.laf.web.vertx.service.Daemons;
 import io.vertx.core.Vertx;
@@ -11,9 +12,9 @@ import io.vertx.core.Vertx;
 public class DaemonRegistrar implements Registrar {
 
     @Override
-    public void register(final Environment environment) throws Exception {
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Daemon plugin : Daemons.getPlugins()) {
-            environment.setup(plugin).start(environment);
+            EnvironmentAware.setup(vertx, environment, plugin).start(environment);
         }
     }
 

@@ -10,8 +10,7 @@ import io.vertx.core.Vertx;
 public class CodecRegistrar implements Registrar {
 
     @Override
-    public void register(final Environment environment) throws Exception {
-        Vertx vertx = environment.getVertx();
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         CustomCodecs.getPlugins().forEach(o -> vertx.eventBus().registerDefaultCodec(o.type(), o));
     }
 

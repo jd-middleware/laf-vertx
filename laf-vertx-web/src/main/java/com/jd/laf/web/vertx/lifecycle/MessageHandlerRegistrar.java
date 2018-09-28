@@ -1,6 +1,7 @@
 package com.jd.laf.web.vertx.lifecycle;
 
 import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.MessageHandler;
 import com.jd.laf.web.vertx.MessageHandlers;
 import io.vertx.core.Vertx;
@@ -13,9 +14,9 @@ import java.util.Map;
 public class MessageHandlerRegistrar implements Registrar {
 
     @Override
-    public void register(final Environment environment) throws Exception {
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
         for (Map.Entry<String, MessageHandler> entry : MessageHandlers.getPlugins().entrySet()) {
-            environment.setup(entry.getValue());
+            EnvironmentAware.setup(vertx, environment, entry.getValue());
         }
     }
 

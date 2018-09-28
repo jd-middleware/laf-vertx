@@ -2,6 +2,7 @@ package com.jd.laf.web.vertx.template;
 
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.TemplateProvider;
+import io.vertx.core.Vertx;
 import io.vertx.ext.web.templ.TemplateEngine;
 
 /**
@@ -12,8 +13,8 @@ public class BeetlProvider implements TemplateProvider {
     public static final String BEETL = "beetl";
 
     @Override
-    public TemplateEngine create(final Environment context) throws Exception {
-        return BeetlTemplateEngine.create(context.getVertx());
+    public TemplateEngine create(final Vertx vertx, final Environment context) throws Exception {
+        return BeetlTemplateEngine.create(vertx);
     }
 
     @Override
