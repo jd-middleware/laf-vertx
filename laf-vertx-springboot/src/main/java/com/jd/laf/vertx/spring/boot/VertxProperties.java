@@ -22,31 +22,29 @@ import java.util.stream.Collectors;
 
 
 @ConfigurationProperties(prefix = "vertx")
-@SuppressWarnings({"unused", "DefaultAnnotationParam"})
 // As this class will *replace* the VertxOptions, we use "highest precedence" so this configurer is called first
 // in the chain, giving other configurers a chance to modify the options
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class VertxProperties implements VertxConfigurer {
 
-    private boolean autoDeployVerticles = true;
+    protected boolean autoDeployVerticles = true;
 
-    private VertxOptions vertxOptions = new VertxOptions();
-
-    @NestedConfigurationProperty
-    private final Ha ha = new Ha(vertxOptions);
+    protected VertxOptions vertxOptions = new VertxOptions();
 
     @NestedConfigurationProperty
-    private AddressResolver addressResolver;
+    protected final Ha ha = new Ha(vertxOptions);
 
     @NestedConfigurationProperty
-    private EventBusOptions eventBus;
+    protected AddressResolver addressResolver;
 
+    @NestedConfigurationProperty
+    protected EventBusOptions eventBus;
 
     public static class Ha {
 
-        private final VertxOptions vertxOptions;
+        protected final VertxOptions vertxOptions;
 
-        private Ha(VertxOptions vertxOptions) {
+        public Ha(VertxOptions vertxOptions) {
             this.vertxOptions = vertxOptions;
         }
 
@@ -75,23 +73,22 @@ public class VertxProperties implements VertxConfigurer {
         }
     }
 
-
     public static class AddressResolver {
 
-        private final AddressResolverOptions options = new AddressResolverOptions();
+        protected final AddressResolverOptions options = new AddressResolverOptions();
 
         @NestedConfigurationProperty
-        private final Cache cache = new Cache(options);
+        protected final Cache cache = new Cache(options);
 
-        private Map<String, List<String>> hosts;
-        private String hostsValue;
-        private Resource hostsResource;
+        protected Map<String, List<String>> hosts;
+        protected String hostsValue;
+        protected Resource hostsResource;
 
         public static class Cache {
 
-            private final AddressResolverOptions options;
+            protected final AddressResolverOptions options;
 
-            private Cache(AddressResolverOptions options) {
+            public Cache(AddressResolverOptions options) {
                 this.options = options;
             }
 
@@ -208,7 +205,7 @@ public class VertxProperties implements VertxConfigurer {
             options.setRotateServers(rotateServers);
         }
 
-        AddressResolverOptions toAddressResolverOptions() {
+        protected AddressResolverOptions toAddressResolverOptions() {
             AddressResolverOptions options = new AddressResolverOptions(this.options);
             if (hosts != null) {
                 String value = hosts.entrySet().stream()
@@ -302,36 +299,29 @@ public class VertxProperties implements VertxConfigurer {
         return vertxOptions.getInternalBlockingPoolSize();
     }
 
-
     public void setInternalBlockingPoolSize(int internalBlockingPoolSize) {
         vertxOptions.setInternalBlockingPoolSize(internalBlockingPoolSize);
     }
-
 
     public MetricsOptions getMetricsOptions() {
         return vertxOptions.getMetricsOptions();
     }
 
-
     public void setMetricsOptions(MetricsOptions metrics) {
         vertxOptions.setMetricsOptions(metrics);
     }
-
 
     public long getWarningExceptionTime() {
         return vertxOptions.getWarningExceptionTime();
     }
 
-
     public void setWarningExceptionTime(long warningExceptionTime) {
         vertxOptions.setWarningExceptionTime(warningExceptionTime);
     }
 
-
     public EventBusOptions getEventBus() {
         return eventBus;
     }
-
 
     public void setEventBus(EventBusOptions eventBus) {
         this.eventBus = eventBus;
@@ -349,11 +339,9 @@ public class VertxProperties implements VertxConfigurer {
         return vertxOptions.isFileResolverCachingEnabled();
     }
 
-
     public void setFileResolverCachingEnabled(boolean fileResolverCachingEnabled) {
         vertxOptions.setFileResolverCachingEnabled(fileResolverCachingEnabled);
     }
-
 
     public VertxOptions toVertxOptions() {
         VertxOptions newOptions = new VertxOptions(this.vertxOptions);
@@ -366,7 +354,6 @@ public class VertxProperties implements VertxConfigurer {
         }
         return newOptions;
     }
-
 
     @Override
     public void configure(SpringVertx.Builder builder) {
