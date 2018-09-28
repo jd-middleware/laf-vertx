@@ -13,36 +13,40 @@ import org.springframework.context.ApplicationEventPublisherAware;
 
 import java.util.function.Supplier;
 
-
+/**
+ * Vertx事件广播到应用事件总线
+ */
 public final class EventPublishingVertxListener implements VertxListener, ApplicationEventPublisherAware {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Override
-    public void vertxStarted(Vertx vertx, VertxOptions options) {
+    public void vertxStarted(final Vertx vertx, final VertxOptions options) {
         publish(() -> new VertxStartedEvent(vertx, options));
     }
 
     @Override
-    public void vertxStopped(Vertx vertx) {
+    public void vertxStopped(final Vertx vertx) {
         publish(() -> new VertxStoppedEvent(vertx));
     }
 
     @Override
-    public void verticleDeployed(Verticle verticle, Context context) {
+    public void verticleDeployed(final Verticle verticle, final Context context) {
         publish(() -> new VerticleDeployedEvent(verticle, context));
     }
 
     @Override
-    public void verticleUndeployed(Verticle verticle, Context context) {
+    public void verticleUndeployed(final Verticle verticle, final Context context) {
         publish(() -> new VerticleUndeployedEvent(verticle, context));
     }
 
-    private <T extends ApplicationEvent> void publish(Supplier<T> eventSupplier) {
+    protected <T extends ApplicationEvent> void publish(final Supplier<T> supplier) {
         if (applicationEventPublisher != null) {
-            T event = eventSupplier.get();
-            logger.debug("Publishing {} with source {}", event.getClass().getSimpleName(), event.getSource());
+            T event = supplier.get();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Publishing {} with source {}", event.getClass().getSimpleName(), event.getSource());
+            }
             applicationEventPublisher.publishEvent(event);
         }
     }

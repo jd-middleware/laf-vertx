@@ -58,7 +58,9 @@ public class VertxConfiguration {
             List<VertxConfigurer> sortedConfigurers = new ArrayList<>(configurers);
             AnnotationAwareOrderComparator.sort(sortedConfigurers);
             for (VertxConfigurer configurer : sortedConfigurers) {
-                logger.debug("Applying configurer: {}", configurer);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Applying configurer: {}", configurer);
+                }
                 configurer.configure(builder);
             }
         }
@@ -74,9 +76,9 @@ public class VertxConfiguration {
     }
 
 
-    private static class ClusterManagerConfigurer implements VertxConfigurer, Ordered {
+    protected static class ClusterManagerConfigurer implements VertxConfigurer, Ordered {
 
-        private final ClusterManager clusterManager;
+        protected final ClusterManager clusterManager;
 
         public ClusterManagerConfigurer(ClusterManager clusterManager) {
             this.clusterManager = clusterManager;

@@ -6,7 +6,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.VerticleFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-
+/**
+ * Spring执行器工厂类
+ */
 public class SpringVerticleFactory implements VerticleFactory {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -27,37 +29,37 @@ public class SpringVerticleFactory implements VerticleFactory {
 
 
     @Override
-    public Verticle createVerticle(String verticleName, ClassLoader classLoader) throws Exception {
-        String beanName = getBeanNameFromVerticleName(verticleName);
-        return createVerticleFromBean(beanName);
+    public Verticle createVerticle(final String verticleName, final ClassLoader classLoader) throws Exception {
+        return createVerticleFromBean(getBeanNameFromVerticleName(verticleName));
     }
 
-
-    private String getBeanNameFromVerticleName(String verticleName) {
-        String beanName;
-        if (verticleName.startsWith(prefix + ":")) {
-            beanName = verticleName.substring(prefix.length() + 1);
-        } else {
-            beanName = verticleName;
-        }
-        return beanName;
+    /**
+     * 获取执行器的Bean名称
+     *
+     * @param verticleName verticle名称
+     * @return
+     */
+    protected String getBeanNameFromVerticleName(final String verticleName) {
+        return verticleName.startsWith(prefix + ":") ? verticleName.substring(prefix.length() + 1) : verticleName;
     }
 
-
-    private Verticle createVerticleFromBean(String beanName) {
+    /**
+     * 构建执行器
+     *
+     * @param beanName
+     * @return
+     */
+    protected Verticle createVerticleFromBean(final String beanName) {
         if (!beanFactory.containsBean(beanName)) {
             throw new IllegalArgumentException("No such bean: " + beanName);
-        }
-
-        if (!beanFactory.isTypeMatch(beanName, Verticle.class)) {
+        } else if (!beanFactory.isTypeMatch(beanName, Verticle.class)) {
             throw new IllegalArgumentException("Bean \"" + beanName + "\" is not of type Verticle");
-        }
-
-        if (beanFactory.isSingleton(beanName)) {
+        } else if (beanFactory.isSingleton(beanName)) {
             throw new IllegalArgumentException("Verticle bean \"" + beanName + "\" is a singleton bean");
         }
-
-        logger.debug("Creating verticle from bean \"{}\"", beanName);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating verticle from bean \"{}\"", beanName);
+        }
         return beanFactory.getBean(beanName, Verticle.class);
     }
 

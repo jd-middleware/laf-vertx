@@ -24,16 +24,18 @@ import org.springframework.core.type.MethodMetadata;
 import java.util.Map;
 import java.util.function.Consumer;
 
-
+/**
+ * Bean初始化后执行器处理器
+ */
 public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProcessor, BeanClassLoaderAware {
 
     private final Logger logger = LoggerFactory.getLogger(VerticleBeanPostProcessor.class);
 
-    private ClassLoader beanClassLoader;
+    protected ClassLoader beanClassLoader;
 
 
     @Override
-    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+    public void postProcessBeanDefinitionRegistry(final BeanDefinitionRegistry registry) throws BeansException {
         for (String beanName : registry.getBeanDefinitionNames()) {
             BeanDefinition beanDefinition = registry.getBeanDefinition(beanName);
             if (!isVerticleBeanDefinition(beanName, beanDefinition)) {
@@ -97,13 +99,20 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
         }
     }
 
-
-    private boolean isVerticleBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+    /**
+     * 判断bean是否是Verticle
+     *
+     * @param beanName       bean名称
+     * @param beanDefinition bean定义
+     * @return
+     */
+    protected boolean isVerticleBeanDefinition(final String beanName, final BeanDefinition beanDefinition) {
         Class<?> beanClass = getBeanClass(beanName, beanDefinition);
         if (beanClass != null) {
             if (Verticle.class.isAssignableFrom(beanClass)) {
                 return true;
             }
+            //工厂Bean
             if (FactoryBean.class.isAssignableFrom(beanClass) && beanDefinition instanceof AnnotatedBeanDefinition) {
                 MethodMetadata factoryMethodMetadata = ((AnnotatedBeanDefinition) beanDefinition).getFactoryMethodMetadata();
                 if (factoryMethodMetadata != null && factoryMethodMetadata.isAnnotated(VerticleDeployment.class.getName())) {
@@ -114,8 +123,14 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
         return false;
     }
 
-
-    private Class<?> getBeanClass(String beanName, BeanDefinition beanDefinition) {
+    /**
+     * 获取bean的类型
+     *
+     * @param beanName
+     * @param beanDefinition
+     * @return
+     */
+    protected Class<?> getBeanClass(final String beanName, final BeanDefinition beanDefinition) {
         if ((beanDefinition instanceof AbstractBeanDefinition)
                 && ((AbstractBeanDefinition) beanDefinition).hasBeanClass()) {
             return ((AbstractBeanDefinition) beanDefinition).getBeanClass();
@@ -123,7 +138,6 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
         if (beanDefinition.getBeanClassName() != null) {
             try {
                 return beanClassLoader.loadClass(beanDefinition.getBeanClassName());
-
             } catch (ClassNotFoundException ex) {
                 logger.warn("Could not load class {} for bean {}", beanDefinition.getBeanClassName(), beanName, ex);
             }
@@ -147,8 +161,13 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
         this.beanClassLoader = beanClassLoader;
     }
 
-
-    private AnnotatedTypeMetadata getMetadataFromBeanDefinition(BeanDefinition beanDefinition) {
+    /**
+     * 获取注解信息
+     *
+     * @param beanDefinition
+     * @return
+     */
+    protected AnnotatedTypeMetadata getMetadataFromBeanDefinition(BeanDefinition beanDefinition) {
         if (beanDefinition instanceof AnnotatedBeanDefinition) {
             AnnotatedBeanDefinition abd = (AnnotatedBeanDefinition) beanDefinition;
             MethodMetadata factoryMethodMetadata = abd.getFactoryMethodMetadata();
@@ -166,16 +185,18 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
     }
 
-
-    private static class VerticleDeploymentAnnotationMirror {
-
-        private final Map<String, Object> attributes;
+    /**
+     * 执行器部署注解镜像
+     */
+    protected static class VerticleDeploymentAnnotationMirror {
+        //注解属性
+        protected final Map<String, Object> attributes;
 
         VerticleDeploymentAnnotationMirror(Map<String, Object> attributes) {
             this.attributes = attributes;
         }
 
-        boolean isAutoDeploy() {
+        public boolean isAutoDeploy() {
             Boolean autoDeploy = (Boolean) attributes.get("autoDeploy");
             if (autoDeploy != null) {
                 return autoDeploy;
@@ -187,7 +208,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
             return true;
         }
 
-        void configure(DeploymentOptions options) {
+        public void configure(final DeploymentOptions options) {
             withAnnotationAttribute("worker", options::setWorker);
             withAnnotationAttribute("multiThreaded", options::setMultiThreaded);
             withAnnotationAttribute("ha", options::setHa);
@@ -198,7 +219,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
         }
 
         @SuppressWarnings("unchecked")
-        private <T> void withAnnotationAttribute(String key, Consumer<T> consumer) {
+        protected <T> void withAnnotationAttribute(final String key, final Consumer<T> consumer) {
             T value = (T) attributes.get(key);
             if (value != null) {
                 consumer.accept(value);
