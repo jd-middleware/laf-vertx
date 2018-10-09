@@ -34,7 +34,7 @@ public class IgniteClusterManagerConfiguration {
 
         @ConditionalOnProperty(prefix = "vertx.cluster-manager", name = "type", matchIfMissing = true)
         @ConditionalOnMissingClass({
-                ClusterManagerAutoConfiguration.IGNITE_CLUSTER_MANAGER,
+                ClusterManagerAutoConfiguration.HAZELCAST_CLUSTER_MANAGER,
                 ClusterManagerAutoConfiguration.INFINISPAN_CLUSTER_MANAGER,
                 ClusterManagerAutoConfiguration.ZOOKEEPER_CLUSTER_MANAGER
         })
