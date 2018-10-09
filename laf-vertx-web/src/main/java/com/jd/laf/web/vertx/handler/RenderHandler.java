@@ -35,7 +35,10 @@ public class RenderHandler implements RoutingHandler {
         if (context == null) {
             return;
         }
-        String contentType = context.getAcceptableContentType();
+        String contentType = context.request().getHeader("Content-Type");
+        if (contentType == null || contentType.isEmpty()) {
+            contentType = context.getAcceptableContentType();
+        }
         contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
         Render render = getPlugin(contentType);
         render = render == null ? JSON : render;
