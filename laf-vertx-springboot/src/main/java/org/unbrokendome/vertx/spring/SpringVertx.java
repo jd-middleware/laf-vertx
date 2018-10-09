@@ -1,6 +1,5 @@
 package org.unbrokendome.vertx.spring;
 
-import org.unbrokendome.vertx.spring.metrics.DispatchingVertxMetricsFactory;
 import io.vertx.core.*;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -12,6 +11,7 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.Ordered;
+import org.unbrokendome.vertx.spring.metrics.DispatchingVertxMetricsFactory;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -105,7 +105,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             vertxReadyFuture = vertxReadyFuture.thenApply(vertx -> {
                 SpringVerticleFactory verticleFactory = new SpringVerticleFactory(verticleFactoryPrefix, beanFactory);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Registering VerticleFactory: {}", verticleFactory);
+                    logger.debug("Registering VerticleFactory: {0}", verticleFactory);
                 }
                 vertx.registerVerticleFactory(verticleFactory);
                 return vertx;
@@ -133,6 +133,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             this.vertx = vertxReadyFuture.join();
             logger.info("Vert.x startup complete");
         } catch (CompletionException ex) {
+            logger.error(ex.getMessage(), ex);
             if (ex.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) ex.getCause();
             } else {
@@ -165,7 +166,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
      */
     protected CompletableFuture<Vertx> deployVerticleGroup(final Vertx vertx, final int order,
                                                            final Collection<VerticleRegistration> registrations) {
-        logger.info("Deploying verticles with order {}", order);
+        logger.info("Deploying verticles with order {0}", order);
 
         @SuppressWarnings("unchecked")
         CompletableFuture<Void>[] futures = new CompletableFuture[registrations.size()];
@@ -192,7 +193,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         String verticleName = registration.getVerticleName();
 
         if (verticle == null && verticleName == null) {
-            logger.error("Invalid VerticleRegistration {}: Either verticle or verticleName must be given", registration);
+            logger.error("Invalid VerticleRegistration {0}: Either verticle or verticleName must be given", registration);
             return CompletableFuture.completedFuture(null);
         }
 
@@ -204,10 +205,10 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         final CompletableFuture<Void> future = new CompletableFuture<>();
         Handler<AsyncResult<String>> resultHandler = ar -> {
             if (ar.succeeded()) {
-                logger.info("Successfully deployed verticle \"{}\" with deployment ID \"{}\"", registration, ar.result());
+                logger.info("Successfully deployed verticle \"{0}\" with deployment ID \"{1}\"", registration, ar.result());
                 future.complete(null);
             } else {
-                logger.error("Failed to deploy verticle \"{}\"", registration, ar.cause());
+                logger.error("Failed to deploy verticle \"{0}\"", registration, ar.cause());
                 future.completeExceptionally(ar.cause());
             }
         };

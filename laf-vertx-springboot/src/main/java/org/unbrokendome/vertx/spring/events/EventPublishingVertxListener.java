@@ -45,7 +45,7 @@ public final class EventPublishingVertxListener implements VertxListener, Applic
         if (applicationEventPublisher != null) {
             T event = supplier.get();
             if (logger.isDebugEnabled()) {
-                logger.debug("Publishing {} with source {}", event.getClass().getSimpleName(), event.getSource());
+                logger.debug("Publishing {0} with source {1}", event.getClass().getSimpleName(), event.getSource());
             }
             applicationEventPublisher.publishEvent(event);
         }

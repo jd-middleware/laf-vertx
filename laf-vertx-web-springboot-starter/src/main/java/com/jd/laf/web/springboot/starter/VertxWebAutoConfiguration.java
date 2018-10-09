@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.unbrokendome.vertx.spring.EnableVertx;
+import org.unbrokendome.vertx.spring.VerticleDeployment;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -14,10 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by yangyang115 on 18-9-27.
  */
 @Configuration
-public class RoutingVerticleAutoConfiguration {
+@EnableVertx
+public class VertxWebAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
+    @VerticleDeployment(worker = true)
     public RoutingVerticle routingVerticle(org.springframework.core.env.Environment environment, ApplicationContext context) {
         RoutingVerticle routingVerticle = new RoutingVerticle();
         routingVerticle.setEnv(new SpringEnvironment(environment, context));

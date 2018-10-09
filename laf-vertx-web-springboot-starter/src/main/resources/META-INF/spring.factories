@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.jd.laf.web.springboot.starter.RoutingVerticleAutoConfiguration
+com.jd.laf.web.springboot.starter.VertxWebAutoConfiguration
