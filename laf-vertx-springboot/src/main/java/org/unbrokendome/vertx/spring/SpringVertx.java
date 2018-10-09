@@ -375,7 +375,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
-        public Builder metricsFactory(VertxMetricsFactory metricsFactory) {
+        public Builder metricsFactory(final VertxMetricsFactory metricsFactory) {
             if (metricsFactory != null) {
                 this.metricsFactories.add(metricsFactory);
             }

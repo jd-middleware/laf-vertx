@@ -20,6 +20,7 @@
         <module>laf-vertx-web-beetl</module>
         <module>laf-vertx-sso-jd</module>
         <module>laf-vertx-springboot</module>
+        <module>laf-vertx-web-springboot-starter</module>
     </modules>
 
     <properties>
@@ -32,6 +33,7 @@
         <hibernate-validator.version>6.0.9.Final</hibernate-validator.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
         <ignite.version>2.6.0</ignite.version>
+        <spring-boot.version>2.0.5.RELEASE</spring-boot.version>
     </properties>
 
     <dependencyManagement>
