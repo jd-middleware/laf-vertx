@@ -14,7 +14,7 @@ public class RenderHandler implements RoutingHandler {
 
     public static final String RENDER = "render";
 
-    protected static final Render JSON = getPlugin(APPLICATION_JSON);
+    public static final Render JSON = getPlugin(APPLICATION_JSON);
 
     @Override
     public String type() {
