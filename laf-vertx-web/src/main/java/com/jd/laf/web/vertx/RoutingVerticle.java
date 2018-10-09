@@ -54,8 +54,6 @@ public class RoutingVerticle extends AbstractVerticle {
     protected Map<String, Object> parameters;
     //资源文件
     protected String file = "routing.xml";
-    //模板引擎
-    protected TemplateEngine engine;
     protected HttpServer httpServer;
 
     @Override
@@ -325,10 +323,6 @@ public class RoutingVerticle extends AbstractVerticle {
 
     public void setConfig(VertxConfig config) {
         this.config = config;
-    }
-
-    public void setEngine(TemplateEngine engine) {
-        this.engine = engine;
     }
 
     public void setEnv(Environment env) {
