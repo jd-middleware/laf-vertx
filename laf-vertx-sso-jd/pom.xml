@@ -26,6 +26,16 @@
             <groupId>com.jd.common</groupId>
             <artifactId>sso-uim-spring</artifactId>
             <version>1.0.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jd</groupId>
+                    <artifactId>jsf</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-webmvc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
