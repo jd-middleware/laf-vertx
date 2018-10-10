@@ -32,7 +32,7 @@ public class RenderHandler implements RoutingHandler {
      * @param context
      */
     public static void render(final RoutingContext context) {
-        if (context == null) {
+        if (context == null || context.response().ended()) {
             return;
         }
         String contentType = context.request().getHeader("Content-Type");
