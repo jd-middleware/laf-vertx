@@ -36,8 +36,7 @@ public class BeetlTest {
 
         Map<String, Object> map = new HashMap<>();
         map.put(Environment.TEMPLATE_TYPE, "beetl");
-        RoutingVerticle verticle = new RoutingVerticle();
-        verticle.setParameters(map);
+        RoutingVerticle verticle = new RoutingVerticle(map);
 
         vertx.deployVerticle(verticle, context.asyncAssertSuccess());
     }

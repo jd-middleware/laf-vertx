@@ -47,8 +47,7 @@ public class RoutingVerticleTest {
         map.put(Environment.TEMPLATE_ENGINE, engine);
         map.put(Environment.TEMPLATE_DIRECTORY, "templates");
         map.put("userService", new UserService());
-        RoutingVerticle verticle = new RoutingVerticle();
-        verticle.setParameters(map);
+        RoutingVerticle verticle = new RoutingVerticle(map);
 
         vertx.deployVerticle(verticle, context.asyncAssertSuccess());
     }

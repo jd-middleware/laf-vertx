@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 
@@ -190,10 +191,11 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     protected CompletableFuture<Void> deployVerticle(final Vertx vertx, final VerticleRegistration registration) {
 
         Verticle verticle = registration.getVerticle();
+        Supplier<Verticle> supplier = registration.getSupplier();
         String verticleName = registration.getVerticleName();
 
-        if (verticle == null && verticleName == null) {
-            logger.error("Invalid VerticleRegistration {0}: Either verticle or verticleName must be given", registration);
+        if (verticle == null && verticleName == null && supplier == null) {
+            logger.error("Invalid VerticleRegistration {0}: Either verticle or verticleName or Supplier must be given", registration);
             return CompletableFuture.completedFuture(null);
         }
 
@@ -212,9 +214,12 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                 future.completeExceptionally(ar.cause());
             }
         };
-
-        if (verticle != null) {
-            //根据实例部署
+        if (supplier != null) {
+            //根据提供者部署
+            vertx.deployVerticle(supplier, deploymentOptions, resultHandler);
+        } else if (verticle != null) {
+            //根据创建实例部署，只能单实例部署，否则会报错
+            deploymentOptions.setInstances(1);
             vertx.deployVerticle(verticle, deploymentOptions, resultHandler);
         } else {
             //根据名称部署

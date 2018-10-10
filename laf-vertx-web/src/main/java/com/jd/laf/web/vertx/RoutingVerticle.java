@@ -1,8 +1,6 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
-import com.jd.laf.binding.reflect.Reflect;
-import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
@@ -20,16 +18,11 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
-import io.vertx.ext.web.templ.TemplateEngine;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.jd.laf.binding.reflect.Fields.getFields;
 import static com.jd.laf.web.vertx.Environment.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
@@ -44,36 +37,66 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final String HTTP_SERVER_OPTION_PREFIX = "http.server.";
     public static final String HTTP_SERVER_OPTIONS = "http.server.options";
+    public static final int DEFAULT_PORT = 8080;
     protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
+
+    //注入的环境
+    protected Environment env;
+    //HTTP选项
+    protected HttpServerOptions httpOptions;
+    //资源文件
+    protected String file;
 
     //配置
     protected VertxConfig config;
-    //注入的环境
-    protected Environment env;
-    //参数
-    protected Map<String, Object> parameters;
-    //资源文件
-    protected String file = "routing.xml";
     protected HttpServer httpServer;
+
+    public RoutingVerticle() {
+        this(new Environment.MapEnvironment(), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Environment env) {
+        this(env, new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions) {
+        this(env, httpOptions, DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions, final String file) {
+        this.env = env != null ? env : new Environment.MapEnvironment();
+        this.httpOptions = httpOptions == null ? new HttpServerOptions().setPort(DEFAULT_PORT) : httpOptions;
+        this.file = file != null ? file : env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Map<String, Object> parameters) {
+        this(new Environment.MapEnvironment(parameters), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions) {
+        this(new Environment.MapEnvironment(parameters), httpOptions, DEFAULT_ROUTING_CONFIG_FILE);
+    }
+
+    public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions, final String file) {
+        this(new Environment.MapEnvironment(parameters), httpOptions, file);
+    }
 
     @Override
     public void start() throws Exception {
         try {
-            Environment environment = env != null ? env : new Environment.MapEnvironment(parameters);
             //构建配置数据
-            file = environment.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
-            config = config == null ? inherit(build(file)) : config;
+            config = inherit(build(file));
 
             //初始化插件
-            Registrars.register(vertx, environment);
+            Registrars.register(vertx, env);
 
-            Router router = createRouter(environment);
+            Router router = createRouter(env);
             //构建业务处理链
-            buildHandlers(router, config, environment);
+            buildHandlers(router, config, env);
             //构建消息处理链
             buildConsumers(config);
             //启动服务
-            httpServer = vertx.createHttpServer(buildHttpServerOptions(environment));
+            httpServer = vertx.createHttpServer(httpOptions);
             httpServer.requestHandler(router::accept).listen(event -> {
                 if (event.succeeded()) {
                     logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
@@ -112,34 +135,6 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
-    }
-
-    /**
-     * 构造Http服务选项
-     *
-     * @param environment
-     */
-    protected HttpServerOptions buildHttpServerOptions(final Environment environment) throws ReflectionException {
-        HttpServerOptions options = environment.getObject(HTTP_SERVER_OPTIONS, HttpServerOptions.class);
-        if (options == null) {
-            options = new HttpServerOptions().setPort(8080);
-            List<Field> fields = getFields(HttpServerOptions.class);
-            if (fields != null) {
-                Object value;
-                //遍历字段，设置字段配置
-                for (Field field : fields) {
-                    if (Modifier.isFinal(field.getModifiers())
-                            || Modifier.isStatic(field.getModifiers())) {
-                        continue;
-                    }
-                    value = environment.getObject(HTTP_SERVER_OPTION_PREFIX + field.getName());
-                    if (value != null) {
-                        Reflect.set(options, field, value);
-                    }
-                }
-            }
-        }
-        return options;
     }
 
     /**
@@ -319,22 +314,6 @@ public class RoutingVerticle extends AbstractVerticle {
                 route.produces(type);
             }
         }
-    }
-
-    public void setConfig(VertxConfig config) {
-        this.config = config;
-    }
-
-    public void setEnv(Environment env) {
-        this.env = env;
-    }
-
-    public void setParameters(Map<String, Object> parameters) {
-        this.parameters = parameters;
-    }
-
-    public void setFile(String file) {
-        this.file = file;
     }
 
     /**

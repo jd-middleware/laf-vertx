@@ -5,6 +5,8 @@ import io.vertx.core.Verticle;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
+import java.util.function.Supplier;
+
 
 /**
  * 执行器注册Bean
@@ -12,6 +14,7 @@ import org.springframework.core.Ordered;
 public class VerticleRegistrationBean implements VerticleRegistration, BeanNameAware, Ordered {
 
     private Verticle verticle;
+    private Supplier<Verticle> supplier;
     private String verticleName;
     private DeploymentOptions deploymentOptions;
     private Integer order;
@@ -25,13 +28,22 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
         this.verticle = verticle;
     }
 
-    public VerticleRegistrationBean(String verticleName) {
-        this.verticleName = verticleName;
-    }
-
     public VerticleRegistrationBean(Verticle verticle, DeploymentOptions deploymentOptions) {
         this(verticle);
         this.deploymentOptions = deploymentOptions;
+    }
+
+    public VerticleRegistrationBean(Supplier<Verticle> supplier) {
+        this.supplier = supplier;
+    }
+
+    public VerticleRegistrationBean(Supplier<Verticle> supplier, DeploymentOptions deploymentOptions) {
+        this.supplier = supplier;
+        this.deploymentOptions = deploymentOptions;
+    }
+
+    public VerticleRegistrationBean(String verticleName) {
+        this.verticleName = verticleName;
     }
 
     public VerticleRegistrationBean(String verticleName, DeploymentOptions deploymentOptions) {
@@ -46,6 +58,16 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
 
     public VerticleRegistrationBean setVerticle(Verticle verticle) {
         this.verticle = verticle;
+        return this;
+    }
+
+    @Override
+    public Supplier<Verticle> getSupplier() {
+        return supplier;
+    }
+
+    public VerticleRegistrationBean setSupplier(Supplier<Verticle> supplier) {
+        this.supplier = supplier;
         return this;
     }
 
