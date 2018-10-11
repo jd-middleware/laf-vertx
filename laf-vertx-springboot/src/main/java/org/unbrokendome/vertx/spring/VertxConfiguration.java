@@ -59,7 +59,7 @@ public class VertxConfiguration {
             AnnotationAwareOrderComparator.sort(sortedConfigurers);
             for (VertxConfigurer configurer : sortedConfigurers) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Applying configurer: {0}", configurer);
+                    logger.debug("Applying configurer: {}", configurer);
                 }
                 configurer.configure(builder);
             }

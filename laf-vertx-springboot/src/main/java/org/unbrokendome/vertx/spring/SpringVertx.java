@@ -106,7 +106,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             vertxReadyFuture = vertxReadyFuture.thenApply(vertx -> {
                 SpringVerticleFactory verticleFactory = new SpringVerticleFactory(verticleFactoryPrefix, beanFactory);
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Registering VerticleFactory: {0}", verticleFactory);
+                    logger.debug("Registering VerticleFactory: {}", verticleFactory);
                 }
                 vertx.registerVerticleFactory(verticleFactory);
                 return vertx;
@@ -167,7 +167,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
      */
     protected CompletableFuture<Vertx> deployVerticleGroup(final Vertx vertx, final int order,
                                                            final Collection<VerticleRegistration> registrations) {
-        logger.info("Deploying verticles with order {0}", order);
+        logger.info("Deploying verticles with order {}", order);
 
         @SuppressWarnings("unchecked")
         CompletableFuture<Void>[] futures = new CompletableFuture[registrations.size()];
@@ -195,7 +195,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         String verticleName = registration.getVerticleName();
 
         if (verticle == null && verticleName == null && supplier == null) {
-            logger.error("Invalid VerticleRegistration {0}: Either verticle or verticleName or Supplier must be given", registration);
+            logger.error("Invalid VerticleRegistration {}: Either verticle or verticleName or Supplier must be given", registration);
             return CompletableFuture.completedFuture(null);
         }
 
@@ -207,10 +207,10 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         final CompletableFuture<Void> future = new CompletableFuture<>();
         Handler<AsyncResult<String>> resultHandler = ar -> {
             if (ar.succeeded()) {
-                logger.info("Successfully deployed verticle \"{0}\" with deployment ID \"{1}\"", registration, ar.result());
+                logger.info("Successfully deployed verticle \"{}\" with deployment ID \"{}\"", registration, ar.result());
                 future.complete(null);
             } else {
-                logger.error("Failed to deploy verticle \"{0}\"", registration, ar.cause());
+                logger.error("Failed to deploy verticle \"{}\"", registration, ar.cause());
                 future.completeExceptionally(ar.cause());
             }
         };

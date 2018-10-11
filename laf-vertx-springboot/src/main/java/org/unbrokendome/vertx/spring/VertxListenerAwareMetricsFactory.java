@@ -45,7 +45,7 @@ public class VertxListenerAwareMetricsFactory implements VertxMetricsFactory {
             try {
                 listenerAction.accept(listener);
             } catch (Throwable t) {
-                logger.error("Error in VertxListener {0} while handling {1} event", listener, eventName, t);
+                logger.error("Error in VertxListener {} while handling {} event", listener, eventName, t);
             }
         }
     }
