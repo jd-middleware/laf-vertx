@@ -35,6 +35,22 @@
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-webmvc</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.jd.jim.cli</groupId>
+                    <artifactId>jim-cli-jedis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.jd.jim.cli</groupId>
+                    <artifactId>jim-cli-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
     </dependencies>

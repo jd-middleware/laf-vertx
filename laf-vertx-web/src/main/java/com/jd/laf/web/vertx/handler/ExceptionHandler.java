@@ -37,7 +37,9 @@ public class ExceptionHandler implements ErrorHandler {
             contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
             Render render = getPlugin(contentType);
             render = render == null ? RenderHandler.JSON : render;
-            render.render(context);
+            if (!context.response().ended()) {
+                render.render(context);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
