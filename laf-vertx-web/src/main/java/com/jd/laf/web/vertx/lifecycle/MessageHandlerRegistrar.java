@@ -21,10 +21,6 @@ public class MessageHandlerRegistrar implements Registrar {
     }
 
     @Override
-    public void deregister(final Vertx vertx) {
-    }
-
-    @Override
     public int order() {
         return HANDLER;
     }

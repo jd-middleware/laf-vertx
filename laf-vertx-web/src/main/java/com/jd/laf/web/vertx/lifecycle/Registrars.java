@@ -4,6 +4,7 @@ import com.jd.laf.web.vertx.Environment;
 import io.vertx.core.Vertx;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -11,6 +12,8 @@ import java.util.logging.Logger;
  * 注册器插件管理器
  */
 public abstract class Registrars {
+    //计数器
+    protected static AtomicLong counter = new AtomicLong(0);
 
     protected static Logger logger = Logger.getLogger(Registrars.class.getName());
 
@@ -48,11 +51,14 @@ public abstract class Registrars {
      * @throws Exception
      */
     public static void register(final Vertx vertx, final Environment environment) throws Exception {
-        for (Registrar plugin : getPlugins()) {
-            try {
-                plugin.register(vertx, environment);
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, String.format("register plugin %s error ", plugin.getClass()), e);
+        //防止多次注册
+        if (counter.incrementAndGet() == 1) {
+            for (Registrar plugin : getPlugins()) {
+                try {
+                    plugin.register(vertx, environment);
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, String.format("register plugin %s error ", plugin.getClass()), e);
+                }
             }
         }
     }
@@ -63,7 +69,9 @@ public abstract class Registrars {
      * @param vertx vertx对象
      */
     public static void deregister(final Vertx vertx) {
-        getPlugins().forEach(o -> o.deregister(vertx));
+        if (counter.decrementAndGet() == 0) {
+            getPlugins().forEach(o -> o.deregister(vertx));
+        }
     }
 
 }

@@ -32,11 +32,8 @@ import static com.jd.laf.web.vertx.handler.RenderHandler.render;
  * 路由装配件
  */
 public class RoutingVerticle extends AbstractVerticle {
-
     public static final String ROUTING_CONFIG_FILE = "routing.file";
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
-    public static final String HTTP_SERVER_OPTION_PREFIX = "http.server.";
-    public static final String HTTP_SERVER_OPTIONS = "http.server.options";
     public static final int DEFAULT_PORT = 8080;
     protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
 
@@ -105,11 +102,11 @@ public class RoutingVerticle extends AbstractVerticle {
                             httpServer.actualPort()), event.cause());
                 }
             });
+            logger.log(Level.INFO, String.format("success starting routing verticle %s", deploymentID()));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "routing verticle starting error ", e);
+            logger.log(Level.SEVERE, String.format("failed starting routing verticle %s", deploymentID()), e);
             throw e;
         }
-
     }
 
     /**
@@ -135,6 +132,7 @@ public class RoutingVerticle extends AbstractVerticle {
             });
         }
         Registrars.deregister(vertx);
+        logger.log(Level.INFO, String.format("success stop routing verticle %s ", deploymentID()));
     }
 
     /**
@@ -233,9 +231,8 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param route       路由对象
      * @param config      路由配置
      * @param environment 环境
-     * @throws Exception
      */
-    protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) throws Exception {
+    protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) {
         RoutingHandler handler;
         Command command;
         //上下文处理
@@ -265,7 +262,11 @@ public class RoutingVerticle extends AbstractVerticle {
                                 int min = Math.min(initializeSize, capacity);
                                 //初始化对象池大小
                                 for (int i = 0; i < min; i++) {
-                                    pool.release(command.getClass().newInstance());
+                                    try {
+                                        pool.release(command.getClass().newInstance());
+                                    } catch (InstantiationException e) {
+                                    } catch (IllegalAccessException e) {
+                                    }
                                 }
                             }
                         }
@@ -395,6 +396,5 @@ public class RoutingVerticle extends AbstractVerticle {
             }
         }
     }
-
 
 }
