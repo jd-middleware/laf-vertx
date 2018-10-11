@@ -14,7 +14,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 import io.vertx.ext.web.handler.impl.HttpStatusException;
 
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 import static com.jd.laf.web.vertx.Environment.REMOTE_IP;
@@ -103,6 +102,7 @@ public class SsoLoginHandler extends RemoteIpHandler {
         } catch (SsoException e) {
             //单独登录认证错误，重新定向到登录页面
             redirect2Login(context);
+            return;
         } catch (Exception e) {
             context.fail(e);
         }

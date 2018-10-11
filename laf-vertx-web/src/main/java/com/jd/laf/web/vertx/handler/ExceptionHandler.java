@@ -32,15 +32,15 @@ public class ExceptionHandler implements ErrorHandler {
         Response response = Responses.error(throwable);
         try {
             context.put(Command.RESULT, response);
-            String contentType = context.getAcceptableContentType();
-            contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
-            Render render = getPlugin(contentType);
-            render = render == null ? RenderHandler.JSON : render;
             if (!context.response().ended()) {
+                String contentType = context.getAcceptableContentType();
+                contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
+                Render render = getPlugin(contentType);
+                render = render == null ? RenderHandler.JSON : render;
                 render.render(context);
             }
         } catch (Exception e) {
-            logger.error( e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
 
     }
