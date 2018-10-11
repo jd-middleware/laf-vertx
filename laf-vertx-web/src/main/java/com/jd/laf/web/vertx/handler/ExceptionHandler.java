@@ -5,10 +5,9 @@ import com.jd.laf.web.vertx.ErrorHandler;
 import com.jd.laf.web.vertx.render.Render;
 import com.jd.laf.web.vertx.response.Response;
 import com.jd.laf.web.vertx.response.Responses;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.jd.laf.web.vertx.render.Render.APPLICATION_JSON;
 import static com.jd.laf.web.vertx.render.Renders.getPlugin;
@@ -18,7 +17,7 @@ import static com.jd.laf.web.vertx.render.Renders.getPlugin;
  */
 public class ExceptionHandler implements ErrorHandler {
 
-    protected static final Logger logger = Logger.getLogger(ExceptionHandler.class.getName());
+    private final static Logger logger = LoggerFactory.getLogger(ExceptionHandler.class);
 
     @Override
     public String type() {
@@ -29,7 +28,7 @@ public class ExceptionHandler implements ErrorHandler {
     @Override
     public void handle(final RoutingContext context) {
         Throwable throwable = context.failure();
-        logger.log(Level.SEVERE, context.request().path() + ": " + throwable.getMessage(), throwable);
+        logger.error(context.request().path() + ": " + throwable.getMessage(), throwable);
         Response response = Responses.error(throwable);
         try {
             context.put(Command.RESULT, response);
@@ -41,7 +40,7 @@ public class ExceptionHandler implements ErrorHandler {
                 render.render(context);
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.error( e.getMessage(), e);
         }
 
     }
