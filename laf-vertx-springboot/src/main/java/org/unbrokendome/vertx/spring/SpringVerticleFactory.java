@@ -58,7 +58,7 @@ public class SpringVerticleFactory implements VerticleFactory {
             throw new IllegalArgumentException("Verticle bean \"" + beanName + "\" is a singleton bean");
         }
         if (logger.isDebugEnabled()) {
-            logger.debug("Creating verticle from bean \"{}\"", beanName);
+            logger.debug(String.format("Creating verticle from bean %s", beanName));
         }
         return beanFactory.getBean(beanName, Verticle.class);
     }

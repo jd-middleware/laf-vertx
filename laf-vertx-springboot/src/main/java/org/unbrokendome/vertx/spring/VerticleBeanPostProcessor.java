@@ -76,9 +76,9 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
             } else if (beanDefinition.isSingleton()) {
                 propertyValues.add("verticle", new RuntimeBeanReference(beanName));
                 if (deploymentOptions != null && deploymentOptions.getInstances() > 1) {
-                    logger.warn("A singleton verticle bean \"{}\" was annotated with an instance count > 1, which will " +
+                    logger.warn("A singleton verticle bean " + beanName + " was annotated with an instance count > 1, which will " +
                             "be ignored. To deploy multiple instances of this verticle, declare it as a prototype or " +
-                            "factory bean.", beanName);
+                            "factory bean.");
                     deploymentOptions.setInstances(1);
                 }
 
@@ -139,7 +139,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
             try {
                 return beanClassLoader.loadClass(beanDefinition.getBeanClassName());
             } catch (ClassNotFoundException ex) {
-                logger.warn("Could not load class {} for bean {}", beanDefinition.getBeanClassName(), beanName, ex);
+                logger.warn(String.format("Could not load class %s for bean %s", beanDefinition.getBeanClassName(), beanName), ex);
             }
         }
         if (beanDefinition instanceof AnnotatedBeanDefinition) {
@@ -148,7 +148,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
                 try {
                     return beanClassLoader.loadClass(factoryMethodMetadata.getReturnTypeName());
                 } catch (ClassNotFoundException ex) {
-                    logger.warn("Could not load class {} for bean {}", beanDefinition.getBeanClassName(), beanName, ex);
+                    logger.warn(String.format("Could not load class %s for bean %s", beanDefinition.getBeanClassName(), beanName), ex);
                 }
             }
         }

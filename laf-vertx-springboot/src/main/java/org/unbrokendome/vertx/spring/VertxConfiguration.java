@@ -1,7 +1,6 @@
 package org.unbrokendome.vertx.spring;
 
 
-import org.unbrokendome.vertx.spring.events.EventPublishingVertxListener;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -11,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
+import org.unbrokendome.vertx.spring.events.EventPublishingVertxListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +59,7 @@ public class VertxConfiguration {
             AnnotationAwareOrderComparator.sort(sortedConfigurers);
             for (VertxConfigurer configurer : sortedConfigurers) {
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Applying configurer: {}", configurer);
+                    logger.debug("Applying configurer: " + configurer);
                 }
                 configurer.configure(builder);
             }
