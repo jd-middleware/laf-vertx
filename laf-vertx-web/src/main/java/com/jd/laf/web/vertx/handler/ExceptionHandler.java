@@ -3,6 +3,7 @@ package com.jd.laf.web.vertx.handler;
 import com.jd.laf.web.vertx.Command;
 import com.jd.laf.web.vertx.ErrorHandler;
 import com.jd.laf.web.vertx.render.Render;
+import com.jd.laf.web.vertx.response.ErrorResponse;
 import com.jd.laf.web.vertx.response.Response;
 import com.jd.laf.web.vertx.response.Responses;
 import io.vertx.core.logging.Logger;
@@ -27,9 +28,16 @@ public class ExceptionHandler implements ErrorHandler {
 
     @Override
     public void handle(final RoutingContext context) {
+        //异常
         Throwable throwable = context.failure();
-        logger.error(context.request().path() + ": " + throwable.getMessage(), throwable);
+        //异常响应
         Response response = Responses.error(throwable);
+        if (response != null && response instanceof ErrorResponse && !((ErrorResponse) response).isTrace()) {
+            //业务异常，不需要打印详细堆栈
+            logger.error(context.request().path() + ": " + throwable.getMessage());
+        } else {
+            logger.error(context.request().path() + ": " + throwable.getMessage(), throwable);
+        }
         try {
             context.put(Command.RESULT, response);
             if (!context.response().ended()) {
