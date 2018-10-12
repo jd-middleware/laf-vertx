@@ -13,6 +13,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -20,8 +22,6 @@ import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.jd.laf.web.vertx.Environment.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
@@ -35,7 +35,7 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String ROUTING_CONFIG_FILE = "routing.file";
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final int DEFAULT_PORT = 8080;
-    protected static Logger logger = Logger.getLogger(RoutingVerticle.class.getName());
+    protected static Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
 
     //注入的环境
     protected Environment env;
@@ -98,13 +98,13 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (event.succeeded()) {
                     logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
                 } else {
-                    logger.log(Level.SEVERE, String.format("failed starting http server on port %d",
+                    logger.error(String.format("failed starting http server on port %d",
                             httpServer.actualPort()), event.cause());
                 }
             });
-            logger.log(Level.INFO, String.format("success starting routing verticle %s", deploymentID()));
+            logger.info(String.format("success starting routing verticle %s", deploymentID()));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, String.format("failed starting routing verticle %s", deploymentID()), e);
+            logger.error(String.format("failed starting routing verticle %s", deploymentID()), e);
             throw e;
         }
     }
@@ -126,13 +126,13 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (event.succeeded()) {
                     logger.info(String.format("success closing http server on port %d", httpServer.actualPort()));
                 } else {
-                    logger.log(Level.SEVERE, String.format("failed closing http server on port %d",
+                    logger.error(String.format("failed closing http server on port %d",
                             httpServer.actualPort()), event.cause());
                 }
             });
         }
         Registrars.deregister(vertx);
-        logger.log(Level.INFO, String.format("success stop routing verticle %s ", deploymentID()));
+        logger.info(String.format("success stop routing verticle %s ", deploymentID()));
     }
 
     /**
@@ -199,7 +199,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 //设置业务处理链
                 buildHandlers(route, info, environment);
             } catch (Exception e) {
-                logger.log(Level.SEVERE, String.format("build handlers error on path %s, type %s", path, type), e);
+                logger.error(String.format("build handlers error on path %s, type %s", path, type), e);
                 throw e;
             }
         }
@@ -219,7 +219,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 if (handler != null) {
                     route.failureHandler(handler);
                 } else {
-                    logger.warning(String.format("error handler %s is not found. ignore.", error));
+                    logger.warn(String.format("error handler %s is not found. ignore.", error));
                 }
             }
         }
@@ -275,7 +275,7 @@ public class RoutingVerticle extends AbstractVerticle {
                     }
                     route.handler(new CommandHandler(command, pool));
                 } else {
-                    logger.warning(String.format("handler %s is not found. ignore.", name));
+                    logger.warn(String.format("handler %s is not found. ignore.", name));
                 }
             }
         }

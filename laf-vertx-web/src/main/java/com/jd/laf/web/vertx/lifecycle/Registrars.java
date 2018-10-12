@@ -2,11 +2,11 @@ package com.jd.laf.web.vertx.lifecycle;
 
 import com.jd.laf.web.vertx.Environment;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * 注册器插件管理器
@@ -15,7 +15,7 @@ public abstract class Registrars {
     //计数器
     protected static AtomicLong counter = new AtomicLong(0);
 
-    protected static Logger logger = Logger.getLogger(Registrars.class.getName());
+    protected static Logger logger = LoggerFactory.getLogger(Registrars.class.getName());
 
     //类对应的绑定器
     protected static volatile List<Registrar> plugins;
@@ -57,7 +57,7 @@ public abstract class Registrars {
                 try {
                     plugin.register(vertx, environment);
                 } catch (Exception e) {
-                    logger.log(Level.SEVERE, String.format("register plugin %s error ", plugin.getClass()), e);
+                    logger.error(String.format("register plugin %s error ", plugin.getClass()), e);
                 }
             }
         }
