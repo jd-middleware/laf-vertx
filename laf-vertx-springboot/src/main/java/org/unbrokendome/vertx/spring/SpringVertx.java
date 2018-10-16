@@ -104,6 +104,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         //注册Spring的执行器工厂
         if (verticleFactoryPrefix != null) {
             vertxReadyFuture = vertxReadyFuture.thenApply(vertx -> {
+                //基于Spring中的Bean的执行器工厂类，
                 SpringVerticleFactory verticleFactory = new SpringVerticleFactory(verticleFactoryPrefix, beanFactory);
                 if (logger.isDebugEnabled()) {
                     logger.debug(String.format("Registering VerticleFactory: %s", verticleFactory));
@@ -277,18 +278,15 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         return new Builder();
     }
 
-
-    @SuppressWarnings("UnusedReturnValue")
     public static class Builder {
-        private VertxFactory factory = Vertx.factory;
-        private VertxOptions options = null;
-        private List<VerticleRegistration> verticleRegistrations = new ArrayList<>();
-        private List<VertxMetricsFactory> metricsFactories = new ArrayList<>();
-        private List<VertxListener> listeners = new ArrayList<>();
-        private String verticleFactoryPrefix = DEFAULT_VERTICLE_FACTORY_PREFIX;
-        private int startupPhase = 0;
-        private boolean autoStartup = true;
-
+        protected VertxFactory factory = Vertx.factory;
+        protected VertxOptions options = null;
+        protected List<VerticleRegistration> verticleRegistrations = new ArrayList<>();
+        protected List<VertxMetricsFactory> metricsFactories = new ArrayList<>();
+        protected List<VertxListener> listeners = new ArrayList<>();
+        protected String verticleFactoryPrefix = DEFAULT_VERTICLE_FACTORY_PREFIX;
+        protected int startupPhase = 0;
+        protected boolean autoStartup = true;
 
         public Builder factory(VertxFactory vertxFactory) {
             this.factory = vertxFactory;
