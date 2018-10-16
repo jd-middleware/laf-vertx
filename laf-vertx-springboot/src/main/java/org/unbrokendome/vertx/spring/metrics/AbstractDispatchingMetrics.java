@@ -11,26 +11,22 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-
 @SuppressWarnings("unchecked")
-abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics {
+public abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics {
 
-    private final List<? extends M> delegates;
+    protected final List<? extends M> delegates;
 
     protected AbstractDispatchingMetrics(List<? extends M> delegates) {
         this.delegates = delegates;
     }
 
-
     protected final List<? extends M> getDelegates() {
         return delegates;
     }
 
-
     protected final void dispatch(Consumer<? super M> action) {
         delegates.forEach(action);
     }
-
 
     protected final Map<M, ?> dispatchWithResult(Function<M, ?> func) {
         Map<M, Object> resultMap = new HashMap<>(delegates.size());
@@ -40,7 +36,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
         }
         return resultMap;
     }
-
 
     protected final <N extends Metrics> N createSubMetrics(
             Function<M, ? extends N> supplier,
@@ -61,8 +56,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
         }
     }
 
-
-    @SuppressWarnings("unchecked")
     protected final void unmap(Map<M, ?> context, BiConsumer<M, ?> action) {
         for (M delegate : delegates) {
             Object delegateContext = context.get(delegate);
@@ -71,7 +64,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
             }
         }
     }
-
 
     protected final Map<M, ?> unmapWithResult(Map<M, ?> context, BiFunction<M, ?, ?> func) {
         Map<M, Object> resultMap = new HashMap<>(context.size());
@@ -85,7 +77,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
         return resultMap;
     }
 
-
     protected final void unmap2(Map<M, ?> context1, Map<M, ?> context2, TriConsumer<M, ?, ?> action) {
         for (M delegate : delegates) {
             Object delegateContext1 = context1.get(delegate);
@@ -97,7 +88,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
             }
         }
     }
-
 
     protected final Map<M, ?> unmap2WithResult(Map<M, ?> context1, Map<M, ?> context2, TriFunction<M, ?, ?, ?> func) {
         Map<M, Object> resultMap = new HashMap<>(Math.min(context1.size(), context2.size()));
@@ -114,7 +104,6 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
         return resultMap;
     }
 
-
     @Override
     public final boolean isEnabled() {
         for (M delegate : delegates) {
@@ -125,12 +114,10 @@ abstract class AbstractDispatchingMetrics<M extends Metrics> implements Metrics 
         return false;
     }
 
-
     @Override
     public final void close() {
         dispatch(M::close);
     }
-
 
     @FunctionalInterface
     protected interface TriConsumer<T, U, V> {

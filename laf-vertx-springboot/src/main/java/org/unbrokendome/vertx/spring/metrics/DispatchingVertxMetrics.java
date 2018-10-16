@@ -15,10 +15,7 @@ import io.vertx.core.spi.metrics.*;
 
 import java.util.List;
 
-
-class DispatchingVertxMetrics
-        extends AbstractDispatchingMetrics<VertxMetrics>
-        implements VertxMetrics {
+public class DispatchingVertxMetrics extends AbstractDispatchingMetrics<VertxMetrics> implements VertxMetrics {
 
     public DispatchingVertxMetrics(List<? extends VertxMetrics> delegates) {
         super(delegates);
@@ -29,31 +26,25 @@ class DispatchingVertxMetrics
         dispatch(m -> m.verticleDeployed(verticle));
     }
 
-
     @Override
     public void verticleUndeployed(Verticle verticle) {
         dispatch(m -> m.verticleUndeployed(verticle));
     }
-
 
     @Override
     public void timerCreated(long id) {
         dispatch(m -> m.timerCreated(id));
     }
 
-
     @Override
     public void timerEnded(long id, boolean cancelled) {
         dispatch(m -> m.timerEnded(id, cancelled));
     }
 
-
     @Override
     public EventBusMetrics<?> createMetrics(EventBus eventBus) {
-        return createSubMetrics(v -> v.createMetrics(eventBus),
-                d -> new DispatchingEventBusMetrics(d));
+        return createSubMetrics(v -> v.createMetrics(eventBus), d -> new DispatchingEventBusMetrics(d));
     }
-
 
     @Override
     public HttpServerMetrics<?, ?, ?> createMetrics(HttpServer server, SocketAddress localAddress, HttpServerOptions options) {
@@ -61,41 +52,31 @@ class DispatchingVertxMetrics
                 d -> new DispatchingHttpServerMetrics(d));
     }
 
-
     @Override
     public HttpClientMetrics<?, ?, ?, ?, ?> createMetrics(HttpClient client, HttpClientOptions options) {
-        return this.<HttpClientMetrics<?, ?, ?, ?, ?>>createSubMetrics(v -> v.createMetrics(client, options),
-                d -> new DispatchingHttpClientMetrics(d));
+        return this.<HttpClientMetrics<?, ?, ?, ?, ?>>createSubMetrics(v -> v.createMetrics(client, options), d -> new DispatchingHttpClientMetrics(d));
     }
-
 
     @Override
     public TCPMetrics<?> createMetrics(SocketAddress localAddress, NetServerOptions options) {
-        return this.<TCPMetrics<?>>createSubMetrics(v -> v.createMetrics(localAddress, options),
-                d -> new DispatchingTcpMetrics(d));
+        return this.<TCPMetrics<?>>createSubMetrics(v -> v.createMetrics(localAddress, options), d -> new DispatchingTcpMetrics(d));
     }
-
 
     @Override
     public TCPMetrics<?> createMetrics(NetClientOptions options) {
-        return this.<TCPMetrics<?>>createSubMetrics(v -> v.createMetrics(options),
-                d -> new DispatchingTcpMetrics(d));
+        return this.<TCPMetrics<?>>createSubMetrics(v -> v.createMetrics(options), d -> new DispatchingTcpMetrics(d));
     }
-
 
     @Override
     public DatagramSocketMetrics createMetrics(DatagramSocket socket, DatagramSocketOptions options) {
-        return createSubMetrics(v -> v.createMetrics(socket, options),
-                d -> new DispatchingDatagramSocketMetrics(d));
+        return createSubMetrics(v -> v.createMetrics(socket, options), d -> new DispatchingDatagramSocketMetrics(d));
     }
-
 
     @Override
     public <P> PoolMetrics<?> createMetrics(P pool, String poolType, String poolName, int maxPoolSize) {
         return this.<PoolMetrics<?>>createSubMetrics(v -> v.createMetrics(pool, poolType, poolName, maxPoolSize),
                 d -> new DispatchingPoolMetrics(d));
     }
-
 
     @Override
     public boolean isMetricsEnabled() {

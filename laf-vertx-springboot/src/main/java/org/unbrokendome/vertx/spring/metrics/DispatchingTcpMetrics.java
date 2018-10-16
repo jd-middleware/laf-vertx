@@ -4,8 +4,7 @@ import io.vertx.core.spi.metrics.TCPMetrics;
 
 import java.util.List;
 
-
-class DispatchingTcpMetrics extends AbstractDispatchingTcpMetrics<TCPMetrics> {
+public class DispatchingTcpMetrics extends AbstractDispatchingTcpMetrics<TCPMetrics> {
 
     public DispatchingTcpMetrics(List<? extends TCPMetrics> delegates) {
         super(delegates);

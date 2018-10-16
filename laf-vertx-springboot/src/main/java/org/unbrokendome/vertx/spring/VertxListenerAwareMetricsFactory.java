@@ -1,6 +1,5 @@
 package org.unbrokendome.vertx.spring;
 
-import io.vertx.core.Context;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
@@ -12,7 +11,6 @@ import org.unbrokendome.vertx.spring.metrics.VertxMetricsAdapter;
 
 import java.util.List;
 import java.util.function.Consumer;
-
 
 public class VertxListenerAwareMetricsFactory implements VertxMetricsFactory {
 
@@ -29,7 +27,7 @@ public class VertxListenerAwareMetricsFactory implements VertxMetricsFactory {
     }
 
     @Override
-    public VertxMetrics metrics(Vertx vertx, VertxOptions options) {
+    public VertxMetrics metrics(final Vertx vertx, final VertxOptions options) {
         dispatch(VERTX_STARTED, listener -> listener.vertxStarted(vertx, options));
         return new ListenerAwareVertxMetrics(vertx);
     }
@@ -54,20 +52,18 @@ public class VertxListenerAwareMetricsFactory implements VertxMetricsFactory {
 
         protected final Vertx vertx;
 
-        private ListenerAwareVertxMetrics(Vertx vertx) {
+        public ListenerAwareVertxMetrics(Vertx vertx) {
             this.vertx = vertx;
         }
 
         @Override
         public void verticleDeployed(final Verticle verticle) {
-            Context context = Vertx.currentContext();
-            dispatch(VERTICLE_DEPLOYED, listener -> listener.verticleDeployed(verticle, context));
+            dispatch(VERTICLE_DEPLOYED, listener -> listener.verticleDeployed(verticle, Vertx.currentContext()));
         }
 
         @Override
         public void verticleUndeployed(final Verticle verticle) {
-            Context context = Vertx.currentContext();
-            dispatch(VERTICLE_UNDEPLOYED, listener -> listener.verticleUndeployed(verticle, context));
+            dispatch(VERTICLE_UNDEPLOYED, listener -> listener.verticleUndeployed(verticle, Vertx.currentContext()));
         }
 
         @Override

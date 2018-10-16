@@ -9,19 +9,16 @@ import io.vertx.core.spi.metrics.VertxMetrics;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class DispatchingVertxMetricsFactory implements VertxMetricsFactory {
 
     private final List<? extends VertxMetricsFactory> delegates;
-
 
     public DispatchingVertxMetricsFactory(List<? extends VertxMetricsFactory> delegates) {
         this.delegates = delegates;
     }
 
-
     @Override
-    public VertxMetrics metrics(Vertx vertx, VertxOptions options) {
+    public VertxMetrics metrics(final Vertx vertx, final VertxOptions options) {
         List<VertxMetrics> allMetrics = new ArrayList<>(delegates.size());
         for (VertxMetricsFactory delegate : delegates) {
             VertxMetrics metrics = delegate.metrics(vertx, options);
@@ -29,12 +26,14 @@ public class DispatchingVertxMetricsFactory implements VertxMetricsFactory {
                 allMetrics.add(metrics);
             }
         }
-        if (allMetrics.isEmpty()) {
-            return new DummyVertxMetrics();
-        } else if (allMetrics.size() == 1) {
-            return allMetrics.get(0);
-        } else {
-            return new DispatchingVertxMetrics(allMetrics);
+        int size = allMetrics.size();
+        switch (size) {
+            case 0:
+                return new DummyVertxMetrics();
+            case 1:
+                return allMetrics.get(0);
+            default:
+                return new DispatchingVertxMetrics(allMetrics);
         }
     }
 }
