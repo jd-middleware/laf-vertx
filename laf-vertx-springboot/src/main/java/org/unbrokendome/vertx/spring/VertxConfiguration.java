@@ -4,6 +4,8 @@ package org.unbrokendome.vertx.spring;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.spi.VertxFactory;
+import io.vertx.core.spi.VertxMetricsFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
@@ -14,7 +16,6 @@ import org.unbrokendome.vertx.spring.events.EventPublishingVertxListener;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Configuration
 public class VertxConfiguration {
@@ -28,18 +29,18 @@ public class VertxConfiguration {
 
     @Bean
     public SpringVertx vertx(
+            ObjectProvider<VertxFactory> vertxFactoryProvider,
             ObjectProvider<VertxOptions> optionsProvider,
             ObjectProvider<ClusterManager> clusterManagerProvider,
             ObjectProvider<List<VertxListener>> listenersProvider,
-            ObjectProvider<List<VertxConfigurer>> configurersProvider) {
+            ObjectProvider<List<VertxConfigurer>> configurersProvider,
+            ObjectProvider<List<VertxMetricsFactory>> metricsFactoryProvider) {
 
         SpringVertx.Builder builder = SpringVertx.builder();
 
-        List<VertxConfigurer> configurers = new ArrayList<>();
-
-        ClusterManager clusterManager = clusterManagerProvider.getIfAvailable();
-        if (clusterManager != null) {
-            configurers.add(new ClusterManagerConfigurer(clusterManager));
+        VertxFactory vertxFactory = vertxFactoryProvider.getIfAvailable();
+        if (vertxFactory != null) {
+            builder.factory(vertxFactory);
         }
 
         List<VertxListener> listeners = listenersProvider.getIfAvailable();
@@ -47,6 +48,20 @@ public class VertxConfiguration {
             for (VertxListener listener : listeners) {
                 builder.listener(listener);
             }
+        }
+
+        List<VertxMetricsFactory> metricsFactories = metricsFactoryProvider.getIfAvailable();
+        if (metricsFactories != null) {
+            for (VertxMetricsFactory metricsFactory : metricsFactories) {
+                builder.metricsFactory(metricsFactory);
+            }
+        }
+
+        List<VertxConfigurer> configurers = new ArrayList<>();
+
+        ClusterManager clusterManager = clusterManagerProvider.getIfAvailable();
+        if (clusterManager != null) {
+            configurers.add(new ClusterManagerConfigurer(clusterManager));
         }
 
         List<VertxConfigurer> injectedConfigurers = configurersProvider.getIfAvailable();

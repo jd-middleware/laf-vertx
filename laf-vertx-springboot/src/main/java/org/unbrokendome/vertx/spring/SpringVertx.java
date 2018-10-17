@@ -396,7 +396,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
-        private VertxOptions getOrCreateOptions() {
+        protected VertxOptions getOrCreateOptions() {
             if (options == null) {
                 options = new VertxOptions();
             }

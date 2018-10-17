@@ -1,7 +1,5 @@
 package org.unbrokendome.vertx.spring.boot;
 
-import org.unbrokendome.vertx.spring.SpringVertx;
-import org.unbrokendome.vertx.spring.VertxConfigurer;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.dns.AddressResolverOptions;
@@ -14,6 +12,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StringUtils;
+import org.unbrokendome.vertx.spring.SpringVertx;
+import org.unbrokendome.vertx.spring.VertxConfigurer;
 
 import java.io.*;
 import java.util.List;
@@ -28,6 +28,12 @@ import java.util.stream.Collectors;
 public class VertxProperties implements VertxConfigurer {
 
     protected boolean autoDeployVerticles = true;
+
+    protected String verticleFactoryPrefix = "spring";
+
+    protected boolean autoStartup = true;
+
+    protected int startupPhase = 0;
 
     protected VertxOptions vertxOptions = new VertxOptions();
 
@@ -357,6 +363,9 @@ public class VertxProperties implements VertxConfigurer {
 
     @Override
     public void configure(SpringVertx.Builder builder) {
+        builder.verticleFactoryPrefix(verticleFactoryPrefix);
+        builder.autoStartup(autoStartup);
+        builder.startupPhase(startupPhase);
         builder.options(toVertxOptions());
     }
 }
