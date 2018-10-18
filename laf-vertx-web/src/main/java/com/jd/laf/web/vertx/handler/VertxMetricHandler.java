@@ -3,10 +3,7 @@ package com.jd.laf.web.vertx.handler;
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.RoutingHandler;
-import io.micrometer.core.instrument.Measurement;
-import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.*;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
 
@@ -83,13 +80,10 @@ public class VertxMetricHandler implements RoutingHandler, EnvironmentAware {
                 writer.write("counter");
                 break;
             case DISTRIBUTION_SUMMARY:
-                writer.write("summary");
+                writer.write(((DistributionSummary) meter).count() > 0 ? "histogram" : "summary");
                 break;
             case TIMER:
-                writer.write("histogram");
-                break;
-            case LONG_TASK_TIMER:
-                writer.write("histogram");
+                writer.write(((io.micrometer.core.instrument.Timer) meter).count() > 0 ? "histogram" : "summary");
                 break;
             default:
                 writer.write("untyped");
