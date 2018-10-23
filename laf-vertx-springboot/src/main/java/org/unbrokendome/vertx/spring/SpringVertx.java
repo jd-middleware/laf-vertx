@@ -191,12 +191,11 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
      */
     protected CompletableFuture<Void> deployVerticle(final Vertx vertx, final VerticleRegistration registration) {
 
-        Verticle verticle = registration.getVerticle();
         Supplier<Verticle> supplier = registration.getSupplier();
         String verticleName = registration.getVerticleName();
 
-        if (verticle == null && verticleName == null && supplier == null) {
-            logger.error(String.format("Invalid VerticleRegistration %s: Either verticle or verticleName or Supplier must be given", registration));
+        if (supplier == null) {
+            logger.error(String.format("Invalid VerticleRegistration %s: Either supplier or verticleName must be given", registration));
             return CompletableFuture.completedFuture(null);
         }
 
@@ -218,10 +217,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         if (supplier != null) {
             //根据提供者部署
             vertx.deployVerticle(supplier, deploymentOptions, resultHandler);
-        } else if (verticle != null) {
-            //根据创建实例部署，只能单实例部署，否则会报错
-            deploymentOptions.setInstances(1);
-            vertx.deployVerticle(verticle, deploymentOptions, resultHandler);
         } else {
             //根据名称部署
             vertx.deployVerticle(verticleFactoryPrefix + ":" + verticleName, deploymentOptions, resultHandler);

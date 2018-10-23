@@ -11,6 +11,7 @@ import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.logging.Logger;
@@ -21,7 +22,9 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
+import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.jd.laf.web.vertx.Environment.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
@@ -43,6 +46,8 @@ public class RoutingVerticle extends AbstractVerticle {
     protected HttpServerOptions httpOptions;
     //资源文件
     protected String file;
+    //消费者
+    protected Collection<MessageConsumer> consumers = new ConcurrentLinkedQueue<>();
 
     //配置
     protected VertxConfig config;
@@ -131,6 +136,11 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
+        //注销消费者
+        for (MessageConsumer consumer : consumers) {
+            consumer.unregister();
+        }
+        consumers.clear();
         Registrars.deregister(vertx);
         logger.info(String.format("success stop routing verticle %s ", deploymentID()));
     }
@@ -148,7 +158,7 @@ public class RoutingVerticle extends AbstractVerticle {
             for (String name : route.getHandlers()) {
                 handler = MessageHandlers.getPlugin(name);
                 if (handler != null && route.getPath() != null && !route.getPath().isEmpty()) {
-                    eventBus.consumer(route.getPath(), handler);
+                    consumers.add(eventBus.consumer(route.getPath(), handler));
                 }
             }
         }

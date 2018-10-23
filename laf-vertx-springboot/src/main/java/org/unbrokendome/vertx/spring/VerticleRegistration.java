@@ -11,15 +11,6 @@ import java.util.function.Supplier;
 public interface VerticleRegistration {
 
     /**
-     * 获取执行器
-     *
-     * @return
-     */
-    default Verticle getVerticle() {
-        return null;
-    }
-
-    /**
      * 返回执行器提供者
      *
      * @return

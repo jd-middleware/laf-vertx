@@ -2,7 +2,6 @@ package org.unbrokendome.vertx.spring;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Verticle;
-import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
 import java.util.function.Supplier;
@@ -11,26 +10,29 @@ import java.util.function.Supplier;
 /**
  * 执行器注册Bean
  */
-public class VerticleRegistrationBean implements VerticleRegistration, BeanNameAware, Ordered {
+public class VerticleRegistrationBean implements VerticleRegistration, Ordered {
 
-    private Verticle verticle;
-    private Supplier<Verticle> supplier;
-    private String verticleName;
-    private DeploymentOptions deploymentOptions;
-    private Integer order;
-    private String name;
-    private String beanName;
+    protected Supplier<Verticle> supplier;
+    protected DeploymentOptions deploymentOptions;
+    protected int order;
+    protected String verticleName;
+    protected Class verticleClass;
 
     public VerticleRegistrationBean() {
     }
 
     public VerticleRegistrationBean(Verticle verticle) {
-        this.verticle = verticle;
+        this(verticle, null);
     }
 
     public VerticleRegistrationBean(Verticle verticle, DeploymentOptions deploymentOptions) {
-        this(verticle);
-        this.deploymentOptions = deploymentOptions;
+        this.supplier = verticle == null ? null : () -> verticle;
+        this.deploymentOptions = deploymentOptions == null && verticle != null
+                && verticle instanceof DeployableVerticle
+                ? ((DeployableVerticle) verticle).getDeploymentOptions()
+                : deploymentOptions;
+        this.order = verticle != null && verticle instanceof Ordered ? ((Ordered) verticle).getOrder() : 0;
+        this.verticleClass = verticle != null ? verticle.getClass() : null;
     }
 
     public VerticleRegistrationBean(Supplier<Verticle> supplier) {
@@ -49,16 +51,6 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
     public VerticleRegistrationBean(String verticleName, DeploymentOptions deploymentOptions) {
         this(verticleName);
         this.deploymentOptions = deploymentOptions;
-    }
-
-    @Override
-    public Verticle getVerticle() {
-        return verticle;
-    }
-
-    public VerticleRegistrationBean setVerticle(Verticle verticle) {
-        this.verticle = verticle;
-        return this;
     }
 
     @Override
@@ -83,13 +75,7 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
 
     @Override
     public DeploymentOptions getDeploymentOptions() {
-        if (deploymentOptions != null) {
-            return deploymentOptions;
-        }
-        if (verticle instanceof DeployableVerticle) {
-            return ((DeployableVerticle) verticle).getDeploymentOptions();
-        }
-        return null;
+        return deploymentOptions;
     }
 
     public VerticleRegistrationBean setDeploymentOptions(DeploymentOptions deploymentOptions) {
@@ -99,13 +85,7 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
 
     @Override
     public int getOrder() {
-        if (order != null) {
-            return order;
-        }
-        if (verticle instanceof Ordered) {
-            return ((Ordered) verticle).getOrder();
-        }
-        return 0;
+        return order;
     }
 
     public VerticleRegistrationBean setOrder(int order) {
@@ -113,30 +93,12 @@ public class VerticleRegistrationBean implements VerticleRegistration, BeanNameA
         return this;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public VerticleRegistration setName(String name) {
-        this.name = name;
-        return this;
-    }
-
-    @Override
-    public void setBeanName(String beanName) {
-        this.beanName = beanName;
-    }
-
     @Override
     public String toString() {
-        if (name != null) {
-            return name;
-        } else if (beanName != null) {
-            return beanName;
-        } else if (verticleName != null) {
+        if (verticleName != null) {
             return verticleName;
-        } else if (verticle != null) {
-            return verticle.getClass().getName();
+        } else if (verticleClass != null) {
+            return verticleClass.getName();
         } else {
             return super.toString();
         }
