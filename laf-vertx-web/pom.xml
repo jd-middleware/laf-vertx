@@ -32,7 +32,7 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
             <version>${micrometer.version}</version>
-            <!--<optional>true</optional>-->
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
