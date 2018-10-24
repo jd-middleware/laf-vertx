@@ -74,7 +74,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
                 propertyValues.add("verticleName", beanName);
 
             } else if (beanDefinition.isSingleton()) {
-                propertyValues.add("verticle", new RuntimeBeanReference(beanName));
+                //propertyValues.add("verticle", new RuntimeBeanReference(beanName));
                 if (deploymentOptions != null && deploymentOptions.getInstances() > 1) {
                     logger.warn("A singleton verticle bean " + beanName + " was annotated with an instance count > 1, which will " +
                             "be ignored. To deploy multiple instances of this verticle, declare it as a prototype or " +
@@ -91,7 +91,7 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
                 propertyValues.add("deploymentOptions", deploymentOptions);
             }
 
-            propertyValues.add("name", beanName);
+            //propertyValues.add("name", beanName);
             if (order != null) {
                 propertyValues.add("order", order);
             }
