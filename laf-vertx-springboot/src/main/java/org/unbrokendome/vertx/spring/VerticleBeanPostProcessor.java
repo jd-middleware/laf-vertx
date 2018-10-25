@@ -33,7 +33,6 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
 
     protected ClassLoader beanClassLoader;
 
-
     @Override
     public void postProcessBeanDefinitionRegistry(final BeanDefinitionRegistry registry) throws BeansException {
         for (String beanName : registry.getBeanDefinitionNames()) {
@@ -43,60 +42,104 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
             }
             AnnotatedTypeMetadata metadata = getMetadataFromBeanDefinition(beanDefinition);
 
+            //获取部署信息
             DeploymentOptions deploymentOptions = null;
             if (metadata != null && metadata.isAnnotated(VerticleDeployment.class.getName())) {
-                Map<String, Object> attributes = metadata.getAnnotationAttributes(VerticleDeployment.class.getName());
-                VerticleDeploymentAnnotationMirror annotationMirror = new VerticleDeploymentAnnotationMirror(attributes);
-                if (!annotationMirror.isAutoDeploy()) {
+                VerticleDeploymentAnnotation annotation = new VerticleDeploymentAnnotation(
+                        metadata.getAnnotationAttributes(VerticleDeployment.class.getName()));
+                if (!annotation.isAutoDeploy()) {
                     continue;
                 }
                 deploymentOptions = new DeploymentOptions();
-                annotationMirror.configure(deploymentOptions);
+                annotation.configure(deploymentOptions);
             }
 
-            Integer order = null;
-            if (metadata != null && metadata.isAnnotated(Order.class.getName())) {
-                Map<String, Object> attributes = metadata.getAnnotationAttributes(Order.class.getName());
-                order = (Integer) attributes.get("value");
+            //获取顺序
+            Integer order = getOrder(metadata);
+            //是否是工厂Bean
+            boolean isFactoryBean = isFactoryBean(beanName, registry);
+            //动态注册bean
+            BeanDefinition registrationBeanDefinition = createRegistrationBeanDefinition(beanName, beanDefinition,
+                    isFactoryBean, deploymentOptions, order);
+            if (registrationBeanDefinition != null) {
+                registry.registerBeanDefinition(beanName + "#registration", registrationBeanDefinition);
             }
-
-            BeanDefinition registrationBeanDefinition = new GenericBeanDefinition();
-            registrationBeanDefinition.setBeanClassName(VerticleRegistrationBean.class.getName());
-            MutablePropertyValues propertyValues = registrationBeanDefinition.getPropertyValues();
-
-            ConfigurableBeanFactory beanFactory = null;
-            if (registry instanceof ConfigurableBeanFactory) {
-                beanFactory = (ConfigurableBeanFactory) registry;
-            }
-            boolean isFactoryBean = beanFactory != null && beanFactory.isFactoryBean(beanName);
-
-            if (beanDefinition.isPrototype() || isFactoryBean) {
-                propertyValues.add("verticleName", beanName);
-
-            } else if (beanDefinition.isSingleton()) {
-                propertyValues.add("verticle", new RuntimeBeanReference(beanName));
-                if (deploymentOptions != null && deploymentOptions.getInstances() > 1) {
-                    logger.warn("A singleton verticle bean " + beanName + " was annotated with an instance count > 1, which will " +
-                            "be ignored. To deploy multiple instances of this verticle, declare it as a prototype or " +
-                            "factory bean.");
-                    deploymentOptions.setInstances(1);
-                }
-
-            } else {
-                logger.warn("A verticle bean must either be singleton, prototype or a factory bean");
-                continue;
-            }
-
-            if (deploymentOptions != null) {
-                propertyValues.add("deploymentOptions", deploymentOptions);
-            }
-
-            propertyValues.add("name", beanName);
-            if (order != null) {
-                propertyValues.add("order", order);
-            }
-            registry.registerBeanDefinition(beanName + "#registration", registrationBeanDefinition);
         }
+    }
+
+    /**
+     * 动态构造Verticle注册Bean定义
+     *
+     * @param beanName
+     * @param beanDefinition
+     * @param isFactoryBean
+     * @param deploymentOptions
+     * @param order
+     * @return
+     */
+    protected BeanDefinition createRegistrationBeanDefinition(final String beanName, final BeanDefinition beanDefinition,
+                                                              final boolean isFactoryBean,
+                                                              final DeploymentOptions deploymentOptions,
+                                                              final Integer order) {
+        BeanDefinition registrationBeanDefinition = new GenericBeanDefinition();
+        registrationBeanDefinition.setBeanClassName(VerticleRegistrationBean.class.getName());
+        MutablePropertyValues propertyValues = registrationBeanDefinition.getPropertyValues();
+
+
+        if (beanDefinition.isPrototype() || isFactoryBean) {
+            propertyValues.add("verticleName", beanName);
+        } else if (beanDefinition.isSingleton()) {
+            propertyValues.add("verticleName", beanName);
+            propertyValues.add("verticle", new RuntimeBeanReference(beanName));
+            if (deploymentOptions != null && deploymentOptions.getInstances() > 1) {
+                logger.warn("A singleton verticle bean " + beanName + " was annotated with an instance count > 1, which will " +
+                        "be ignored. To deploy multiple instances of this verticle, declare it as a prototype or " +
+                        "factory bean.");
+                deploymentOptions.setInstances(1);
+            }
+        } else {
+            logger.warn("A verticle bean must either be singleton, prototype or a factory bean");
+            return null;
+        }
+
+        if (deploymentOptions != null) {
+            propertyValues.add("deploymentOptions", deploymentOptions);
+        }
+
+        if (order != null) {
+            propertyValues.add("order", order);
+        }
+        return registrationBeanDefinition;
+    }
+
+    /**
+     * 是否是工厂Bean
+     *
+     * @param beanName
+     * @param registry
+     * @return
+     */
+    protected boolean isFactoryBean(final String beanName, final BeanDefinitionRegistry registry) {
+        ConfigurableBeanFactory beanFactory = null;
+        if (registry instanceof ConfigurableBeanFactory) {
+            beanFactory = (ConfigurableBeanFactory) registry;
+        }
+        return beanFactory != null && beanFactory.isFactoryBean(beanName);
+    }
+
+    /**
+     * 获取顺序
+     *
+     * @param metadata
+     * @return
+     */
+    protected Integer getOrder(final AnnotatedTypeMetadata metadata) {
+        Integer order = null;
+        if (metadata != null && metadata.isAnnotated(Order.class.getName())) {
+            Map<String, Object> attributes = metadata.getAnnotationAttributes(Order.class.getName());
+            order = (Integer) attributes.get("value");
+        }
+        return order;
     }
 
     /**
@@ -188,11 +231,11 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
     /**
      * 执行器部署注解镜像
      */
-    protected static class VerticleDeploymentAnnotationMirror {
+    protected static class VerticleDeploymentAnnotation {
         //注解属性
         protected final Map<String, Object> attributes;
 
-        VerticleDeploymentAnnotationMirror(Map<String, Object> attributes) {
+        public VerticleDeploymentAnnotation(final Map<String, Object> attributes) {
             this.attributes = attributes;
         }
 

@@ -26,13 +26,8 @@ public class VerticleRegistrationBean implements VerticleRegistration, Ordered {
     }
 
     public VerticleRegistrationBean(Verticle verticle, DeploymentOptions deploymentOptions) {
-        this.supplier = verticle == null ? null : () -> verticle;
-        this.deploymentOptions = deploymentOptions == null && verticle != null
-                && verticle instanceof DeployableVerticle
-                ? ((DeployableVerticle) verticle).getDeploymentOptions()
-                : deploymentOptions;
-        this.order = verticle != null && verticle instanceof Ordered ? ((Ordered) verticle).getOrder() : 0;
-        this.verticleClass = verticle != null ? verticle.getClass() : null;
+        setVerticle(verticle);
+        this.deploymentOptions = deploymentOptions != null ? deploymentOptions : this.deploymentOptions;
     }
 
     public VerticleRegistrationBean(Supplier<Verticle> supplier) {
@@ -60,6 +55,17 @@ public class VerticleRegistrationBean implements VerticleRegistration, Ordered {
 
     public VerticleRegistrationBean setSupplier(Supplier<Verticle> supplier) {
         this.supplier = supplier;
+        return this;
+    }
+
+    public VerticleRegistrationBean setVerticle(Verticle verticle) {
+        this.supplier = verticle == null ? null : () -> verticle;
+        this.deploymentOptions = deploymentOptions == null && verticle != null
+                && verticle instanceof DeployableVerticle
+                ? ((DeployableVerticle) verticle).getDeploymentOptions()
+                : deploymentOptions;
+        this.order = verticle != null && verticle instanceof Ordered ? ((Ordered) verticle).getOrder() : 0;
+        this.verticleClass = verticle != null ? verticle.getClass() : null;
         return this;
     }
 
