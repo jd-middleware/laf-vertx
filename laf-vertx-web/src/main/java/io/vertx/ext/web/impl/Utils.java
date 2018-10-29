@@ -229,18 +229,17 @@ public class Utils extends io.vertx.core.impl.Utils {
                             slice.end = i;
                             slice.partial = true;
                             //创建转义字符切片
-                            slice = new Slice(i, i + 3, ch, slice);
-                            slice.partial = true;
-                            //创建下一个切片
-                            slice = slice.end >= length ? null : new Slice(slice.end, -1, slice);
+                            slice = new Slice(i, i + 3, slice);
                         } else {
                             //第一个字符
-                            slice.setEnd(i + 3);
-                            slice.setValue(ch);
-                            slice.partial = true;
-                            slice.accept(ch);
+                            slice.end = i + 3;
+                        }
+                        slice.value = ch;
+                        slice.accept(ch);
+                        if (slice.end < length) {
                             //创建下一个切片
-                            slice = slice.end >= length ? null : new Slice(slice.end, -1, slice);
+                            slice.partial = true;
+                            slice = new Slice(slice.end, -1, slice);
                         }
                         count++;
                         i += 2;
