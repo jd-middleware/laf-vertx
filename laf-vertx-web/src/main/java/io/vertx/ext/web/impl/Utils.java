@@ -221,6 +221,7 @@ public class Utils extends io.vertx.core.impl.Utils {
                     }
                     break;
                 case '%':
+                    //'/'对应的"%2E"不会进行转义
                     ch = decodeUnreserved(pathname, i);
                     if (ch > 0) {
                         if (i > 0) {
@@ -229,12 +230,14 @@ public class Utils extends io.vertx.core.impl.Utils {
                             slice.partial = true;
                             //创建转义字符切片
                             slice = new Slice(i, i + 3, ch, slice);
+                            slice.partial = true;
                             //创建下一个切片
                             slice = slice.end >= length ? null : new Slice(slice.end, -1, slice);
                         } else {
                             //第一个字符
                             slice.setEnd(i + 3);
                             slice.setValue(ch);
+                            slice.partial = true;
                             slice.accept(ch);
                             //创建下一个切片
                             slice = slice.end >= length ? null : new Slice(slice.end, -1, slice);
@@ -270,13 +273,29 @@ public class Utils extends io.vertx.core.impl.Utils {
                     case 2:
                         //处理'/.'，删除当前节点
                         prev = slice.removePath();
-                        root = prev == null ? slice.next : root;
+                        if (prev != null) {
+                            //有父节点
+                            if (slice.next == null) {
+                                //当前节点是最后一个节点，则保留最后的'/'
+                                prev.next = new Slice(-1, -1, '/');
+                            }
+                        } else {
+                            root = slice.next;
+                        }
                         break;
                     case 3:
                         //处理'/..'，删除当前节点及前一个节点
                         prev = slice.removePath();
                         prev = prev == null ? null : prev.removePath();
-                        root = prev == null ? slice.next : root;
+                        if (prev != null) {
+                            //有父节点
+                            if (slice.next == null) {
+                                //当前节点是最后一个节点，则保留最后的'/'
+                                prev.next = new Slice(-1, -1, '/');
+                            }
+                        } else {
+                            root = slice.next;
+                        }
                         break;
                 }
             }
@@ -631,7 +650,7 @@ public class Utils extends io.vertx.core.impl.Utils {
             this.prev = prev;
             if (prev != null) {
                 prev.setNext(this);
-                if (prev.end == -1) {
+                if (prev.partial) {
                     //没有结束，小数点延续
                     this.dots = prev.dots;
                 }
