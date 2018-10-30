@@ -198,9 +198,7 @@ public class Utils extends io.vertx.core.impl.Utils {
         Slice root = null;
         //字符串不以'/'开头
         if (pathname.charAt(0) != '/') {
-            root = new Slice(-1, -1, '/');
-            root.dots = 1;
-            root.partial = true;
+            root = new Slice(-1, -1, '/', true, 1, null);
             flag = true;
         }
         int length = pathname.length();
@@ -656,17 +654,27 @@ public class Utils extends io.vertx.core.impl.Utils {
         protected int dots;
 
         public Slice(int start, int end, Slice prev) {
-            this(start, end, (char) 0, prev);
+            this(start, end, (char) 0, false, 0, prev);
         }
 
         public Slice(int start, int end, char value) {
-            this(start, end, value, null);
+            this(start, end, value, false, 0, null);
+        }
+
+        public Slice(int start, int end, char value, boolean partial) {
+            this(start, end, value, partial, 0, null);
         }
 
         public Slice(int start, int end, char value, Slice prev) {
+            this(start, end, value, false, 0, prev);
+        }
+
+        public Slice(int start, int end, char value, boolean partial, int dots, Slice prev) {
             this.start = start;
             this.end = end;
             this.value = value;
+            this.partial = partial;
+            this.dots = dots;
             this.prev = prev;
             if (prev != null) {
                 prev.setNext(this);
