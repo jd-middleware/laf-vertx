@@ -192,15 +192,12 @@ public class Utils extends io.vertx.core.impl.Utils {
         if (pathname == null || pathname.isEmpty()) {
             return "/";
         }
-        //记录需要变更的部分
-        int count = 0;
         //根节点
         Slice root = null;
         //字符串不以'/'开头
         if (pathname.charAt(0) != '/') {
             root = new Slice(-1, -1, '/');
             root.partial = true;
-            count++;
         }
         int length = pathname.length();
         char ch;
@@ -217,8 +214,8 @@ public class Utils extends io.vertx.core.impl.Utils {
                         slice.end = i;
                         //创建下一个切片
                         slice = new Slice(i, -1, slice);
-                        slice.accept(ch);
                     }
+                    slice.accept(ch);
                     break;
                 case '%':
                     //'/'对应的"%2E"不会进行转义
@@ -241,7 +238,6 @@ public class Utils extends io.vertx.core.impl.Utils {
                             slice.partial = true;
                             slice = new Slice(slice.end, -1, slice);
                         }
-                        count++;
                         i += 2;
                     }
                     break;
@@ -254,19 +250,21 @@ public class Utils extends io.vertx.core.impl.Utils {
             slice.end = length;
         }
         //不需要变化
-        if (count == 0) {
-            return pathname;
-        }
+        boolean flag = false;
         slice = root;
         Slice prev;
         while (slice != null) {
+            if (!flag && slice.value > 0) {
+                flag = true;
+            }
             if (!slice.partial) {
                 switch (slice.dots) {
                     case 1:
                         //处理'/'
                         if (slice.prev != null && slice.prev.dots == 1) {
-                            //处理'//'
+                            //处理'//'，把当前节点删除，上一个'/'保留，不涉及root的变化
                             slice.remove();
+                            flag = true;
                         }
                         break;
                     case 2:
@@ -281,6 +279,7 @@ public class Utils extends io.vertx.core.impl.Utils {
                         } else {
                             root = slice.next;
                         }
+                        flag = true;
                         break;
                     case 3:
                         //处理'/..'，删除当前节点及前一个节点
@@ -295,14 +294,19 @@ public class Utils extends io.vertx.core.impl.Utils {
                         } else {
                             root = slice.next;
                         }
+                        flag = true;
                         break;
                 }
             }
             slice = slice.next;
         }
-        if (root == null) {
+        //判断是否发生了变化
+        if (!flag) {
+            return pathname;
+        } else if (root == null) {
             return "/";
         }
+        //构造缓冲区，拼接字符串
         StringBuilder builder = new StringBuilder(length);
         while (root != null) {
             if (root.value > 0) {
@@ -747,6 +751,9 @@ public class Utils extends io.vertx.core.impl.Utils {
         }
 
         public void accept(final char ch) {
+            if (dots == -1) {
+                return;
+            }
             switch (ch) {
                 case '/':
                     dots = dots == 0 ? 1 : -1;
