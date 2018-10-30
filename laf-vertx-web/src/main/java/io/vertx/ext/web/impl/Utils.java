@@ -182,7 +182,7 @@ public class Utils extends io.vertx.core.impl.Utils {
      * <p>
      * double slash // will be converted to single slash and the path will always start with slash.
      * <p>
-     * 对性能进行了优化，原有的方法名称改为normalize
+     * 对性能进行了优化，采用链表方式切片，另外方法内敛，减少方法调用，原有的方法名称改为normalize
      *
      * @param pathname raw path
      * @return normalized path
@@ -199,6 +199,7 @@ public class Utils extends io.vertx.core.impl.Utils {
         //字符串不以'/'开头
         if (pathname.charAt(0) != '/') {
             root = new Slice(-1, -1, '/');
+            root.dots = 1;
             root.partial = true;
             flag = true;
         }
@@ -206,51 +207,54 @@ public class Utils extends io.vertx.core.impl.Utils {
         char ch;
         Slice slice = new Slice(0, -1, root);
         root = root == null ? slice : root;
+        boolean created;
         //遍历字符，按照'/'切片
         for (int i = 0; i < length; ) {
             ch = pathname.charAt(i);
-            //当前字符
-            switch (ch) {
-                case '/':
+            created = false;
+            if (ch == '/') {
+                if (i > 0) {
+                    //不是第一个字符，则作为结束符号
+                    slice.end = i;
+                    slice.partial = false;
+                    flag = flag || slice.dots != -1;
+                    //创建下一个切片
+                    slice = new Slice(i, -1, slice);
+                }
+            } else if (ch == '%') {
+                //'/'对应的"%2E"不会进行转义
+                ch = decodeUnreserved(pathname, i);
+                if (ch > 0) {
                     if (i > 0) {
-                        //不是第一个字符，则作为结束符号
+                        //不是第一个字符，则当前切片结束
                         slice.end = i;
-                        slice.partial = false;
-                        flag = flag || slice.dots != -1;
-                        //创建下一个切片
-                        slice = new Slice(i, -1, slice);
-                    }
-                    slice.accept(ch);
-                    break;
-                case '%':
-                    //'/'对应的"%2E"不会进行转义
-                    ch = decodeUnreserved(pathname, i);
-                    if (ch > 0) {
-                        if (i > 0) {
-                            //不是第一个字符，则当前切片结束
-                            slice.end = i;
-                            slice.partial = true;
-                            //创建转义字符切片
-                            slice = new Slice(i, i + 3, slice);
-                        } else {
-                            //第一个字符
-                            slice.end = i + 3;
-                        }
-                        slice.value = ch;
-                        slice.accept(ch);
-                        if (slice.end < length) {
-                            //创建下一个切片
-                            slice.partial = true;
-                            slice = new Slice(slice.end, -1, slice);
-                        }
-                        flag = true;
-                        i += 2;
+                        slice.partial = true;
+                        //创建转义字符切片
+                        slice = new Slice(i, i + 3, slice);
                     } else {
-                        slice.accept(ch);
+                        //第一个字符
+                        slice.end = i + 3;
                     }
-                    break;
-                default:
-                    slice.accept(ch);
+                    slice.value = ch;
+                    if (slice.end < length) {
+                        slice.partial = true;
+                        //需要创建下一个切片
+                        created = true;
+                    }
+                    flag = true;
+                    i += 2;
+                }
+            }
+            if (slice.dots != -1) {
+                if ((ch == '/' && slice.dots == 0) || ch == '.' && (slice.dots == 1 || slice.dots == 2)) {
+                    slice.dots++;
+                } else {
+                    slice.dots = -1;
+                }
+            }
+            if (created) {
+                //创建下一个切片
+                slice = new Slice(slice.end, -1, slice);
             }
             i++;
         }
@@ -671,10 +675,6 @@ public class Utils extends io.vertx.core.impl.Utils {
                     this.dots = prev.dots;
                 }
             }
-            if (value > 0) {
-                //当前字符，继续判断小数点
-                accept(value);
-            }
         }
 
         public int getStart() {
@@ -761,22 +761,6 @@ public class Utils extends io.vertx.core.impl.Utils {
                 ;
             }
             return result;
-        }
-
-        public void accept(final char ch) {
-            if (dots == -1) {
-                return;
-            }
-            switch (ch) {
-                case '/':
-                    dots = dots == 0 ? 1 : -1;
-                    break;
-                case '.':
-                    dots = (dots == 1 || dots == 2) ? ++dots : -1;
-                    break;
-                default:
-                    dots = -1;
-            }
         }
     }
 
