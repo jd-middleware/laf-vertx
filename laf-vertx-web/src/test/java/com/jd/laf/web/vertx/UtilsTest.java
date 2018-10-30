@@ -23,10 +23,9 @@ public class UtilsTest {
                 ".",
                 "..",
                 "%2F/a",
-                "/a/c/.."
+                "/a/c/..",
+                "/.%8E"
         };
-        Utils.normalizePath("/a/c/..");
-
 
         for (String url : urls) {
             Assert.assertEquals(Utils.normalizePath(url), Utils.normalize(url));

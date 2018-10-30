@@ -192,12 +192,15 @@ public class Utils extends io.vertx.core.impl.Utils {
         if (pathname == null || pathname.isEmpty()) {
             return "/";
         }
+        //不需要变化
+        boolean flag = false;
         //根节点
         Slice root = null;
         //字符串不以'/'开头
         if (pathname.charAt(0) != '/') {
             root = new Slice(-1, -1, '/');
             root.partial = true;
+            flag = true;
         }
         int length = pathname.length();
         char ch;
@@ -212,6 +215,8 @@ public class Utils extends io.vertx.core.impl.Utils {
                     if (i > 0) {
                         //不是第一个字符，则作为结束符号
                         slice.end = i;
+                        slice.partial = false;
+                        flag = flag || slice.dots != -1;
                         //创建下一个切片
                         slice = new Slice(i, -1, slice);
                     }
@@ -238,7 +243,10 @@ public class Utils extends io.vertx.core.impl.Utils {
                             slice.partial = true;
                             slice = new Slice(slice.end, -1, slice);
                         }
+                        flag = true;
                         i += 2;
+                    } else {
+                        slice.accept(ch);
                     }
                     break;
                 default:
@@ -247,10 +255,15 @@ public class Utils extends io.vertx.core.impl.Utils {
             i++;
         }
         if (slice != null && slice.end == -1) {
+            slice.partial = false;
             slice.end = length;
+            flag = flag || slice.dots != -1;
+        }
+        if (!flag) {
+            return pathname;
         }
         //不需要变化
-        boolean flag = false;
+        flag = false;
         slice = root;
         Slice prev;
         while (slice != null) {
