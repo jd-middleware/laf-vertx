@@ -37,6 +37,11 @@ public class JacksonProvider implements JsonProvider {
         public <T> T unmarshall(final String value, final Class<T> clazz, final String format) {
             return Json.decodeValue(value, clazz);
         }
+
+        @Override
+        public <T> T unmarshall(final String value, final Class<T> clazz) {
+            return Json.decodeValue(value, clazz);
+        }
     }
 
     /**
