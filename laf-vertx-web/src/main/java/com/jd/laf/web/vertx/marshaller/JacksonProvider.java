@@ -1,5 +1,6 @@
 package com.jd.laf.web.vertx.marshaller;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.jd.laf.binding.marshaller.JsonProvider;
 import com.jd.laf.binding.marshaller.Marshaller;
 import com.jd.laf.binding.marshaller.Unmarshaller;
@@ -13,7 +14,9 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 public class JacksonProvider implements JsonProvider {
 
     static {
-        Json.mapper.setSerializationInclusion(NON_NULL);
+        Json.mapper.setSerializationInclusion(NON_NULL)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     }
 
 
