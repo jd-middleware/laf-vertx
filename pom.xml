@@ -7,7 +7,7 @@
     <groupId>com.jd.laf.web</groupId>
     <artifactId>laf-vertx</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <organization>
         <name>JD.com, Inc.</name>
@@ -36,6 +36,14 @@
         <ignite.version>2.6.0</ignite.version>
         <spring-boot.version>2.0.5.RELEASE</spring-boot.version>
         <micrometer.version>1.0.6</micrometer.version>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
+        <maven-dependency-plugin.version>3.1.1</maven-dependency-plugin.version>
+        <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+        <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
+        <maven-compiler-plugin.compilerArgument>-parameters</maven-compiler-plugin.compilerArgument>
     </properties>
 
     <dependencyManagement>
@@ -68,8 +76,9 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
+                    <compilerArgument>${maven-compiler-plugin.compilerArgument}</compilerArgument>
                     <source>${jdk.version}</source>
                     <target>${jdk.version}</target>
                     <encoding>${project.build.sourceEncoding}</encoding>
@@ -79,17 +88,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.5</version>
+                <version>${maven-resources-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-                <version>2.4</version>
+                <version>${maven-dependency-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.4</version>
+                <version>${maven-jar-plugin.version}</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -101,7 +110,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>2.2.1</version>
+                <version>${maven-source-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>attach-sources</id>
@@ -114,7 +123,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.8.1</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
                 </configuration>
@@ -122,16 +131,4 @@
         </plugins>
     </build>
 
-    <distributionManagement>
-        <repository>
-            <id>libs-releases-local</id>
-            <name>Release Repository</name>
-            <url>http://artifactory.jd.com/libs-releases-local</url>
-        </repository>
-        <snapshotRepository>
-            <id>libs-snapshots-local</id>
-            <name>Snapshot Repository</name>
-            <url>http://artifactory.jd.com/libs-snapshots-local</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>
