@@ -26,7 +26,7 @@ public class QueryParamBinder implements Binder {
 
         Class<?> type = field.getType();
         MultiMap params = ((RoutingContext) source).request().params();
-        if (Collection.class.isAssignableFrom(type)) {
+        if (Collection.class.isAssignableFrom(type) || type.isArray()) {
             return context.bind(params.getAll(name));
         } else {
             return context.bind(params.get(name));

@@ -25,7 +25,7 @@ public class FormParamBinder implements Binder {
         name = name == null || name.isEmpty() ? field.getName() : name;
         Class<?> type = field.getType();
         MultiMap attributes = ((RoutingContext) source).request().formAttributes();
-        if (Collection.class.isAssignableFrom(type)) {
+        if (Collection.class.isAssignableFrom(type) || type.isArray()) {
             //集合
             return context.bind(attributes.getAll(name));
         } else {
