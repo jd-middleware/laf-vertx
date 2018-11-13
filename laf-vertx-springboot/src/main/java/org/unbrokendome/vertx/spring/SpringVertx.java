@@ -1,6 +1,7 @@
 package org.unbrokendome.vertx.spring;
 
 import io.vertx.core.*;
+import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.metrics.MetricsOptions;
@@ -50,7 +51,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                        int startupPhase, boolean autoStartup) {
         this.factory = factory;
         this.options = new VertxOptions(options);
-        this.options.setClusterHost(NetUtils.getLocalHost()) ;
         this.verticleRegistrations = new ArrayList<>(verticleRegistrations);
         this.listeners = new ArrayList<>(listeners);
         this.verticleFactoryPrefix = verticleFactoryPrefix;
@@ -395,6 +395,11 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         protected VertxOptions getOrCreateOptions() {
             if (options == null) {
                 options = new VertxOptions();
+
+            }
+            if (options.getClusterHost() == null || EventBusOptions.DEFAULT_HOST.equals(options.getClusterHost())) {
+                //localhost
+                options.setClusterHost(NetUtils.getLocalHost());
             }
             return options;
         }
