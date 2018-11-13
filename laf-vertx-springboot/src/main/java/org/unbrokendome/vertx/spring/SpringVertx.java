@@ -51,7 +51,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                        int startupPhase, boolean autoStartup) {
         this.factory = factory;
         this.options = new VertxOptions(options);
-        this.options.setClusterHost(NetUtils.getLocalHost()) ;
         this.verticleRegistrations = new ArrayList<>(verticleRegistrations);
         this.listeners = new ArrayList<>(listeners);
         this.verticleFactoryPrefix = verticleFactoryPrefix;
