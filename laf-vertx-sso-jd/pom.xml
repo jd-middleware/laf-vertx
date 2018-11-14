@@ -5,7 +5,7 @@
     <parent>
         <artifactId>laf-vertx</artifactId>
         <groupId>com.jd.laf.web</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -20,12 +20,12 @@
         <dependency>
             <groupId>com.jd.laf</groupId>
             <artifactId>laf-codec</artifactId>
-            <version>1.0.0</version>
+            <version>${laf-codec.version}</version>
         </dependency>
         <dependency>
             <groupId>com.jd.common</groupId>
             <artifactId>sso-uim-spring</artifactId>
-            <version>1.0.4</version>
+            <version>${sso-uim-spring.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>com.jd</groupId>

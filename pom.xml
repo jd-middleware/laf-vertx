@@ -7,7 +7,7 @@
     <groupId>com.jd.laf.web</groupId>
     <artifactId>laf-vertx</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 
     <organization>
         <name>JD.com, Inc.</name>
@@ -36,6 +36,10 @@
         <ignite.version>2.6.0</ignite.version>
         <spring-boot.version>2.0.5.RELEASE</spring-boot.version>
         <micrometer.version>1.0.6</micrometer.version>
+        <laf-codec.version>1.0.0</laf-codec.version>
+        <laf-binding.version>1.0.1</laf-binding.version>
+        <sso-uim-spring.version>1.0.4</sso-uim-spring.version>
+        <beetl.version>2.9.3</beetl.version>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>

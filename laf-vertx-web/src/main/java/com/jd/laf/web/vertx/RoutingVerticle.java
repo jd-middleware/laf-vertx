@@ -35,7 +35,7 @@ import static com.jd.laf.web.vertx.handler.RenderHandler.render;
  * 路由装配件
  */
 public class RoutingVerticle extends AbstractVerticle {
-    public static final String ROUTING_CONFIG_FILE = "routing.file";
+    public static final String ROUTING_CONFIG_FILE = "vertx.file";
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final int DEFAULT_PORT = 8080;
     protected static Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);

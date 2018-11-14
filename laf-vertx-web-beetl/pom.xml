@@ -5,15 +5,11 @@
     <parent>
         <artifactId>laf-vertx</artifactId>
         <groupId>com.jd.laf.web</groupId>
-        <version>1.0.1</version>
+        <version>1.0.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>laf-vertx-web-beetl</artifactId>
-
-    <properties>
-        <beetl.version>2.8.6</beetl.version>
-    </properties>
 
     <dependencies>
         <dependency>
