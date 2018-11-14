@@ -4,12 +4,14 @@ import com.hazelcast.core.HazelcastInstance;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
 import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 
 @Configuration
 @ConditionalOnClass(HazelcastClusterManager.class)
 @ConditionalOnBean(HazelcastInstance.class)
+@Conditional(HazelcastClusterManagerConfiguration.HazelcastClusterManagerCondition.class)
 public class HazelcastClusterManagerConfiguration {
 
     @Bean
