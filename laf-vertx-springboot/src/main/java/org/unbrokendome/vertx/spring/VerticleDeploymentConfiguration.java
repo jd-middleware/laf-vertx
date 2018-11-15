@@ -6,6 +6,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
+/**
+ * Verticle部署配置
+ */
 @Configuration
 public class VerticleDeploymentConfiguration implements VertxConfigurer {
 
@@ -20,6 +23,11 @@ public class VerticleDeploymentConfiguration implements VertxConfigurer {
         this.verticleRegistrationsProvider = verticleRegistrationsProvider;
     }
 
+    /**
+     * 注册Bean后置处理器，部署Verticle
+     *
+     * @return
+     */
     @Bean
     public static VerticleBeanPostProcessor verticleBeanPostProcessor() {
         return new VerticleBeanPostProcessor();
@@ -27,9 +35,6 @@ public class VerticleDeploymentConfiguration implements VertxConfigurer {
 
     @Override
     public void configure(final SpringVertx.Builder builder) {
-        List<VerticleRegistration> verticleRegistrations = verticleRegistrationsProvider.getIfAvailable();
-        if (verticleRegistrations != null) {
-            builder.verticleRegistrations(verticleRegistrations);
-        }
+        builder.verticleRegistrations(verticleRegistrationsProvider.getIfAvailable());
     }
 }

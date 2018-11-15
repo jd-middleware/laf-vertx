@@ -2,8 +2,6 @@ package org.unbrokendome.vertx.spring;
 
 
 import io.vertx.core.VertxOptions;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.spi.VertxFactory;
 import io.vertx.core.spi.VertxMetricsFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
@@ -11,22 +9,37 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.unbrokendome.vertx.spring.events.EventPublishingVertxListener;
 
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Vertx配置
+ */
 @Configuration
 public class VertxConfiguration {
 
-    private final Logger logger = LoggerFactory.getLogger(VertxConfiguration.class);
-
+    /**
+     * 注册Vertx事件监听器
+     *
+     * @return
+     */
     @Bean
-    public EventPublishingVertxListener eventPublishingVertxListener() {
+    public EventPublishingVertxListener vertxListener() {
         return new EventPublishingVertxListener();
     }
 
+    /**
+     * 注册SpringVertx
+     *
+     * @param vertxFactoryProvider
+     * @param optionsProvider
+     * @param clusterManagerProvider
+     * @param listenersProvider
+     * @param configurersProvider
+     * @param metricsFactoryProvider
+     * @return
+     */
     @Bean
     public SpringVertx vertx(
             ObjectProvider<VertxFactory> vertxFactoryProvider,
@@ -36,56 +49,17 @@ public class VertxConfiguration {
             ObjectProvider<List<VertxConfigurer>> configurersProvider,
             ObjectProvider<List<VertxMetricsFactory>> metricsFactoryProvider) {
 
-        SpringVertx.Builder builder = SpringVertx.builder();
-
-        VertxFactory vertxFactory = vertxFactoryProvider.getIfAvailable();
-        if (vertxFactory != null) {
-            builder.factory(vertxFactory);
-        }
-
-        List<VertxListener> listeners = listenersProvider.getIfAvailable();
-        if (listeners != null) {
-            for (VertxListener listener : listeners) {
-                builder.listener(listener);
-            }
-        }
-
-        List<VertxMetricsFactory> metricsFactories = metricsFactoryProvider.getIfAvailable();
-        if (metricsFactories != null) {
-            for (VertxMetricsFactory metricsFactory : metricsFactories) {
-                builder.metricsFactory(metricsFactory);
-            }
-        }
-
-        List<VertxConfigurer> configurers = new ArrayList<>();
-
         ClusterManager clusterManager = clusterManagerProvider.getIfAvailable();
-        if (clusterManager != null) {
-            configurers.add(new ClusterManagerConfigurer(clusterManager));
-        }
 
-        List<VertxConfigurer> injectedConfigurers = configurersProvider.getIfAvailable();
-        if (injectedConfigurers != null) {
-            configurers.addAll(injectedConfigurers);
-        }
-
-        if (!configurers.isEmpty()) {
-            List<VertxConfigurer> sortedConfigurers = new ArrayList<>(configurers);
-            AnnotationAwareOrderComparator.sort(sortedConfigurers);
-            for (VertxConfigurer configurer : sortedConfigurers) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Applying configurer: " + configurer);
-                }
-                configurer.configure(builder);
-            }
-        }
-
-        // If we have a VertxOptions bean, it will replace all the options possibly gathered by configurers,
-        // so make sure to call it last
-        VertxOptions options = optionsProvider.getIfAvailable();
-        if (options != null) {
-            builder.options(options);
-        }
+        //如果配置了VertxOptions bean，放在最后替换所有可能的配置
+        SpringVertx.Builder builder = SpringVertx.builder()
+                .factory(vertxFactoryProvider.getIfAvailable())
+                .listener(listenersProvider.getIfAvailable())
+                .metricsFactory(metricsFactoryProvider.getIfAvailable())
+                .configurer(clusterManager == null ? null : new ClusterManagerConfigurer(clusterManager))
+                .configurer(configurersProvider.getIfAvailable())
+                .configure()
+                .options(optionsProvider.getIfAvailable());
 
         return builder.build();
     }
