@@ -8,7 +8,7 @@ import com.jd.laf.web.vertx.annotation.Body;
 import com.jd.laf.web.vertx.annotation.Body.BodyType;
 import io.vertx.ext.web.RoutingContext;
 
-import java.io.ByteArrayInputStream;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.util.Properties;
 
@@ -54,9 +54,8 @@ public class BodyBinder implements Binder {
                     return context.bind(XmlProviders.getPlugin().getUnmarshaller().unmarshall(
                             ctx.getBodyAsString(), field.getType(), null));
                 case PROPERTIES:
-                    byte[] data = ctx.getBody().getBytes();
                     Properties properties = new Properties();
-                    properties.load(new ByteArrayInputStream(data));
+                    properties.load(new StringReader(ctx.getBody().toString()));
                     return context.bind(properties);
                 default:
                     return context.bind(ctx.getBody());
