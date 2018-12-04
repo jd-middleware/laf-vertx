@@ -1,6 +1,9 @@
 package org.unbrokendome.vertx.spring.boot.clustermanager;
 
 import io.vertx.spi.cluster.ignite.IgniteClusterManager;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
@@ -16,12 +19,15 @@ import org.springframework.context.annotation.Configuration;
 public class IgniteClusterManagerConfiguration {
 
     @Bean
-    public IgniteClusterManager igniteClusterManager() {
-        return new IgniteClusterManager();
+    public IgniteClusterManager igniteClusterManager(
+            ObjectProvider<IgniteConfiguration> configurationProvider,
+            ObjectProvider<Ignite> igniteProvider) {
+        Ignite ignite = igniteProvider.getIfAvailable();
+        IgniteConfiguration configuration = configurationProvider.getIfAvailable();
+        return ignite != null ? new IgniteClusterManager(ignite) :
+                (configuration != null ? new IgniteClusterManager(configuration) : new IgniteClusterManager());
     }
 
-
-    @SuppressWarnings("unused")
     static class IgniteClusterManagerCondition extends AnyNestedCondition {
 
         public IgniteClusterManagerCondition() {
