@@ -24,7 +24,7 @@ public class Log4jConfiguration {
     private String config;
 
     @Bean
-    public Log4JLogger log4jListener() throws IgniteCheckedException {
+    public Log4JLogger log4jLogger() throws IgniteCheckedException {
         URL url = Thread.currentThread().getContextClassLoader().getResource(config);
         if (url == null) {
             url = this.getClass().getClassLoader().getResource(config);

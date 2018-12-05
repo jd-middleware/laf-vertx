@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 public class Slf4jConfiguration {
 
     @Bean
-    public Slf4jLogger log4jListener() {
+    public Slf4jLogger slf4jLogger() {
         return new Slf4jLogger();
     }
 
