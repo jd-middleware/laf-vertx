@@ -94,9 +94,12 @@ public class VertxConfig {
                 if (f.exists()) {
                     in = new FileInputStream(f);
                 } else {
-                    in = VertxConfig.class.getClassLoader().getResourceAsStream(file);
+                    in = Thread.currentThread().getContextClassLoader().getResourceAsStream(file);
                     if (in == null) {
-                        throw new IOException("file is not found. " + file);
+                        in = VertxConfig.class.getClassLoader().getResourceAsStream(file);
+                        if (in == null) {
+                            throw new IOException("file is not found. " + file);
+                        }
                     }
                 }
                 reader = new BufferedReader(new InputStreamReader(in));

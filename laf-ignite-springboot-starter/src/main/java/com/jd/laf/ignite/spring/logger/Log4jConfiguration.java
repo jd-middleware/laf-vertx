@@ -25,11 +25,11 @@ public class Log4jConfiguration {
 
     @Bean
     public Log4JLogger log4jListener() throws IgniteCheckedException {
-        URL url = this.getClass().getClassLoader().getResource(config);
-        if (url != null) {
-            return new Log4JLogger(url);
+        URL url = Thread.currentThread().getContextClassLoader().getResource(config);
+        if (url == null) {
+            url = this.getClass().getClassLoader().getResource(config);
         }
-        return new Log4JLogger(config);
+        return url != null ? new Log4JLogger(url) : new Log4JLogger(config);
     }
 
     static class Log4jCondition extends AnyNestedCondition {
