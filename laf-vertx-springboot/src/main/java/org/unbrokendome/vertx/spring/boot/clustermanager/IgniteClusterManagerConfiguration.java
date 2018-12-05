@@ -1,7 +1,6 @@
 package org.unbrokendome.vertx.spring.boot.clustermanager;
 
 import io.vertx.spi.cluster.ignite.IgniteClusterManager;
-import org.apache.ignite.Ignite;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;
@@ -20,12 +19,10 @@ public class IgniteClusterManagerConfiguration {
 
     @Bean
     public IgniteClusterManager igniteClusterManager(
-            ObjectProvider<IgniteConfiguration> configurationProvider,
-            ObjectProvider<Ignite> igniteProvider) {
-        Ignite ignite = igniteProvider.getIfAvailable();
-        IgniteConfiguration configuration = configurationProvider.getIfAvailable();
-        return ignite != null ? new IgniteClusterManager(ignite) :
-                (configuration != null ? new IgniteClusterManager(configuration) : new IgniteClusterManager());
+            ObjectProvider<IgniteConfiguration> igniteProvider) {
+        System.setProperty("IGNITE_NO_SHUTDOWN_HOOK", "true");
+        IgniteConfiguration ignite = igniteProvider.getIfAvailable();
+        return ignite != null ? new IgniteClusterManager(ignite) : new IgniteClusterManager();
     }
 
     static class IgniteClusterManagerCondition extends AnyNestedCondition {

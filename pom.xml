@@ -7,7 +7,7 @@
     <groupId>com.jd.laf.web</groupId>
     <artifactId>laf-vertx</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
 
     <organization>
         <name>JD.com, Inc.</name>
@@ -21,6 +21,7 @@
         <module>laf-vertx-sso-jd</module>
         <module>laf-vertx-springboot</module>
         <module>laf-vertx-web-springboot-starter</module>
+        <module>laf-ignite-springboot-starter</module>
     </modules>
 
     <properties>
