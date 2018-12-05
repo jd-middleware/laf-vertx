@@ -3,6 +3,10 @@ package com.jd.laf.ignite.spring;
 import org.apache.ignite.cache.*;
 import org.apache.ignite.configuration.CacheConfiguration;
 
+import javax.cache.expiry.CreatedExpiryPolicy;
+import javax.cache.expiry.Duration;
+import java.util.concurrent.TimeUnit;
+
 import static org.apache.ignite.configuration.CacheConfiguration.*;
 
 public class CacheProperties {
@@ -51,6 +55,7 @@ public class CacheProperties {
     protected int storeConcurrentLoadAllThreshold = DFLT_CONCURRENT_LOAD_ALL_THRESHOLD;
     protected boolean managementEnabled;
     protected boolean eventsDisabled = DFLT_EVENTS_DISABLED;
+    protected long expireTime;
 
     public String getName() {
         return name;
@@ -412,6 +417,14 @@ public class CacheProperties {
         this.eventsDisabled = eventsDisabled;
     }
 
+    public long getExpireTime() {
+        return expireTime;
+    }
+
+    public void setExpireTime(long expireTime) {
+        this.expireTime = expireTime;
+    }
+
     public CacheConfiguration build() {
         CacheConfiguration result = new CacheConfiguration();
         result.setAtomicityMode(atomicityMode);
@@ -459,6 +472,7 @@ public class CacheProperties {
         result.setWriteBehindFlushThreadCount(writeBehindFlushThreadCount);
         result.setWriteSynchronizationMode(writeSynchronizationMode);
         result.setWriteThrough(writeThrough);
+        result.setExpiryPolicyFactory(expireTime <= 0 ? null : CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.MICROSECONDS, expireTime)));
         return result;
     }
 }
