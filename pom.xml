@@ -7,7 +7,7 @@
     <groupId>com.jd.laf.web</groupId>
     <artifactId>laf-vertx</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.6</version>
+    <version>1.0.7</version>
 
     <organization>
         <name>JD.com, Inc.</name>
@@ -34,7 +34,7 @@
         <hibernate-validator.version>6.0.9.Final</hibernate-validator.version>
         <javax.el.version>3.0.1-b10</javax.el.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
-        <ignite.version>2.6.0</ignite.version>
+        <ignite.version>2.7.0</ignite.version>
         <spring-boot.version>2.1.0.RELEASE</spring-boot.version>
         <micrometer.version>1.0.6</micrometer.version>
         <laf-codec.version>1.0.0</laf-codec.version>
