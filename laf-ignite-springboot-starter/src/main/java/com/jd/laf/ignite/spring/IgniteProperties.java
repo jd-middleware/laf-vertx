@@ -11,8 +11,7 @@ import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.plugin.segmentation.SegmentationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static org.apache.ignite.configuration.IgniteConfiguration.*;
 
@@ -534,36 +533,55 @@ public class IgniteProperties {
             }
             result.setCacheConfiguration(configurations);
         }
-        if (binaryTypes != null) {
+        result.setBinaryConfiguration(build(binaryTypes));
+
+        return result;
+    }
+
+    protected BinaryConfiguration build(final List<BinaryTypeProperties> binaryTypes) throws InstantiationException, IllegalAccessException {
+        BinaryConfiguration binaryCfg = new BinaryConfiguration();
+        List<BinaryTypeConfiguration> binaryTypeCfgs = new ArrayList<>();
+        binaryCfg.setTypeConfigurations(binaryTypeCfgs);
+        Set<String> serializers = new HashSet<>();
+        //从配置获取
+        if (binaryTypes != null && !binaryTypes.isEmpty()) {
             BinaryTypeConfiguration binaryTypeCfg;
-            BinaryConfiguration binaryCfg = new BinaryConfiguration();
-            List<BinaryTypeConfiguration> binaryTypeCfgs = new ArrayList<>(binaryTypes.size());
             for (BinaryTypeProperties binaryType : binaryTypes) {
                 if (binaryType.getTypeName() == null || binaryType.getTypeName().isEmpty()) {
                     //默认
-                    build(binaryCfg, binaryType);
+                    configure(binaryCfg, binaryType);
                 } else {
                     //指定类型
                     binaryTypeCfg = build(binaryType);
                     if (binaryTypeCfg.getIdMapper() != null
                             || binaryTypeCfg.getNameMapper() != null
                             || binaryTypeCfg.getSerializer() != null) {
-                        binaryTypeCfgs.add(binaryTypeCfg);
+                        if (serializers.add(binaryTypeCfg.getTypeName())) {
+                            binaryTypeCfgs.add(binaryTypeCfg);
+                        }
                     }
                 }
             }
-            if (!binaryTypeCfgs.isEmpty()) {
-                binaryCfg.setTypeConfigurations(binaryTypeCfgs);
-            }
-            if (binaryCfg.getIdMapper() != null
-                    || binaryCfg.getNameMapper() != null
-                    || binaryCfg.getSerializer() != null
-                    || binaryCfg.getTypeConfigurations() != null) {
-                result.setBinaryConfiguration(binaryCfg);
-            }
         }
 
-        return result;
+        //从插件加载
+        BinaryTypeConfiguration binaryTypeCfg;
+        String name;
+        ServiceLoader<BinaryMarshaller> loader = ServiceLoader.load(BinaryMarshaller.class, IgniteProperties.class.getClassLoader());
+        for (BinaryMarshaller marshaller : loader) {
+            name = marshaller.name();
+            if (name == null || name.isEmpty()) {
+                if (binaryCfg.getSerializer() == null) {
+                    binaryCfg.setSerializer(marshaller);
+                }
+            } else if (serializers.add(name)) {
+                binaryTypeCfg = new BinaryTypeConfiguration();
+                binaryTypeCfg.setTypeName(name);
+                binaryTypeCfg.setSerializer(marshaller);
+                binaryTypeCfgs.add(binaryTypeCfg);
+            }
+        }
+        return binaryCfg;
     }
 
     protected BinaryTypeConfiguration build(final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
@@ -580,7 +598,7 @@ public class IgniteProperties {
         return binaryTypeCfg;
     }
 
-    protected void build(final BinaryConfiguration binaryCfg, final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
+    protected void configure(final BinaryConfiguration binaryCfg, final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
         if (binaryType.getIdMapperClass() != null && BinaryIdMapper.class.isAssignableFrom(binaryType.getIdMapperClass())) {
             binaryCfg.setIdMapper(binaryType.getIdMapperClass().newInstance());
         }
