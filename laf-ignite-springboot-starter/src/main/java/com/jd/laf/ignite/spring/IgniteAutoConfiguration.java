@@ -7,12 +7,15 @@ import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.internal.managers.discovery.IgniteDiscoverySpi;
 import org.apache.ignite.spi.communication.CommunicationSpi;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+
+import java.util.List;
 
 @Configuration
 @EnableConfigurationProperties(IgniteProperties.class)
@@ -29,12 +32,19 @@ public class IgniteAutoConfiguration {
     public IgniteConfiguration ignite(IgniteProperties igniteProperties,
                                       IgniteDiscoverySpi discoverySpi,
                                       CommunicationSpi communicationSpi,
-                                      IgniteLogger igniteLogger
+                                      IgniteLogger igniteLogger,
+                                      ObjectProvider<List<IgniteConfigurer>> configurersProvider
     ) throws Exception {
         IgniteConfiguration result = igniteProperties.build();
         result.setDiscoverySpi(discoverySpi);
         result.setCommunicationSpi(communicationSpi);
         result.setGridLogger(igniteLogger);
+        List<IgniteConfigurer> configurers = configurersProvider.getIfAvailable();
+        if (configurers != null) {
+            for (IgniteConfigurer configurer : configurers) {
+                configurer.configure(result);
+            }
+        }
         return result;
     }
 

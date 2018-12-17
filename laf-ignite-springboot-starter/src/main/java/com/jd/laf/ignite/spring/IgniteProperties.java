@@ -1,5 +1,8 @@
 package com.jd.laf.ignite.spring;
 
+import org.apache.ignite.binary.BinaryIdMapper;
+import org.apache.ignite.binary.BinaryNameMapper;
+import org.apache.ignite.binary.BinarySerializer;
 import org.apache.ignite.binary.BinaryTypeConfiguration;
 import org.apache.ignite.configuration.BinaryConfiguration;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -565,26 +568,26 @@ public class IgniteProperties {
 
     protected BinaryTypeConfiguration build(final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
         BinaryTypeConfiguration binaryTypeCfg = new BinaryTypeConfiguration();
-        if (binaryType.getIdMapperClass() != null) {
+        if (binaryType.getIdMapperClass() != null && BinaryIdMapper.class.isAssignableFrom(binaryType.getIdMapperClass())) {
             binaryTypeCfg.setIdMapper(binaryType.getIdMapperClass().newInstance());
         }
-        if (binaryType.getNameMapperClass() != null) {
+        if (binaryType.getNameMapperClass() != null && BinaryNameMapper.class.isAssignableFrom(binaryType.getNameMapperClass())) {
             binaryTypeCfg.setNameMapper(binaryType.getNameMapperClass().newInstance());
         }
-        if (binaryType.getSerializerClass() != null) {
+        if (binaryType.getSerializerClass() != null && BinarySerializer.class.isAssignableFrom(binaryType.getSerializerClass())) {
             binaryTypeCfg.setSerializer(binaryType.getSerializerClass().newInstance());
         }
         return binaryTypeCfg;
     }
 
     protected void build(final BinaryConfiguration binaryCfg, final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
-        if (binaryType.getIdMapperClass() != null) {
+        if (binaryType.getIdMapperClass() != null && BinaryIdMapper.class.isAssignableFrom(binaryType.getIdMapperClass())) {
             binaryCfg.setIdMapper(binaryType.getIdMapperClass().newInstance());
         }
-        if (binaryType.getNameMapperClass() != null) {
+        if (binaryType.getNameMapperClass() != null && BinaryNameMapper.class.isAssignableFrom(binaryType.getNameMapperClass())) {
             binaryCfg.setNameMapper(binaryType.getNameMapperClass().newInstance());
         }
-        if (binaryType.getSerializerClass() != null) {
+        if (binaryType.getSerializerClass() != null && BinarySerializer.class.isAssignableFrom(binaryType.getSerializerClass())) {
             binaryCfg.setSerializer(binaryType.getSerializerClass().newInstance());
         }
     }
