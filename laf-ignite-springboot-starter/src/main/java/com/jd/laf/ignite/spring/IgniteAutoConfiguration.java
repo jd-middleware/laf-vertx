@@ -30,7 +30,7 @@ public class IgniteAutoConfiguration {
                                       IgniteDiscoverySpi discoverySpi,
                                       CommunicationSpi communicationSpi,
                                       IgniteLogger igniteLogger
-    ) {
+    ) throws Exception {
         IgniteConfiguration result = igniteProperties.build();
         result.setDiscoverySpi(discoverySpi);
         result.setCommunicationSpi(communicationSpi);

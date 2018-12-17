@@ -1,11 +1,14 @@
 package com.jd.laf.ignite.spring;
 
+import org.apache.ignite.binary.BinaryTypeConfiguration;
+import org.apache.ignite.configuration.BinaryConfiguration;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.DeploymentMode;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.plugin.segmentation.SegmentationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.apache.ignite.configuration.IgniteConfiguration.*;
@@ -63,6 +66,7 @@ public class IgniteProperties {
 
     protected DataStorageProperties storage;
     protected List<CacheProperties> caches;
+    protected List<BinaryTypeProperties> binaryTypes;
 
     public String getIgniteInstanceName() {
         return igniteInstanceName;
@@ -456,7 +460,15 @@ public class IgniteProperties {
         this.caches = caches;
     }
 
-    public IgniteConfiguration build() {
+    public List<BinaryTypeProperties> getBinaryTypes() {
+        return binaryTypes;
+    }
+
+    public void setBinaryTypes(List<BinaryTypeProperties> binaryTypes) {
+        this.binaryTypes = binaryTypes;
+    }
+
+    public IgniteConfiguration build() throws Exception {
         IgniteConfiguration result = new IgniteConfiguration();
         result.setIgniteHome(igniteHome);
         result.setIgniteInstanceName(igniteInstanceName);
@@ -519,6 +531,61 @@ public class IgniteProperties {
             }
             result.setCacheConfiguration(configurations);
         }
+        if (binaryTypes != null) {
+            BinaryTypeConfiguration binaryTypeCfg;
+            BinaryConfiguration binaryCfg = new BinaryConfiguration();
+            List<BinaryTypeConfiguration> binaryTypeCfgs = new ArrayList<>(binaryTypes.size());
+            for (BinaryTypeProperties binaryType : binaryTypes) {
+                if (binaryType.getTypeName() == null || binaryType.getTypeName().isEmpty()) {
+                    //默认
+                    build(binaryCfg, binaryType);
+                } else {
+                    //指定类型
+                    binaryTypeCfg = build(binaryType);
+                    if (binaryTypeCfg.getIdMapper() != null
+                            || binaryTypeCfg.getNameMapper() != null
+                            || binaryTypeCfg.getSerializer() != null) {
+                        binaryTypeCfgs.add(binaryTypeCfg);
+                    }
+                }
+            }
+            if (!binaryTypeCfgs.isEmpty()) {
+                binaryCfg.setTypeConfigurations(binaryTypeCfgs);
+            }
+            if (binaryCfg.getIdMapper() != null
+                    || binaryCfg.getNameMapper() != null
+                    || binaryCfg.getSerializer() != null
+                    || binaryCfg.getTypeConfigurations() != null) {
+                result.setBinaryConfiguration(binaryCfg);
+            }
+        }
+
         return result;
+    }
+
+    protected BinaryTypeConfiguration build(final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
+        BinaryTypeConfiguration binaryTypeCfg = new BinaryTypeConfiguration();
+        if (binaryType.getIdMapperClass() != null) {
+            binaryTypeCfg.setIdMapper(binaryType.getIdMapperClass().newInstance());
+        }
+        if (binaryType.getNameMapperClass() != null) {
+            binaryTypeCfg.setNameMapper(binaryType.getNameMapperClass().newInstance());
+        }
+        if (binaryType.getSerializerClass() != null) {
+            binaryTypeCfg.setSerializer(binaryType.getSerializerClass().newInstance());
+        }
+        return binaryTypeCfg;
+    }
+
+    protected void build(final BinaryConfiguration binaryCfg, final BinaryTypeProperties binaryType) throws InstantiationException, IllegalAccessException {
+        if (binaryType.getIdMapperClass() != null) {
+            binaryCfg.setIdMapper(binaryType.getIdMapperClass().newInstance());
+        }
+        if (binaryType.getNameMapperClass() != null) {
+            binaryCfg.setNameMapper(binaryType.getNameMapperClass().newInstance());
+        }
+        if (binaryType.getSerializerClass() != null) {
+            binaryCfg.setSerializer(binaryType.getSerializerClass().newInstance());
+        }
     }
 }
