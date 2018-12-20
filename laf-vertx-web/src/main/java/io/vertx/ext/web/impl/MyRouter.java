@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -17,6 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 环境感知的路由器
  */
 public class MyRouter extends RouterImpl {
+
+    private static final Logger log = LoggerFactory.getLogger(MyRouter.class);
 
     protected static final Comparator<RouteImpl> routeComparator = (RouteImpl o1, RouteImpl o2) -> {
         // we keep a set of handlers ordered by its "order" property
@@ -50,7 +54,10 @@ public class MyRouter extends RouterImpl {
     }
 
     @Override
-    public void accept(final HttpServerRequest request) {
+    public void handle(HttpServerRequest request) {
+        if (log.isTraceEnabled()) {
+            log.trace("Router: " + System.identityHashCode(this) + " accepting request " + request.method() + " " + request.absoluteURI());
+        }
         //创建对环境感知的上下文
         new MyRoutingContext(null, this, request, routes, environment).next();
     }

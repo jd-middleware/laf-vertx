@@ -3,7 +3,7 @@ package com.jd.laf.web.vertx.template;
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.TemplateProvider;
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.common.template.TemplateEngine;
 
 /**
  * beetl模板引擎

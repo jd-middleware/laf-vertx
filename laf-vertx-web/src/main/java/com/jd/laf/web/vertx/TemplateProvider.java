@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx;
 
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.common.template.TemplateEngine;
 
 /**
  * 模板引擎提供者

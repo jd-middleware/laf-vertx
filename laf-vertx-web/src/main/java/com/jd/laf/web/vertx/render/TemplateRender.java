@@ -5,7 +5,7 @@ import com.jd.laf.web.vertx.EnvironmentAware;
 import io.vertx.core.Vertx;
 import io.vertx.core.file.FileSystemException;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.common.template.TemplateEngine;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,7 +31,7 @@ public class TemplateRender implements Render, EnvironmentAware {
             context.fail(new IllegalStateException("template engine is not found."));
         } else {
             context.response().putHeader(CONTENT_TYPE, TEXT_HTML);
-            engine.render(context, templateDirectory, template, rs -> {
+            engine.render(context.data(), templateDirectory + template, rs -> {
                 if (rs.succeeded()) {
                     context.response().end(rs.result());
                 } else {

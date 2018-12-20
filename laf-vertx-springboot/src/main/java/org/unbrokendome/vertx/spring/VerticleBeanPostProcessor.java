@@ -253,7 +253,6 @@ public class VerticleBeanPostProcessor implements BeanDefinitionRegistryPostProc
 
         public void configure(final DeploymentOptions options) {
             withAnnotationAttribute("worker", options::setWorker);
-            withAnnotationAttribute("multiThreaded", options::setMultiThreaded);
             withAnnotationAttribute("ha", options::setHa);
             withAnnotationAttribute("instances", options::setInstances);
             withAnnotationAttribute("workerPoolName", options::setWorkerPoolName);

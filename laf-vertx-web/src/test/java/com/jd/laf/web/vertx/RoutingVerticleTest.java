@@ -7,7 +7,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.templ.ThymeleafTemplateEngine;
+import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -39,7 +39,7 @@ public class RoutingVerticleTest {
         client = WebClient.create(vertx);
 
         Map<String, Object> map = new HashMap<>();
-        ThymeleafTemplateEngine engine = ThymeleafTemplateEngine.create();
+        ThymeleafTemplateEngine engine = ThymeleafTemplateEngine.create(vertx);
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
         resolver.setPrefix("");
         resolver.setTemplateMode("HTML5");

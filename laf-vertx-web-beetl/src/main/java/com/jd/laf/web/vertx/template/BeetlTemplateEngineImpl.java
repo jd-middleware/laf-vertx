@@ -6,7 +6,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.file.FileSystemException;
-import io.vertx.ext.web.RoutingContext;
 import org.beetl.core.*;
 import org.beetl.core.misc.BeetlUtil;
 
@@ -14,7 +13,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -37,16 +35,10 @@ public class BeetlTemplateEngineImpl implements BeetlTemplateEngine {
     }
 
     @Override
-    public void render(final RoutingContext context, final String templateDirectory,
-                       final String templateFileName, final Handler<AsyncResult<Buffer>> handler) {
+    public void render(final Map<String, Object> context, final String templateFile, final Handler<AsyncResult<Buffer>> handler) {
         try {
-            Map<String, Object> data = context.data();
-            Map<String, Object> variables = new HashMap<>(data.size() + 1);
-            variables.put("context", context);
-            variables.putAll(data);
-            String file = templateDirectory + templateFileName;
-            Template template = groupTemplate.getTemplate(file);
-            template.binding(variables);
+            Template template = groupTemplate.getTemplate(templateFile);
+            template.binding(context);
             String text = template.render();
             handler.handle(Future.succeededFuture(Buffer.buffer(text)));
         } catch (FileSystemException e) {
@@ -54,6 +46,11 @@ public class BeetlTemplateEngineImpl implements BeetlTemplateEngine {
         } catch (Exception e) {
             handler.handle(Future.failedFuture(e));
         }
+    }
+
+    @Override
+    public boolean isCachingEnabled() {
+        return false;
     }
 
     /**

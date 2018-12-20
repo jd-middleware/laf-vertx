@@ -1,6 +1,6 @@
 package com.jd.laf.web.vertx;
 
-import io.vertx.ext.web.impl.Utils;
+import io.vertx.core.http.impl.HttpUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,18 +28,18 @@ public class UtilsTest {
         };
 
         for (String url : urls) {
-            Assert.assertEquals(Utils.normalizePath(url), Utils.normalize(url));
+            Assert.assertEquals(HttpUtils.normalizePath(url), HttpUtils.normalize(url));
         }
 
         long time = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            Utils.normalizePath(URL);
+            HttpUtils.normalizePath(URL);
         }
         System.out.println("tps:" + count * 1000 / (System.currentTimeMillis() - time));
 
         time = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            Utils.normalize(URL);
+            HttpUtils.normalize(URL);
         }
         System.out.println("tps:" + count * 1000 / (System.currentTimeMillis() - time));
 

@@ -34,7 +34,7 @@ public abstract class Registrars {
                     //加载插件
                     ServiceLoader<Registrar> loader = ServiceLoader.load(Registrar.class, Registrars.class.getClassLoader());
                     loader.forEach(o -> result.add(o));
-                    //按照优先级排序
+                    //按照优先级降序排序
                     Collections.sort(result, Comparator.comparingInt(Registrar::order).reversed());
                     plugins = result;
                 }

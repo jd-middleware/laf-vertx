@@ -4,7 +4,7 @@ import com.jd.laf.web.vertx.*;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.common.template.TemplateEngine;
 
 import static com.jd.laf.web.vertx.Environment.*;
 import static io.vertx.ext.web.handler.TemplateHandler.DEFAULT_CONTENT_TYPE;
@@ -32,6 +32,7 @@ public class TemplateHandler implements RoutingHandler, EnvironmentAware {
             TemplateProvider provider = TemplateProviders.getPlugin(type);
             if (provider != null) {
                 engine = provider.create(vertx, environment);
+                environment.put(TEMPLATE_ENGINE, engine);
             } else {
                 throw new IllegalStateException("template engine is not found. " + type);
             }

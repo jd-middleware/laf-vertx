@@ -22,6 +22,7 @@ public class RenderRegistrar implements Registrar {
 
     @Override
     public int order() {
-        return HANDLER;
+        //模板引擎是在handler里面进行了初始化
+        return HANDLER - 1;
     }
 }

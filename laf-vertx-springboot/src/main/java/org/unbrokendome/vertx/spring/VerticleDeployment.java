@@ -1,13 +1,13 @@
 package org.unbrokendome.vertx.spring;
 
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.VertxOptions;
 import org.springframework.core.annotation.AliasFor;
 
 import java.lang.annotation.*;
 
+import static io.vertx.core.DeploymentOptions.*;
+import static io.vertx.core.VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME;
+import static io.vertx.core.VertxOptions.DEFAULT_WORKER_POOL_SIZE;
 
-@SuppressWarnings("unused")
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -19,17 +19,15 @@ public @interface VerticleDeployment {
     @AliasFor("value")
     boolean autoDeploy() default true;
 
-    boolean worker() default DeploymentOptions.DEFAULT_WORKER;
+    boolean worker() default DEFAULT_WORKER;
 
-    boolean multiThreaded() default DeploymentOptions.DEFAULT_MULTI_THREADED;
+    boolean ha() default DEFAULT_HA;
 
-    boolean ha() default DeploymentOptions.DEFAULT_HA;
-
-    int instances() default DeploymentOptions.DEFAULT_INSTANCES;
+    int instances() default DEFAULT_INSTANCES;
 
     String workerPoolName() default "";
 
-    int workerPoolSize() default VertxOptions.DEFAULT_WORKER_POOL_SIZE;
+    int workerPoolSize() default DEFAULT_WORKER_POOL_SIZE;
 
-    long maxWorkerExecuteTime() default VertxOptions.DEFAULT_MAX_WORKER_EXECUTE_TIME;
+    long maxWorkerExecuteTime() default DEFAULT_MAX_WORKER_EXECUTE_TIME;
 }

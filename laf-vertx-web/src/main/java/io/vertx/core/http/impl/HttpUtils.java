@@ -14,15 +14,18 @@ package io.vertx.core.http.impl;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.handler.codec.compression.ZlibWrapper;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http2.Http2Headers;
 import io.netty.handler.codec.http2.Http2Settings;
 import io.netty.util.AsciiString;
+import io.netty.util.CharsetUtil;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.CaseInsensitiveHeaders;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.StreamPriority;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,17 +33,40 @@ import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.METHOD_NOT_ALLOWED;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.vertx.core.http.Http2Settings.*;
 
 /**
  * Various http utils.
+ * <p>
+ * update normalizePath & decodeUnreserved & validateHeader & validateHeaderValue
  *
  * @author <a href="mailto:nmaurer@redhat.com">Norman Maurer</a>
  */
 public final class HttpUtils {
 
     protected static final boolean VALIDATE_HEADER = Boolean.valueOf(System.getProperty("http.header.validate", "true"));
+
+    static final StreamPriority DEFAULT_STREAM_PRIORITY = new StreamPriority() {
+        @Override
+        public StreamPriority setWeight(short weight) {
+            throw new UnsupportedOperationException("Unmodifiable stream priority");
+        }
+
+        @Override
+        public StreamPriority setDependency(int dependency) {
+            throw new UnsupportedOperationException("Unmodifiable stream priority");
+        }
+
+        @Override
+        public StreamPriority setExclusive(boolean exclusive) {
+            throw new UnsupportedOperationException("Unmodifiable stream priority");
+        }
+    };
+
 
     private HttpUtils() {
     }
@@ -79,11 +105,294 @@ public final class HttpUtils {
     }
 
     /**
-     * Removed dots as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     *
+     * There are 2 extra transformations that are not part of the spec but kept for backwards compatibility:
+     *
+     * double slash // will be converted to single slash and the path will always start with slash.
+     *
+     * Null paths are not normalized as nothing can be said about them.
+     *
+     * @param pathname raw path
+     * @return normalized path
+     */
+    public static String normalize(String pathname) {
+        if (pathname == null) {
+            return null;
+        }
+
+        // add trailing slash if not set
+        if (pathname.length() == 0) {
+            return "/";
+        }
+
+        StringBuilder ibuf = new StringBuilder(pathname.length() + 1);
+
+        // Not standard!!!
+        if (pathname.charAt(0) != '/') {
+            ibuf.append('/');
+        }
+
+        ibuf.append(pathname);
+        int i = 0;
+
+        while (i < ibuf.length()) {
+            // decode unreserved chars described in
+            // http://tools.ietf.org/html/rfc3986#section-2.4
+            if (ibuf.charAt(i) == '%') {
+                decodeUnreserved(ibuf, i);
+            }
+
+            i++;
+        }
+
+        // remove dots as described in
+        // http://tools.ietf.org/html/rfc3986#section-5.2.4
+        return removeDots(ibuf);
+    }
+
+    private static void decodeUnreserved(StringBuilder path, int start) {
+        if (start + 3 <= path.length()) {
+            // these are latin chars so there is no danger of falling into some special unicode char that requires more
+            // than 1 byte
+            final String escapeSequence = path.substring(start + 1, start + 3);
+            int unescaped;
+            try {
+                unescaped = Integer.parseInt(escapeSequence, 16);
+                if (unescaped < 0) {
+                    throw new IllegalArgumentException("Invalid escape sequence: %" + escapeSequence);
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid escape sequence: %" + escapeSequence);
+            }
+            // validate if the octet is within the allowed ranges
+            if (
+                // ALPHA
+                    (unescaped >= 0x41 && unescaped <= 0x5A) ||
+                            (unescaped >= 0x61 && unescaped <= 0x7A) ||
+                            // DIGIT
+                            (unescaped >= 0x30 && unescaped <= 0x39) ||
+                            // HYPHEN
+                            (unescaped == 0x2D) ||
+                            // PERIOD
+                            (unescaped == 0x2E) ||
+                            // UNDERSCORE
+                            (unescaped == 0x5F) ||
+                            // TILDE
+                            (unescaped == 0x7E)) {
+
+                path.setCharAt(start, (char) unescaped);
+                path.delete(start + 1, start + 3);
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid position for escape character: " + start);
+        }
+    }
+
+    /**
+     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
      * <p>
      * There are 2 extra transformations that are not part of the spec but kept for backwards compatibility:
      * <p>
      * double slash // will be converted to single slash and the path will always start with slash.
+     * <p>
+     * 对性能进行了优化，采用链表方式切片，另外方法内敛，减少方法调用，原有的方法名称改为normalize
+     *
+     * @param pathname raw path
+     * @return normalized path
+     */
+    public static String normalizePath(final String pathname) {
+        // add trailing slash if not set
+        if (pathname == null) {
+            return null;
+        } else if (pathname.isEmpty()) {
+            return "/";
+        }
+        //不需要变化
+        boolean flag = false;
+        //根节点
+        Slice root = null;
+        //字符串不以'/'开头
+        if (pathname.charAt(0) != '/') {
+            root = new Slice(-1, -1, '/', true, 1, null);
+            flag = true;
+        }
+        int length = pathname.length();
+        char ch;
+        Slice slice = new Slice(0, -1, root);
+        root = root == null ? slice : root;
+        boolean created;
+        //遍历字符，按照'/'切片
+        for (int i = 0; i < length; ) {
+            ch = pathname.charAt(i);
+            created = false;
+            if (ch == '/') {
+                if (i > 0) {
+                    //不是第一个字符，则作为结束符号
+                    slice.end = i;
+                    slice.partial = false;
+                    flag = flag || slice.dots != -1;
+                    //创建下一个切片
+                    slice = new Slice(i, -1, slice);
+                }
+            } else if (ch == '%') {
+                //'/'对应的"%2E"不会进行转义
+                ch = decodeUnreserved(pathname, i);
+                if (ch > 0) {
+                    if (i > 0) {
+                        //不是第一个字符，则当前切片结束
+                        slice.end = i;
+                        slice.partial = true;
+                        //创建转义字符切片
+                        slice = new Slice(i, i + 3, slice);
+                    } else {
+                        //第一个字符
+                        slice.end = i + 3;
+                    }
+                    slice.value = ch;
+                    if (slice.end < length) {
+                        slice.partial = true;
+                        //需要创建下一个切片
+                        created = true;
+                    }
+                    flag = true;
+                    i += 2;
+                }
+            }
+            if (slice.dots != -1) {
+                if ((ch == '/' && slice.dots == 0) || ch == '.' && (slice.dots == 1 || slice.dots == 2)) {
+                    slice.dots++;
+                } else {
+                    slice.dots = -1;
+                }
+            }
+            if (created) {
+                //创建下一个切片
+                slice = new Slice(slice.end, -1, slice);
+            }
+            i++;
+        }
+        if (slice != null && slice.end == -1) {
+            slice.partial = false;
+            slice.end = length;
+            flag = flag || slice.dots != -1;
+        }
+        if (!flag) {
+            return pathname;
+        }
+        //不需要变化
+        flag = false;
+        slice = root;
+        Slice prev;
+        while (slice != null) {
+            if (!flag && slice.value > 0) {
+                flag = true;
+            }
+            if (!slice.partial) {
+                switch (slice.dots) {
+                    case 1:
+                        //处理'/'
+                        if (slice.prev != null && slice.prev.dots == 1) {
+                            //处理'//'，把当前节点删除，上一个'/'保留，不涉及root的变化
+                            slice.remove();
+                            flag = true;
+                        }
+                        break;
+                    case 2:
+                        //处理'/.'，删除当前节点
+                        prev = slice.removePath();
+                        if (prev != null) {
+                            //有父节点
+                            if (slice.next == null) {
+                                //当前节点是最后一个节点，则保留最后的'/'
+                                prev.next = new Slice(-1, -1, '/');
+                            }
+                        } else {
+                            root = slice.next;
+                        }
+                        flag = true;
+                        break;
+                    case 3:
+                        //处理'/..'，删除当前节点及前一个节点
+                        prev = slice.removePath();
+                        prev = prev == null ? null : prev.removePath();
+                        if (prev != null) {
+                            //有父节点
+                            if (slice.next == null) {
+                                //当前节点是最后一个节点，则保留最后的'/'
+                                prev.next = new Slice(-1, -1, '/');
+                            }
+                        } else {
+                            root = slice.next;
+                        }
+                        flag = true;
+                        break;
+                }
+            }
+            slice = slice.next;
+        }
+        //判断是否发生了变化
+        if (!flag) {
+            return pathname;
+        } else if (root == null) {
+            return "/";
+        }
+        //构造缓冲区，拼接字符串
+        StringBuilder builder = new StringBuilder(length);
+        while (root != null) {
+            if (root.value > 0) {
+                builder.append(root.value);
+            } else {
+                builder.append(pathname, root.start, root.end);
+            }
+            root = root.next;
+        }
+        return builder.toString();
+    }
+
+    protected static char decodeUnreserved(final CharSequence sequence, final int start) {
+        if (start + 3 <= sequence.length()) {
+            // these are latin chars so there is no danger of falling into some special unicode char that requires more
+            // than 1 byte
+            final CharSequence escapeSequence = sequence.subSequence(start + 1, start + 3);
+            int unescaped;
+            try {
+                unescaped = Integer.parseInt(escapeSequence.toString(), 16);
+                if (unescaped < 0) {
+                    throw new IllegalArgumentException("Invalid escape sequence: %" + escapeSequence);
+                }
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid escape sequence: %" + escapeSequence);
+            }
+            // validate if the octet is within the allowed ranges
+            if (
+                // ALPHA
+                    (unescaped >= 0x41 && unescaped <= 0x5A) ||
+                            (unescaped >= 0x61 && unescaped <= 0x7A) ||
+                            // DIGIT
+                            (unescaped >= 0x30 && unescaped <= 0x39) ||
+                            // HYPHEN
+                            (unescaped == 0x2D) ||
+                            // PERIOD
+                            (unescaped == 0x2E) ||
+                            // UNDERSCORE
+                            (unescaped == 0x5F) ||
+                            // TILDE
+                            (unescaped == 0x7E)) {
+                return (char) unescaped;
+            }
+            return 0;
+        } else {
+            throw new IllegalArgumentException("Invalid position for escape character: " + start);
+        }
+    }
+
+    /**
+     * Removed dots as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     * <p>
+     * There is 1 extra transformation that are not part of the spec but kept for backwards compatibility:
+     * <p>
+     * double slash // will be converted to single slash.
      *
      * @param path raw path
      * @return normalized path
@@ -398,6 +707,38 @@ public final class HttpUtils {
         }
     }
 
+    static void sendError(Channel ch, HttpResponseStatus status, CharSequence err) {
+        FullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, status);
+        if (status.code() == METHOD_NOT_ALLOWED.code()) {
+            // SockJS requires this
+            resp.headers().set(io.vertx.core.http.HttpHeaders.ALLOW, io.vertx.core.http.HttpHeaders.GET);
+        }
+        if (err != null) {
+            resp.content().writeBytes(err.toString().getBytes(CharsetUtil.UTF_8));
+            HttpUtil.setContentLength(resp, err.length());
+        } else {
+            HttpUtil.setContentLength(resp, 0);
+        }
+        ch.writeAndFlush(resp);
+    }
+
+    static String getWebSocketLocation(HttpRequest req, boolean ssl) throws Exception {
+        String prefix;
+        if (ssl) {
+            prefix = "ws://";
+        } else {
+            prefix = "wss://";
+        }
+        URI uri = new URI(req.uri());
+        String path = uri.getRawPath();
+        String loc = prefix + req.headers().get(HttpHeaderNames.HOST) + path;
+        String query = uri.getRawQuery();
+        if (query != null) {
+            loc += "?" + query;
+        }
+        return loc;
+    }
+
     private static class CustomCompressor extends HttpContentCompressor {
         @Override
         public ZlibWrapper determineWrapper(String acceptEncoding) {
@@ -471,16 +812,6 @@ public final class HttpUtils {
         }
     }
 
-    static io.vertx.core.http.HttpVersion toVertxHttpVersion(HttpVersion version) {
-        if (version == io.netty.handler.codec.http.HttpVersion.HTTP_1_0) {
-            return io.vertx.core.http.HttpVersion.HTTP_1_0;
-        } else if (version == io.netty.handler.codec.http.HttpVersion.HTTP_1_1) {
-            return io.vertx.core.http.HttpVersion.HTTP_1_1;
-        } else {
-            return null;
-        }
-    }
-
     static io.vertx.core.http.HttpMethod toVertxMethod(String method) {
         try {
             return io.vertx.core.http.HttpMethod.valueOf(method);
@@ -532,28 +863,249 @@ public final class HttpUtils {
         return -1;
     }
 
+    private static final Consumer<CharSequence> HEADER_VALUE_VALIDATOR = HttpUtils::validateHeaderValue;
+
     public static void validateHeader(CharSequence name, CharSequence value) {
         if (VALIDATE_HEADER) {
-            validateHeader(name);
-            validateHeader(value);
+            validateHeaderName(name);
+            validateHeaderValue(value);
         }
     }
 
     public static void validateHeader(CharSequence name, Iterable<? extends CharSequence> values) {
         if (VALIDATE_HEADER) {
-            validateHeader(name);
-            values.forEach(HttpUtils::validateHeader);
+            validateHeaderName(name);
+            values.forEach(HEADER_VALUE_VALIDATOR);
         }
     }
 
-    public static void validateHeader(CharSequence value) {
+    public static void validateHeaderValue(CharSequence seq) {
         if (VALIDATE_HEADER) {
-            for (int i = 0; i < value.length(); i++) {
-                char c = value.charAt(i);
-                if (c == '\r' || c == '\n') {
-                    throw new IllegalArgumentException("Illegal header character: " + ((int) c));
+            int state = 0;
+            // Start looping through each of the character
+            for (int index = 0; index < seq.length(); index++) {
+                state = validateValueChar(seq, state, seq.charAt(index));
+            }
+
+            if (state != 0) {
+                throw new IllegalArgumentException("a header value must not end with '\\r' or '\\n':" + seq);
+            }
+        }
+    }
+
+    private static final int HIGHEST_INVALID_VALUE_CHAR_MASK = ~15;
+
+    private static int validateValueChar(CharSequence seq, int state, char character) {
+        /*
+         * State:
+         * 0: Previous character was neither CR nor LF
+         * 1: The previous character was CR
+         * 2: The previous character was LF
+         */
+        if ((character & HIGHEST_INVALID_VALUE_CHAR_MASK) == 0) {
+            // Check the absolutely prohibited characters.
+            switch (character) {
+                case 0x0: // NULL
+                    throw new IllegalArgumentException("a header value contains a prohibited character '\0': " + seq);
+                case 0x0b: // Vertical tab
+                    throw new IllegalArgumentException("a header value contains a prohibited character '\\v': " + seq);
+                case '\f':
+                    throw new IllegalArgumentException("a header value contains a prohibited character '\\f': " + seq);
+            }
+        }
+
+        // Check the CRLF (HT | SP) pattern
+        switch (state) {
+            case 0:
+                switch (character) {
+                    case '\r':
+                        return 1;
+                    case '\n':
+                        return 2;
+                }
+                break;
+            case 1:
+                switch (character) {
+                    case '\n':
+                        return 2;
+                    default:
+                        throw new IllegalArgumentException("only '\\n' is allowed after '\\r': " + seq);
+                }
+            case 2:
+                switch (character) {
+                    case '\t':
+                    case ' ':
+                        return 0;
+                    default:
+                        throw new IllegalArgumentException("only ' ' and '\\t' are allowed after '\\n': " + seq);
+                }
+        }
+        return state;
+    }
+
+    public static void validateHeaderName(CharSequence value) {
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case 0x00:
+                case '\t':
+                case '\n':
+                case 0x0b:
+                case '\f':
+                case '\r':
+                case ' ':
+                case ',':
+                case ':':
+                case ';':
+                case '=':
+                    throw new IllegalArgumentException(
+                            "a header name cannot contain the following prohibited characters: =,;: \\t\\r\\n\\v\\f: " +
+                                    value);
+                default:
+                    // Check to see if the character is not an ASCII character, or invalid
+                    if (c > 127) {
+                        throw new IllegalArgumentException("a header name cannot contain non-ASCII character: " +
+                                value);
+                    }
+            }
+        }
+    }
+
+    /**
+     * 切片链表
+     */
+    protected static class Slice {
+        //起始位置
+        protected int start = -1;
+        //结束位置+1
+        protected int end = -1;
+        //部分字段
+        protected boolean partial;
+        //替换字符
+        protected char value;
+        //上一个节点
+        protected Slice prev;
+        //下一个节点
+        protected Slice next;
+        //起始小数点连续数量
+        protected int dots;
+
+        public Slice(int start, int end, Slice prev) {
+            this(start, end, (char) 0, false, 0, prev);
+        }
+
+        public Slice(int start, int end, char value) {
+            this(start, end, value, false, 0, null);
+        }
+
+        public Slice(int start, int end, char value, boolean partial) {
+            this(start, end, value, partial, 0, null);
+        }
+
+        public Slice(int start, int end, char value, Slice prev) {
+            this(start, end, value, false, 0, prev);
+        }
+
+        public Slice(int start, int end, char value, boolean partial, int dots, Slice prev) {
+            this.start = start;
+            this.end = end;
+            this.value = value;
+            this.partial = partial;
+            this.dots = dots;
+            this.prev = prev;
+            if (prev != null) {
+                prev.setNext(this);
+                if (prev.partial) {
+                    //没有结束，小数点延续
+                    this.dots = prev.dots;
                 }
             }
+        }
+
+        public int getStart() {
+            return start;
+        }
+
+        public void setStart(int start) {
+            this.start = start;
+        }
+
+        public int getEnd() {
+            return end;
+        }
+
+        public void setEnd(int end) {
+            this.end = end;
+        }
+
+        public boolean isPartial() {
+            return partial;
+        }
+
+        public void setPartial(boolean partial) {
+            this.partial = partial;
+        }
+
+        public int length() {
+            return end - start;
+        }
+
+        public char getValue() {
+            return value;
+        }
+
+        public void setValue(char value) {
+            this.value = value;
+        }
+
+        public int getDots() {
+            return dots;
+        }
+
+        public Slice getPrev() {
+            return prev;
+        }
+
+        public void setPrev(Slice prev) {
+            this.prev = prev;
+        }
+
+        public Slice getNext() {
+            return next;
+        }
+
+        public void setNext(Slice next) {
+            this.next = next;
+        }
+
+        /**
+         * 删除当前节点，返回上一个节点
+         *
+         * @return
+         */
+        public Slice remove() {
+            if (prev != null) {
+                prev.setNext(next);
+                if (next != null) {
+                    next.setPrev(prev);
+                }
+            } else if (next != null) {
+                next.setPrev(null);
+            }
+            return prev;
+        }
+
+        /**
+         * 删除当前路径
+         *
+         * @return 上一个路径
+         */
+        public Slice removePath() {
+            Slice result = this;
+            while ((result = result.remove()) != null && result.partial) {
+                ;
+            }
+            return result;
         }
     }
 }

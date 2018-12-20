@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx.template;
 
 import io.vertx.core.Vertx;
-import io.vertx.ext.web.templ.TemplateEngine;
+import io.vertx.ext.web.common.template.TemplateEngine;
 import org.beetl.core.GroupTemplate;
 
 /**
