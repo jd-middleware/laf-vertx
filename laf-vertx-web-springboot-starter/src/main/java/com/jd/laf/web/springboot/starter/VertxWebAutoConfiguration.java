@@ -1,6 +1,8 @@
 package com.jd.laf.web.springboot.starter;
 
+import com.jd.laf.web.vertx.RouteProvider;
 import com.jd.laf.web.vertx.RoutingVerticle;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -21,10 +23,11 @@ public class VertxWebAutoConfiguration {
     public VerticleRegistrationBean routingVerticle(
             org.springframework.core.env.Environment environment,
             ApplicationContext context,
-            VertxWebProperties webProperties) {
+            VertxWebProperties webProperties,
+            ObjectProvider<RouteProvider> provider) {
         return new VerticleRegistrationBean(() -> new RoutingVerticle(
                 new SpringEnvironment(environment, context),
-                webProperties.getHttp().toHttpServerOptions(), webProperties.getFile()),
+                webProperties.getHttp().toHttpServerOptions(), webProperties.getFile(), provider.getIfAvailable()),
                 webProperties.getRouting().toDeploymentOptions());
     }
 

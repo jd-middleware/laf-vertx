@@ -5,12 +5,14 @@ import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.lifecycle.Registrars;
+import com.jd.laf.web.vertx.message.RouteMessage;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.PoolFactories;
 import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
@@ -23,6 +25,7 @@ import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -46,41 +49,55 @@ public class RoutingVerticle extends AbstractVerticle {
     protected HttpServerOptions httpOptions;
     //资源文件
     protected String file;
+    //路由配置提供者
+    protected RouteProvider provider;
     //消费者
     protected Collection<MessageConsumer> consumers = new ConcurrentLinkedQueue<>();
 
     //配置
     protected VertxConfig config;
+    //Http服务
     protected HttpServer httpServer;
+    //路由信息
+    protected Router router;
 
     public RoutingVerticle() {
-        this(new Environment.MapEnvironment(), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+        this(new Environment.MapEnvironment(), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE, null);
     }
 
     public RoutingVerticle(final Environment env) {
-        this(env, new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+        this(env, new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE, null);
     }
 
     public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions) {
-        this(env, httpOptions, DEFAULT_ROUTING_CONFIG_FILE);
+        this(env, httpOptions, DEFAULT_ROUTING_CONFIG_FILE, null);
     }
 
     public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions, final String file) {
+        this(env, httpOptions, file, null);
+    }
+
+    public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions, final String file, final RouteProvider provider) {
         this.env = env != null ? env : new Environment.MapEnvironment();
         this.httpOptions = httpOptions == null ? new HttpServerOptions().setPort(DEFAULT_PORT) : httpOptions;
         this.file = file != null ? file : env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
+        this.provider = provider;
     }
 
     public RoutingVerticle(final Map<String, Object> parameters) {
-        this(new Environment.MapEnvironment(parameters), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE);
+        this(new Environment.MapEnvironment(parameters), new HttpServerOptions().setPort(DEFAULT_PORT), DEFAULT_ROUTING_CONFIG_FILE, null);
     }
 
     public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions) {
-        this(new Environment.MapEnvironment(parameters), httpOptions, DEFAULT_ROUTING_CONFIG_FILE);
+        this(new Environment.MapEnvironment(parameters), httpOptions, DEFAULT_ROUTING_CONFIG_FILE, null);
     }
 
     public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions, final String file) {
-        this(new Environment.MapEnvironment(parameters), httpOptions, file);
+        this(new Environment.MapEnvironment(parameters), httpOptions, file, null);
+    }
+
+    public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions, final String file, final RouteProvider provider) {
+        this(new Environment.MapEnvironment(parameters), httpOptions, file, provider);
     }
 
     @Override
@@ -92,14 +109,16 @@ public class RoutingVerticle extends AbstractVerticle {
             //初始化插件
             Registrars.register(vertx, env);
 
-            Router router = createRouter(env);
-            //构建业务处理链
-            buildHandlers(router, config, env);
-            //构建消息处理链
+            router = createRouter(env);
+            //通过配置文件构建路由
+            addRoutes(router, config.getRoutes(), env);
+            //通过路由提供者构建路由
+            addRoutes(router, provider == null ? null : provider.getRoutes(), env);
+            //通过配置文件构建消息处理链
             buildConsumers(config);
             //启动服务
             httpServer = vertx.createHttpServer(httpOptions);
-            httpServer.requestHandler(router::accept).listen(event -> {
+            httpServer.requestHandler(router).listen(event -> {
                 if (event.succeeded()) {
                     logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
                 } else {
@@ -107,6 +126,18 @@ public class RoutingVerticle extends AbstractVerticle {
                             httpServer.actualPort()), event.cause());
                 }
             });
+            //注册路由变更信息
+            consumers.add(vertx.eventBus().consumer(RouteMessage.TOPIC, (Handler<Message<RouteMessage>>) event -> {
+                RouteMessage message = event.body();
+                switch (message.getType()) {
+                    case ADD:
+                        addRoute(message.getConfig());
+                        break;
+                    case REMOVE:
+                        remoteRoute(message.getConfig());
+                        break;
+                }
+            }));
             logger.info(String.format("success starting routing verticle %s", deploymentID()));
         } catch (Exception e) {
             logger.error(String.format("failed starting routing verticle %s", deploymentID()), e);
@@ -168,50 +199,94 @@ public class RoutingVerticle extends AbstractVerticle {
      * 构造处理链
      *
      * @param router      路由
-     * @param config      配置
      * @param environment 环境
-     * @throws Exception
      */
-    protected void buildHandlers(final Router router, final VertxConfig config, final Environment environment) throws Exception {
+    protected void addRoutes(final Router router, final List<RouteConfig> routes, final Environment environment) {
+        if (routes != null) {
+            for (RouteConfig info : routes) {
+                addRoute(info, router, environment);
+            }
+        }
+    }
+
+    /**
+     * 添加路由
+     *
+     * @param config
+     * @param router
+     * @param environment
+     */
+    protected void addRoute(final RouteConfig config, final Router router, final Environment environment) {
+        // 过滤掉模板
+        if (config.isRoute()) {
+            return;
+        }
+        Route route = getRoute(config, router);
+        if (route == null) {
+            return;
+        }
+        if (config.getOrder() != null) {
+            route.order(config.getOrder());
+        }
+        //设置路由配置
+        if (route instanceof MyRoute) {
+            ((MyRoute) route).setConfig(config);
+        }
+        // 设置能产生的内容
+        buildProduces(route, config);
+        // 设置能消费的内容
+        buildConsumes(route, config);
+        //设置异常处理链
+        buildErrors(route, config);
+        //设置业务处理链
+        buildHandlers(route, config, environment);
+
+    }
+
+    /**
+     * 获取路由
+     *
+     * @param config 路由配置
+     * @param router 路由器
+     * @return
+     */
+    protected Route getRoute(final RouteConfig config, final Router router) {
+        if (config == null || router == null) {
+            return null;
+        }
         Route route;
-        String path;
-        RouteType type;
-        for (RouteConfig info : config.getRoutes()) {
-            // 过滤掉模板
-            if (info.isRoute()) {
-                continue;
-            }
-            type = info.getType();
-            path = info.getPath();
-            path = path != null ? path.trim() : path;
-            //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
-            if (path == null || path.isEmpty()) {
-                route = router.route();
-            } else if (!info.isRegex()) {
-                route = type == null ? router.route(path) : router.route(type.getMethod(), path);
-            } else {
-                route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
-            }
-            if (info.getOrder() != null) {
-                route.order(info.getOrder());
-            }
-            //设置路由配置
-            if (route instanceof MyRoute) {
-                ((MyRoute) route).setConfig(info);
-            }
-            try {
-                // 设置能产生的内容
-                buildProduces(route, info);
-                // 设置能消费的内容
-                buildConsumes(route, info);
-                //设置异常处理链
-                buildErrors(route, info);
-                //设置业务处理链
-                buildHandlers(route, info, environment);
-            } catch (Exception e) {
-                logger.error(String.format("build handlers error on path %s, type %s", path, type), e);
-                throw e;
-            }
+        RouteType type = config.getType();
+        String path = config.getPath();
+        path = path != null ? path.trim() : path;
+        //如果没有路径，则默认路由，如果没有请求方法，则默认匹配所有请求方法
+        if (path == null || path.isEmpty()) {
+            route = router.route();
+        } else if (!config.isRegex()) {
+            route = type == null ? router.route(path) : router.route(type.getMethod(), path);
+        } else {
+            route = type == null ? router.routeWithRegex(path) : router.routeWithRegex(type.getMethod(), path);
+        }
+        return route;
+    }
+
+    /**
+     * 添加路由
+     *
+     * @param config
+     */
+    protected void addRoute(final RouteConfig config) {
+        addRoute(config, router, env);
+    }
+
+    /**
+     * 删除路由
+     *
+     * @param config 路由配置
+     */
+    protected void remoteRoute(final RouteConfig config) {
+        Route route = getRoute(config, router);
+        if (route != null) {
+            route.remove();
         }
     }
 
