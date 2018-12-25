@@ -1,4 +1,4 @@
-package org.unbrokendome.vertx.spring.boot.clustermanager;
+package org.unbrokendome.vertx.spring.boot.cluster;
 
 import com.hazelcast.core.HazelcastInstance;
 import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;

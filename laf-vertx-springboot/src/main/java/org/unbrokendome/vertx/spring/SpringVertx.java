@@ -4,6 +4,7 @@ import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.spi.VertxFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 import org.springframework.beans.factory.BeanFactory;
@@ -16,7 +17,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -47,7 +47,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                        String verticleFactoryPrefix,
                        int startupPhase, boolean autoStartup) {
         this.factory = factory;
-        this.options = new VertxOptions(options);
+        this.options = options;
         this.verticleRegistrations = new ArrayList<>(verticleRegistrations);
         this.verticleFactoryPrefix = verticleFactoryPrefix;
         this.startupPhase = startupPhase;
@@ -273,6 +273,8 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     public static class Builder {
         protected VertxFactory factory = Vertx.factory;
         protected VertxOptions options = null;
+        protected ClusterManager clusterManager;
+        protected MetricsOptions metricsOptions;
         protected List<VerticleRegistration> verticleRegistrations = new ArrayList<>();
         protected List<VertxConfigurer> configurers = new ArrayList<>();
         protected String verticleFactoryPrefix = DEFAULT_VERTICLE_FACTORY_PREFIX;
@@ -286,16 +288,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
-        public Builder options(final Consumer<VertxOptions> consumer) {
-            if (this.options == null) {
-                this.options = new VertxOptions();
-            }
-            if (consumer != null) {
-                consumer.accept(options);
-            }
-            return this;
-        }
-
         public Builder options(final VertxOptions options) {
             if (options != null) {
                 this.options = new VertxOptions(options);
@@ -303,12 +295,18 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return this;
         }
 
+        public Builder options(final MetricsOptions options) {
+            if (options != null) {
+                this.metricsOptions = options;
+            }
+            return this;
+        }
+
         public Builder clusterManager(final ClusterManager clusterManager) {
-            return options(opt -> {
-                if (opt.getClusterManager() == null) {
-                    opt.setClusterManager(clusterManager);
-                }
-            });
+            if (clusterManager != null) {
+                this.clusterManager = clusterManager;
+            }
+            return this;
         }
 
         public Builder verticleFactoryPrefix(final String prefix) {
@@ -418,6 +416,12 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                 if (localHost != null) {
                     options.setClusterHost(localHost);
                 }
+            }
+            if (options.getClusterManager() == null) {
+                options.setClusterManager(clusterManager);
+            }
+            if (metricsOptions != null) {
+                options.setMetricsOptions(metricsOptions);
             }
             return options;
         }

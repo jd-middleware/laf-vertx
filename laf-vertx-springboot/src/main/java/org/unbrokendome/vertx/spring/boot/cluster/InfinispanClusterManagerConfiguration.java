@@ -1,4 +1,4 @@
-package org.unbrokendome.vertx.spring.boot.clustermanager;
+package org.unbrokendome.vertx.spring.boot.cluster;
 
 import io.vertx.ext.cluster.infinispan.InfinispanClusterManager;
 import org.springframework.boot.autoconfigure.condition.AnyNestedCondition;

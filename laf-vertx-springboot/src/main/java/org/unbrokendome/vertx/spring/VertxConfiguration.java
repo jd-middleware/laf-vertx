@@ -2,6 +2,7 @@ package org.unbrokendome.vertx.spring;
 
 
 import io.vertx.core.VertxOptions;
+import io.vertx.core.metrics.MetricsOptions;
 import io.vertx.core.spi.VertxFactory;
 import io.vertx.core.spi.cluster.ClusterManager;
 import org.springframework.beans.factory.ObjectProvider;
@@ -31,7 +32,8 @@ public class VertxConfiguration {
             ObjectProvider<VertxFactory> vertxFactoryProvider,
             ObjectProvider<VertxOptions> optionsProvider,
             ObjectProvider<ClusterManager> clusterManagerProvider,
-            ObjectProvider<List<VertxConfigurer>> configurersProvider) {
+            ObjectProvider<List<VertxConfigurer>> configurersProvider,
+            ObjectProvider<MetricsOptions> metricsOptionsProvider) {
 
         ClusterManager clusterManager = clusterManagerProvider.getIfAvailable();
 
@@ -40,6 +42,7 @@ public class VertxConfiguration {
                 .factory(vertxFactoryProvider.getIfAvailable())
                 .configurer(clusterManager == null ? null : new ClusterManagerConfigurer(clusterManager))
                 .configurer(configurersProvider.getIfAvailable())
+                .options(metricsOptionsProvider.getIfAvailable())
                 .configure()
                 .options(optionsProvider.getIfAvailable());
 

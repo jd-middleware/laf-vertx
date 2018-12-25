@@ -1,4 +1,4 @@
-package org.unbrokendome.vertx.spring.boot.clustermanager;
+package org.unbrokendome.vertx.spring.boot.cluster;
 
 import io.vertx.spi.cluster.ignite.IgniteClusterManager;
 import org.apache.ignite.configuration.IgniteConfiguration;

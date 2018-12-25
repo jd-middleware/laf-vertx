@@ -5,7 +5,6 @@ import io.vertx.core.dns.AddressResolverOptions;
 import io.vertx.core.eventbus.EventBusOptions;
 import io.vertx.core.file.FileSystemOptions;
 import io.vertx.core.http.ClientAuth;
-import io.vertx.core.metrics.MetricsOptions;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -51,7 +50,6 @@ public class VertxProperties implements VertxConfigurer {
     private boolean classPathResolvingEnabled = DEFAULT_CLASS_PATH_RESOLVING_ENABLED;
     private boolean fileCachingEnabled = DEFAULT_FILE_CACHING_ENABLED;
     private HaProperties ha = new HaProperties();
-    private MetricsProperties metric = new MetricsProperties();
     private EventBusProperties eventBus = new EventBusProperties();
     private AddressResolverProperties addressResolver = new AddressResolverProperties();
 
@@ -239,14 +237,6 @@ public class VertxProperties implements VertxConfigurer {
         this.ha = ha;
     }
 
-    public MetricsProperties getMetric() {
-        return metric;
-    }
-
-    public void setMetric(MetricsProperties metric) {
-        this.metric = metric;
-    }
-
     public EventBusProperties getEventBus() {
         return eventBus;
     }
@@ -291,24 +281,6 @@ public class VertxProperties implements VertxConfigurer {
 
         public void setGroup(String group) {
             this.group = group;
-        }
-    }
-
-    public static class MetricsProperties {
-        private boolean enabled;
-
-        public boolean isEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(boolean enabled) {
-            this.enabled = enabled;
-        }
-
-        public MetricsOptions toMetricsOptions() {
-            MetricsOptions result = new MetricsOptions();
-            result.setEnabled(enabled);
-            return result;
         }
     }
 
@@ -718,9 +690,6 @@ public class VertxProperties implements VertxConfigurer {
             options.setClusterPingInterval(clusterPingInterval);
             options.setClusterPingReplyInterval(clusterPingReplyInterval);
             result.setEventBusOptions(options);
-        }
-        if (metric != null) {
-            result.setMetricsOptions(metric.toMetricsOptions());
         }
         return result;
     }

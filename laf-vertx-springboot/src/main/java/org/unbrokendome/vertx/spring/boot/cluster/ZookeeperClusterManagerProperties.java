@@ -1,4 +1,4 @@
-package org.unbrokendome.vertx.spring.boot.clustermanager;
+package org.unbrokendome.vertx.spring.boot.cluster;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.JsonObject;

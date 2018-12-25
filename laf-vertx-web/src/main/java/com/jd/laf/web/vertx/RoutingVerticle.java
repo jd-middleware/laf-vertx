@@ -50,7 +50,7 @@ public class RoutingVerticle extends AbstractVerticle {
     //资源文件
     protected String file;
     //路由配置提供者
-    protected RouteProvider provider;
+    protected List<RouteProvider> providers;
     //消费者
     protected Collection<MessageConsumer> consumers = new ConcurrentLinkedQueue<>();
 
@@ -77,11 +77,11 @@ public class RoutingVerticle extends AbstractVerticle {
         this(env, httpOptions, file, null);
     }
 
-    public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions, final String file, final RouteProvider provider) {
+    public RoutingVerticle(final Environment env, final HttpServerOptions httpOptions, final String file, final List<RouteProvider> providers) {
         this.env = env != null ? env : new Environment.MapEnvironment();
         this.httpOptions = httpOptions == null ? new HttpServerOptions().setPort(DEFAULT_PORT) : httpOptions;
         this.file = file != null ? file : env.getString(ROUTING_CONFIG_FILE, DEFAULT_ROUTING_CONFIG_FILE);
-        this.provider = provider;
+        this.providers = providers;
     }
 
     public RoutingVerticle(final Map<String, Object> parameters) {
@@ -96,8 +96,8 @@ public class RoutingVerticle extends AbstractVerticle {
         this(new Environment.MapEnvironment(parameters), httpOptions, file, null);
     }
 
-    public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions, final String file, final RouteProvider provider) {
-        this(new Environment.MapEnvironment(parameters), httpOptions, file, provider);
+    public RoutingVerticle(final Map<String, Object> parameters, final HttpServerOptions httpOptions, final String file, final List<RouteProvider> providers) {
+        this(new Environment.MapEnvironment(parameters), httpOptions, file, providers);
     }
 
     @Override
@@ -113,7 +113,11 @@ public class RoutingVerticle extends AbstractVerticle {
             //通过配置文件构建路由
             addRoutes(router, config.getRoutes(), env);
             //通过路由提供者构建路由
-            addRoutes(router, provider == null ? null : provider.getRoutes(), env);
+            if (providers != null) {
+                for (RouteProvider provider : providers) {
+                    addRoutes(router, provider.getRoutes(), env);
+                }
+            }
             //通过配置文件构建消息处理链
             buildConsumers(config);
             //启动服务

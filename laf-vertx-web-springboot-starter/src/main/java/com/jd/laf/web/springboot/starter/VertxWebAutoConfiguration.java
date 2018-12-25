@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.unbrokendome.vertx.spring.VerticleRegistrationBean;
 
+import java.util.List;
+
 
 /**
  * Created by yangyang115 on 18-9-27.
@@ -24,7 +26,7 @@ public class VertxWebAutoConfiguration {
             org.springframework.core.env.Environment environment,
             ApplicationContext context,
             VertxWebProperties webProperties,
-            ObjectProvider<RouteProvider> provider) {
+            ObjectProvider<List<RouteProvider>> provider) {
         return new VerticleRegistrationBean(() -> new RoutingVerticle(
                 new SpringEnvironment(environment, context),
                 webProperties.getHttp().toHttpServerOptions(), webProperties.getFile(), provider.getIfAvailable()),
