@@ -61,16 +61,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <distributionManagement>
-        <repository>
-            <id>lib-releases</id>
-            <url>
-                http://artifactory.jd.com/libs-releases-local
-            </url>
-        </repository>
-    </distributionManagement>
-
     <build>
         <resources>
             <resource>
@@ -127,15 +117,6 @@
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>2.7</version>
-                <configuration>
-                    <generateBackupPoms>false</generateBackupPoms>
-                    <newVersion>1.0.10</newVersion>
                 </configuration>
             </plugin>
         </plugins>
