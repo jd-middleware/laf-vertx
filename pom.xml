@@ -7,7 +7,7 @@
     <groupId>com.jd.laf.web</groupId>
     <artifactId>laf-vertx</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.9</version>
+    <version>1.0.10</version>
 
     <organization>
         <name>JD.com, Inc.</name>
@@ -61,6 +61,15 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>lib-releases</id>
+            <url>
+                http://artifactory.jd.com/libs-releases-local
+            </url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <resources>
@@ -118,6 +127,15 @@
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <generateBackupPoms>false</generateBackupPoms>
+                    <newVersion>1.0.10</newVersion>
                 </configuration>
             </plugin>
         </plugins>
