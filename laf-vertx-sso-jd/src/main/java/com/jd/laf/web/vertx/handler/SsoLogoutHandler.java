@@ -3,11 +3,8 @@ package com.jd.laf.web.vertx.handler;
 import com.jd.laf.binding.annotation.Value;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.http.HttpHeaders;
-import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
-
-import javax.validation.constraints.NotEmpty;
 
 import static com.jd.laf.web.vertx.Environment.USER_KEY;
 

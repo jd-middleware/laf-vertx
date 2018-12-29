@@ -11,7 +11,10 @@ import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.plugin.segmentation.SegmentationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.apache.ignite.configuration.IgniteConfiguration.*;
 
@@ -567,8 +570,7 @@ public class IgniteProperties {
         //从插件加载
         BinaryTypeConfiguration binaryTypeCfg;
         String name;
-        ServiceLoader<BinaryMarshaller> loader = ServiceLoader.load(BinaryMarshaller.class, IgniteProperties.class.getClassLoader());
-        for (BinaryMarshaller marshaller : loader) {
+        for (BinaryMarshaller marshaller : BinaryMarshaller.Plugin.getPlugins()) {
             name = marshaller.name();
             if (name == null || name.isEmpty()) {
                 if (binaryCfg.getSerializer() == null) {

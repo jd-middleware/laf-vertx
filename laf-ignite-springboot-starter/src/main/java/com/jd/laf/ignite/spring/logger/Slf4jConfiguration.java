@@ -28,7 +28,7 @@ public class Slf4jConfiguration {
         }
 
         @ConditionalOnProperty(prefix = "ignite.logger", name = "type", havingValue = "slf4j")
-        static class LogbackPropertyCondition {
+        static class Slf4jPropertyCondition {
         }
 
         @ConditionalOnProperty(prefix = "ignite.logger", name = "type", matchIfMissing = true)

@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by yangyang36 on 2018/10/10.
  */
-public class  SpringEnvironment implements Environment {
+public class SpringEnvironment implements Environment {
 
     protected ConcurrentHashMap<String, Object> params = new ConcurrentHashMap<>();
 

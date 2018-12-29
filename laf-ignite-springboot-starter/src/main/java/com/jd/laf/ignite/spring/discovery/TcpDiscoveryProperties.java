@@ -6,7 +6,6 @@ import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import static org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi.*;
 
 public abstract class TcpDiscoveryProperties extends SpiAdapterProperties<TcpDiscoverySpi> {
-    protected boolean forceServerMode;
     protected boolean clientReconnectDisabled;
     protected long ipFinderCleanFrequency = DFLT_IP_FINDER_CLEAN_FREQ;
     protected long sockTimeout = DFLT_SOCK_TIMEOUT;
@@ -23,14 +22,6 @@ public abstract class TcpDiscoveryProperties extends SpiAdapterProperties<TcpDis
     protected int threadPriority = DFLT_THREAD_PRI;
     protected int topHistorySize = DFLT_TOP_HISTORY_SIZE;
     protected boolean shared;
-
-    public boolean isForceServerMode() {
-        return forceServerMode;
-    }
-
-    public void setForceServerMode(boolean forceServerMode) {
-        this.forceServerMode = forceServerMode;
-    }
 
     public boolean isClientReconnectDisabled() {
         return clientReconnectDisabled;
@@ -171,7 +162,6 @@ public abstract class TcpDiscoveryProperties extends SpiAdapterProperties<TcpDis
     @Override
     public void configure(final TcpDiscoverySpi spi) {
         super.configure(spi);
-        spi.setForceServerMode(forceServerMode);
         spi.setClientReconnectDisabled(clientReconnectDisabled);
         spi.setIpFinderCleanFrequency(ipFinderCleanFrequency);
         spi.setSocketTimeout(sockTimeout);

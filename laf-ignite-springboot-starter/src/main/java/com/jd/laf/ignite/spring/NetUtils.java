@@ -112,8 +112,9 @@ public class NetUtils {
      * @return 是否合法
      */
     private static boolean isValidAddress(InetAddress address) {
-        if (address == null || address.isLoopbackAddress())
+        if (address == null || address.isLoopbackAddress()) {
             return false;
+        }
         String name = address.getHostAddress();
         return (name != null
                 && !isAnyHost(name)

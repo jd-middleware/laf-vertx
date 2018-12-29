@@ -3,7 +3,9 @@ package org.unbrokendome.vertx.spring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.regex.Pattern;
 
@@ -110,8 +112,9 @@ public class NetUtils {
      * @return 是否合法
      */
     private static boolean isValidAddress(InetAddress address) {
-        if (address == null || address.isLoopbackAddress())
+        if (address == null || address.isLoopbackAddress()) {
             return false;
+        }
         String name = address.getHostAddress();
         return (name != null
                 && !isAnyHost(name)

@@ -30,6 +30,7 @@ public class MulticastAutoConfiguration {
         protected int multicastPort = DFLT_MCAST_PORT;
         protected int responseWaitTime = DFLT_RES_WAIT_TIME;
         protected int addressRequestAttempts = DFLT_ADDR_REQ_ATTEMPTS;
+        protected String localAddress;
         protected int timeToLive = -1;
 
         public String getMulticastGroup() {
@@ -64,6 +65,16 @@ public class MulticastAutoConfiguration {
             this.addressRequestAttempts = addressRequestAttempts;
         }
 
+        @Override
+        public String getLocalAddress() {
+            return localAddress;
+        }
+
+        @Override
+        public void setLocalAddress(String localAddress) {
+            this.localAddress = localAddress;
+        }
+
         public int getTimeToLive() {
             return timeToLive;
         }
@@ -81,6 +92,7 @@ public class MulticastAutoConfiguration {
             ipFinder.setMulticastPort(multicastPort);
             ipFinder.setResponseWaitTime(responseWaitTime);
             ipFinder.setAddressRequestAttempts(addressRequestAttempts);
+            ipFinder.setLocalAddress(localAddress);
             ipFinder.setTimeToLive(timeToLive);
         }
     }

@@ -5,7 +5,7 @@
     <parent>
         <artifactId>laf-vertx</artifactId>
         <groupId>com.jd.laf.web</groupId>
-        <version>1.0.10</version>
+        <version>1.0.11-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -138,7 +138,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
 
 
     </dependencies>
