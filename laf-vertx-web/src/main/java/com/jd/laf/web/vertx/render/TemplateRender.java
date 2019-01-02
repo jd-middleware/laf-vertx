@@ -56,11 +56,6 @@ public class TemplateRender implements Render, EnvironmentAware {
     }
 
     @Override
-    public int order() {
-        return 0;
-    }
-
-    @Override
     public String type() {
         return TEXT_HTML;
     }

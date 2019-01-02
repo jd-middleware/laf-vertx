@@ -1,7 +1,10 @@
 package com.jd.laf.web.vertx.response;
 
+import com.jd.laf.web.vertx.Plugin;
+
 import java.util.List;
 
+import static com.jd.laf.web.vertx.Plugin.THROWABLE;
 import static com.jd.laf.web.vertx.response.Response.HTTP_INTERNAL_ERROR;
 
 /**
@@ -145,7 +148,7 @@ public abstract class Responses {
         } else if (supplier != null) {
             return supplier.error(throwable);
         } else {
-            supplier = ErrorSuppliers.getPlugin(throwable.getClass());
+            supplier = THROWABLE.select(throwable.getClass());
             if (supplier != null) {
                 return supplier.error(throwable);
             } else {

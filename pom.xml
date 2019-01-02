@@ -38,7 +38,8 @@
         <spring-boot.version>2.1.1.RELEASE</spring-boot.version>
         <micrometer.version>1.1.1</micrometer.version>
         <laf-codec.version>1.0.0</laf-codec.version>
-        <laf-binding.version>1.0.2</laf-binding.version>
+        <laf-binding.version>1.0.3-SNAPSHOT</laf-binding.version>
+        <laf-extension.version>1.0.7-SNAPSHOT</laf-extension.version>
         <sso-uim-spring.version>1.0.4</sso-uim-spring.version>
         <beetl.version>2.9.6</beetl.version>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>

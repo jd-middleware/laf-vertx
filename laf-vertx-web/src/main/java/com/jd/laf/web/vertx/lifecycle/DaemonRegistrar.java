@@ -3,28 +3,33 @@ package com.jd.laf.web.vertx.lifecycle;
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.service.Daemon;
-import com.jd.laf.web.vertx.service.Daemons;
 import io.vertx.core.Vertx;
+
+import static com.jd.laf.web.vertx.Plugin.DAEMON;
 
 /**
  * 服务注册器
  */
 public class DaemonRegistrar implements Registrar {
 
+    public static final int DAEMON_ORDER = CodecRegistrar.CODEC_ORDER - 1;
+
     @Override
     public void register(final Vertx vertx, final Environment environment) throws Exception {
-        for (Daemon plugin : Daemons.getPlugins()) {
-            EnvironmentAware.setup(vertx, environment, plugin).start(environment);
+        //加载扩展点
+        for (Daemon daemon : DAEMON.extensions()) {
+            EnvironmentAware.setup(vertx, environment, daemon).start(environment);
         }
     }
 
     @Override
     public void deregister(final Vertx vertx) {
-        Daemons.getPlugins().forEach(Daemon::stop);
+        DAEMON.extensions().forEach(Daemon::stop);
     }
 
     @Override
     public int order() {
-        return HANDLER + 2;
+        //在CodecRegistrar之前执行
+        return DAEMON_ORDER;
     }
 }

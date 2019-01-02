@@ -1,17 +1,15 @@
 package com.jd.laf.web.vertx.message;
 
+import com.jd.laf.extension.Type;
+
 /**
  * 自定义消息编解码
  *
  * @param <T>
  */
-public interface CustomCodec<T> extends io.vertx.core.eventbus.MessageCodec<T, T> {
+public interface CustomCodec<T> extends io.vertx.core.eventbus.MessageCodec<T, T>, Type<Class<T>> {
 
-    /**
-     * 类型
-     *
-     * @return
-     */
+    @Override
     Class<T> type();
 
     @Override

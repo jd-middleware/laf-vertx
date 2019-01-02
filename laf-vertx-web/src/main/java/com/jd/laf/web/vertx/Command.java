@@ -1,9 +1,11 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.extension.Type;
+
 /**
  * 命令接口
  */
-public interface Command<T> extends Cloneable {
+public interface Command<T> extends Type<String>, Cloneable {
 
     /**
      * 结果
@@ -23,6 +25,7 @@ public interface Command<T> extends Cloneable {
      *
      * @return
      */
+    @Override
     default String type() {
         String name = this.getClass().getSimpleName();
         int length = name.length();

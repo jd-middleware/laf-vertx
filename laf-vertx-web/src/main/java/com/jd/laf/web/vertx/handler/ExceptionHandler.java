@@ -10,8 +10,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
+import static com.jd.laf.web.vertx.Plugin.RENDER;
 import static com.jd.laf.web.vertx.render.Render.APPLICATION_JSON;
-import static com.jd.laf.web.vertx.render.Renders.getPlugin;
 
 /**
  * 异常处理类
@@ -24,7 +24,6 @@ public class ExceptionHandler implements ErrorHandler {
     public String type() {
         return "error";
     }
-
 
     @Override
     public void handle(final RoutingContext context) {
@@ -43,7 +42,7 @@ public class ExceptionHandler implements ErrorHandler {
             if (!context.response().ended()) {
                 String contentType = context.getAcceptableContentType();
                 contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
-                Render render = getPlugin(contentType);
+                Render render = RENDER.get(contentType);
                 render = render == null ? RenderHandler.JSON : render;
                 render.render(context);
             }

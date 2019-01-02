@@ -29,7 +29,9 @@ public class VertxWebAutoConfiguration {
             ObjectProvider<List<RouteProvider>> provider) {
         return new VerticleRegistrationBean(() -> new RoutingVerticle(
                 new SpringEnvironment(environment, context),
-                webProperties.getHttp().toHttpServerOptions(), webProperties.getFile(), provider.getIfAvailable()),
+                webProperties.getHttp().toHttpServerOptions(),
+                webProperties.getFile(),
+                provider.getIfAvailable()),
                 webProperties.getRouting().toDeploymentOptions());
     }
 

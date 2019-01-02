@@ -4,13 +4,13 @@ import com.jd.laf.binding.Binding;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
-import com.jd.laf.web.vertx.lifecycle.Registrars;
+import com.jd.laf.web.vertx.lifecycle.Registrar;
 import com.jd.laf.web.vertx.message.RouteMessage;
 import com.jd.laf.web.vertx.pool.Pool;
-import com.jd.laf.web.vertx.pool.PoolFactories;
 import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
@@ -28,8 +28,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
-import static com.jd.laf.web.vertx.Environment.*;
+import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_CAPACITY;
+import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_INITIALIZE_SIZE;
+import static com.jd.laf.web.vertx.Plugin.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
 import static com.jd.laf.web.vertx.handler.RenderHandler.render;
@@ -42,6 +45,8 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final int DEFAULT_PORT = 8080;
     protected static Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
+
+    protected static AtomicLong register = new AtomicLong(0);
 
     //注入的环境
     protected Environment env;
@@ -107,7 +112,7 @@ public class RoutingVerticle extends AbstractVerticle {
             config = inherit(build(file));
 
             //初始化插件
-            Registrars.register(vertx, env);
+            register(vertx, env);
 
             router = createRouter(env);
             //通过配置文件构建路由
@@ -149,6 +154,38 @@ public class RoutingVerticle extends AbstractVerticle {
         }
     }
 
+
+    /**
+     * 初始化
+     *
+     * @param vertx
+     * @param environment 环境上下文
+     * @throws Exception
+     */
+    public void register(final Vertx vertx, final Environment environment) throws Exception {
+        //防止多次注册
+        if (register.incrementAndGet() == 1) {
+            for (Registrar plugin : REGISTRAR.extensions()) {
+                try {
+                    plugin.register(vertx, environment);
+                } catch (Exception e) {
+                    logger.error(String.format("register plugin %s error ", plugin.getClass()), e);
+                }
+            }
+        }
+    }
+
+    /**
+     * 注销
+     *
+     * @param vertx vertx对象
+     */
+    public void deregister(final Vertx vertx) {
+        if (register.decrementAndGet() == 0) {
+            REGISTRAR.extensions().forEach(o -> o.deregister(vertx));
+        }
+    }
+
     /**
      * 创建路由管理器
      *
@@ -176,7 +213,7 @@ public class RoutingVerticle extends AbstractVerticle {
             consumer.unregister();
         }
         consumers.clear();
-        Registrars.deregister(vertx);
+        deregister(vertx);
         logger.info(String.format("success stop routing verticle %s ", deploymentID()));
     }
 
@@ -191,7 +228,7 @@ public class RoutingVerticle extends AbstractVerticle {
         for (RouteConfig route : config.getMessages()) {
             //设置消息处理链
             for (String name : route.getHandlers()) {
-                handler = MessageHandlers.getPlugin(name);
+                handler = MESSAGE.get(name);
                 if (handler != null && route.getPath() != null && !route.getPath().isEmpty()) {
                     consumers.add(eventBus.consumer(route.getPath(), handler));
                 }
@@ -304,7 +341,7 @@ public class RoutingVerticle extends AbstractVerticle {
         if (config.getErrors() != null) {
             ErrorHandler handler;
             for (String error : config.getErrors()) {
-                handler = ErrorHandlers.getPlugin(error);
+                handler = ERROR.get(error);
                 if (handler != null) {
                     route.failureHandler(handler);
                 } else {
@@ -326,7 +363,7 @@ public class RoutingVerticle extends AbstractVerticle {
         Command command;
         //上下文处理
         for (String name : config.getHandlers()) {
-            handler = RoutingHandlers.getPlugin(name);
+            handler = ROUTING.get(name);
             if (handler != null) {
                 if (handler instanceof RouteAware) {
                     //感知路由配置，复制一份对象，确保环境初始化的设置
@@ -336,7 +373,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 route.handler(handler);
             } else {
                 //命令
-                command = Commands.getPlugin(name);
+                command = COMMAND.get(name);
                 if (command != null) {
                     Pool<Command> pool = null;
                     //判断命令是否需要池化
@@ -346,7 +383,7 @@ public class RoutingVerticle extends AbstractVerticle {
                         int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
                         if (capacity > 0) {
                             //构造对象池
-                            pool = PoolFactories.getPlugin().create(capacity);
+                            pool = POOL.get().create(capacity);
                             if (initializeSize > 0) {
                                 int min = Math.min(initializeSize, capacity);
                                 //初始化对象池大小
@@ -451,7 +488,7 @@ public class RoutingVerticle extends AbstractVerticle {
                     //有返回结果
                     if (result.getTemplate() != null && !result.getTemplate().isEmpty()) {
                         //存放模板
-                        context.put(TEMPLATE, result.getTemplate());
+                        context.put(Environment.TEMPLATE, result.getTemplate());
                     }
                     if (result.getKey() != null) {
                         //存放实际的返回结果

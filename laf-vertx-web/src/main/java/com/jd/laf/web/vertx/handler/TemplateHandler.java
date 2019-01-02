@@ -29,7 +29,7 @@ public class TemplateHandler implements RoutingHandler, EnvironmentAware {
         TemplateEngine engine = environment.getObject(TEMPLATE_ENGINE, TemplateEngine.class);
         if (engine == null) {
             String type = environment.getString(TEMPLATE_TYPE, "beetl");
-            TemplateProvider provider = TemplateProviders.getPlugin(type);
+            TemplateProvider provider = Plugin.TEMPLATE.get(type);
             if (provider != null) {
                 engine = provider.create(vertx, environment);
                 environment.put(TEMPLATE_ENGINE, engine);

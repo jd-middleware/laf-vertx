@@ -20,8 +20,8 @@ public interface PoolFactory<T> {
     /**
      * 创建对象池，并进行初始化
      *
-     * @param capacity    池大小
-     * @param objects 初始化大小
+     * @param capacity 池大小
+     * @param objects  初始化大小
      * @return
      */
     Pool<T> create(int capacity, List<T> objects);

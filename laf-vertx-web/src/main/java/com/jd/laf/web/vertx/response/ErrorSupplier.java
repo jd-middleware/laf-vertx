@@ -1,9 +1,11 @@
 package com.jd.laf.web.vertx.response;
 
+import com.jd.laf.extension.Type;
+
 /**
  * 异常响应转换接口
  */
-public interface ErrorSupplier {
+public interface ErrorSupplier extends Type<Class<? extends Throwable>> {
 
     /**
      * 把异常转换成响应

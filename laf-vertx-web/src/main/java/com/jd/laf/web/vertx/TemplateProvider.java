@@ -1,12 +1,13 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.extension.Type;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.common.template.TemplateEngine;
 
 /**
  * 模板引擎提供者
  */
-public interface TemplateProvider {
+public interface TemplateProvider extends Type<String> {
 
     /**
      * 创建引擎
@@ -18,10 +19,4 @@ public interface TemplateProvider {
      */
     TemplateEngine create(Vertx vertx, Environment context) throws Exception;
 
-    /**
-     * 类型
-     *
-     * @return
-     */
-    String type();
 }

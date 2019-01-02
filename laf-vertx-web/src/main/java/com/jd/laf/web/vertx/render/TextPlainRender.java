@@ -20,11 +20,6 @@ public class TextPlainRender implements Render {
     }
 
     @Override
-    public int order() {
-        return 0;
-    }
-
-    @Override
     public String type() {
         return TEXT_PLAIN;
     }

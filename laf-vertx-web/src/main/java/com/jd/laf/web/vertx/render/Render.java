@@ -1,11 +1,13 @@
 package com.jd.laf.web.vertx.render;
 
+import com.jd.laf.extension.Ordered;
+import com.jd.laf.extension.Type;
 import io.vertx.ext.web.RoutingContext;
 
 /**
  * 渲染
  */
-public interface Render {
+public interface Render extends Ordered, Type<String> {
 
     String APPLICATION_JSON = "application/json";
 
@@ -23,17 +25,9 @@ public interface Render {
      */
     void render(RoutingContext context) throws Exception;
 
-    /**
-     * 顺序
-     *
-     * @return
-     */
-    int order();
+    @Override
+    default int order() {
+        return ORDER;
+    }
 
-    /**
-     * 类型
-     *
-     * @return
-     */
-    String type();
 }

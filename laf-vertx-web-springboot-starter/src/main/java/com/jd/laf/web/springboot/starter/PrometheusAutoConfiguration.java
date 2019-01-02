@@ -1,6 +1,9 @@
 package com.jd.laf.web.springboot.starter;
 
-import com.jd.laf.web.vertx.*;
+import com.jd.laf.web.vertx.Environment;
+import com.jd.laf.web.vertx.EnvironmentAware;
+import com.jd.laf.web.vertx.RouteProvider;
+import com.jd.laf.web.vertx.RoutingHandler;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
@@ -36,11 +39,14 @@ public class PrometheusAutoConfiguration {
     private String registryName = "default";
 
     @Bean
+    public PrometheusHandler prometheusHandler() {
+        return new PrometheusHandler(registryName);
+    }
+
+    @Bean
     public RouteProvider prometheusProvider() {
 
         //添加插件
-        RoutingHandlers.getPlugins().putIfAbsent(PrometheusHandler.PROMETHEUS, new PrometheusHandler(registryName));
-
         return () -> {
             List<RouteConfig> result = new ArrayList<>();
             RouteConfig config = new RouteConfig();
