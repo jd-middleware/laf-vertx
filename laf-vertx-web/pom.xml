@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>com.jd.laf.binding</groupId>
-            <artifactId>laf-binding</artifactId>
+            <artifactId>laf-binding-core</artifactId>
             <version>${laf-binding.version}</version>
         </dependency>
         <dependency>
