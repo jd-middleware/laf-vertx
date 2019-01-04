@@ -11,7 +11,6 @@ import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.http.HttpServer;
@@ -24,11 +23,8 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
 
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_CAPACITY;
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_INITIALIZE_SIZE;
@@ -44,9 +40,7 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final String ROUTING_CONFIG_FILE = "vertx.file";
     public static final String DEFAULT_ROUTING_CONFIG_FILE = "routing.xml";
     public static final int DEFAULT_PORT = 8080;
-    protected static Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
-
-    protected static AtomicLong register = new AtomicLong(0);
+    protected static final Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
 
     //注入的环境
     protected Environment env;
@@ -56,8 +50,7 @@ public class RoutingVerticle extends AbstractVerticle {
     protected String file;
     //路由配置提供者
     protected List<RouteProvider> providers;
-    //消费者
-    protected Collection<MessageConsumer> consumers = new ConcurrentLinkedQueue<>();
+    protected MessageConsumer consumer;
 
     //配置
     protected VertxConfig config;
@@ -112,7 +105,7 @@ public class RoutingVerticle extends AbstractVerticle {
             config = inherit(build(file));
 
             //初始化插件
-            register(vertx, env);
+            register(vertx, env, config);
 
             router = createRouter(env);
             //通过配置文件构建路由
@@ -123,8 +116,6 @@ public class RoutingVerticle extends AbstractVerticle {
                     addRoutes(router, provider.getRoutes(), env);
                 }
             }
-            //通过配置文件构建消息处理链
-            buildConsumers(config);
             //启动服务
             httpServer = vertx.createHttpServer(httpOptions);
             httpServer.requestHandler(router).listen(event -> {
@@ -135,8 +126,8 @@ public class RoutingVerticle extends AbstractVerticle {
                             httpServer.actualPort()), event.cause());
                 }
             });
-            //注册路由变更信息
-            consumers.add(vertx.eventBus().consumer(RouteMessage.TOPIC, (Handler<Message<RouteMessage>>) event -> {
+            //注册路由变更消息监听器
+            consumer = vertx.eventBus().consumer(RouteMessage.TOPIC, (Handler<Message<RouteMessage>>) event -> {
                 RouteMessage message = event.body();
                 switch (message.getType()) {
                     case ADD:
@@ -146,7 +137,7 @@ public class RoutingVerticle extends AbstractVerticle {
                         remoteRoute(message.getConfig());
                         break;
                 }
-            }));
+            });
             logger.info(String.format("success starting routing verticle %s", deploymentID()));
         } catch (Exception e) {
             logger.error(String.format("failed starting routing verticle %s", deploymentID()), e);
@@ -160,17 +151,15 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param vertx
      * @param environment 环境上下文
+     * @param config
      * @throws Exception
      */
-    public void register(final Vertx vertx, final Environment environment) throws Exception {
+    public void register(final Vertx vertx, final Environment environment, final VertxConfig config) throws Exception {
         //防止多次注册
-        if (register.incrementAndGet() == 1) {
-            for (Registrar plugin : REGISTRAR.extensions()) {
-                try {
-                    plugin.register(vertx, environment);
-                } catch (Exception e) {
-                    logger.error(String.format("register plugin %s error ", plugin.getClass()), e);
-                }
+        if (Registrar.counter.incrementAndGet() == 1) {
+            for (Registrar registrar : REGISTRAR.extensions()) {
+                //注册
+                registrar.register(vertx, environment, config);
             }
         }
     }
@@ -181,8 +170,9 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param vertx vertx对象
      */
     public void deregister(final Vertx vertx) {
-        if (register.decrementAndGet() == 0) {
-            REGISTRAR.extensions().forEach(o -> o.deregister(vertx));
+        if (Registrar.counter.decrementAndGet() == 0) {
+            //反序进行注销
+            REGISTRAR.reverse().forEach(o -> o.deregister(vertx));
         }
     }
 
@@ -197,7 +187,7 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
     @Override
-    public void stop() throws Exception {
+    public void stop() {
         if (httpServer != null) {
             httpServer.close(event -> {
                 if (event.succeeded()) {
@@ -208,32 +198,13 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             });
         }
-        //注销消费者
-        for (MessageConsumer consumer : consumers) {
+        //注销本实例的消费者
+        if (consumer != null) {
             consumer.unregister();
         }
-        consumers.clear();
+        //注销本实例的消费者
         deregister(vertx);
         logger.info(String.format("success stop routing verticle %s ", deploymentID()));
-    }
-
-    /**
-     * 构造消息处理链
-     *
-     * @param config
-     */
-    protected void buildConsumers(final VertxConfig config) {
-        EventBus eventBus = vertx.eventBus();
-        MessageHandler handler;
-        for (RouteConfig route : config.getMessages()) {
-            //设置消息处理链
-            for (String name : route.getHandlers()) {
-                handler = MESSAGE.get(name);
-                if (handler != null && route.getPath() != null && !route.getPath().isEmpty()) {
-                    consumers.add(eventBus.consumer(route.getPath(), handler));
-                }
-            }
-        }
     }
 
     /**

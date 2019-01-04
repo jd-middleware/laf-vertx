@@ -38,4 +38,20 @@ public interface EnvironmentAware {
         }
         return target;
     }
+
+    /**
+     * 绑定并且验证
+     *
+     * @param vertx
+     * @param environment 环境
+     * @param targets     对象
+     * @throws Exception
+     */
+    static <T> void setup(final Vertx vertx, final Environment environment, final Iterable<T> targets) throws Exception {
+        if (targets != null) {
+            for (T target : targets) {
+                setup(vertx, environment, target);
+            }
+        }
+    }
 }

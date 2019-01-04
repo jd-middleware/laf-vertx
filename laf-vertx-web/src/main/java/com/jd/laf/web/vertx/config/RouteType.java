@@ -16,6 +16,9 @@ public enum RouteType {
     CONNECT(HttpMethod.CONNECT),
     PATCH(HttpMethod.PATCH),
     ERROR,
+    /**
+     * 每个jvm实例只监听一次
+     */
     MSG;
 
     private HttpMethod method;

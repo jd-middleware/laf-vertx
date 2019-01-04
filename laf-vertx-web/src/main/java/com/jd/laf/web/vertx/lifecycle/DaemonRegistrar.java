@@ -2,6 +2,7 @@ package com.jd.laf.web.vertx.lifecycle;
 
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;
+import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.service.Daemon;
 import io.vertx.core.Vertx;
 
@@ -12,13 +13,13 @@ import static com.jd.laf.web.vertx.Plugin.DAEMON;
  */
 public class DaemonRegistrar implements Registrar {
 
-    public static final int DAEMON_ORDER = CodecRegistrar.CODEC_ORDER - 1;
-
     @Override
-    public void register(final Vertx vertx, final Environment environment) throws Exception {
-        //加载扩展点
+    public void register(final Vertx vertx, final Environment environment, final VertxConfig config) throws Exception {
+        //初始化扩展点
+        EnvironmentAware.setup(vertx, environment, DAEMON.extensions());
+        //启动
         for (Daemon daemon : DAEMON.extensions()) {
-            EnvironmentAware.setup(vertx, environment, daemon).start(environment);
+            daemon.start(environment);
         }
     }
 

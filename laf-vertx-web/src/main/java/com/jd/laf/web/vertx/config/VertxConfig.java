@@ -51,10 +51,11 @@ public class VertxConfig {
      */
     public void add(final RouteConfig route) {
         if (route != null) {
-            if (RouteType.MSG == route.getType()) {
-                messages.add(route);
-            } else {
-                routes.add(route);
+            switch (route.getType()) {
+                case MSG:
+                    messages.add(route);
+                default:
+                    routes.add(route);
             }
         }
     }
