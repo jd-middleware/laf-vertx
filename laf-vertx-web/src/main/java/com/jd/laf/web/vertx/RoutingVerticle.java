@@ -120,9 +120,9 @@ public class RoutingVerticle extends AbstractVerticle {
             httpServer = vertx.createHttpServer(httpOptions);
             httpServer.requestHandler(router).listen(event -> {
                 if (event.succeeded()) {
-                    logger.info(String.format("success starting http server on port %d", httpServer.actualPort()));
+                    logger.info(String.format("success adding http server listener on port %d", httpServer.actualPort()));
                 } else {
-                    logger.error(String.format("failed starting http server on port %d",
+                    logger.error(String.format("failed adding http server listener on port %d",
                             httpServer.actualPort()), event.cause());
                 }
             });
@@ -138,9 +138,9 @@ public class RoutingVerticle extends AbstractVerticle {
                         break;
                 }
             });
-            logger.info(String.format("success starting routing verticle %s", deploymentID()));
+            logger.info(String.format("success starting routing verticle at %s", deploymentID()));
         } catch (Exception e) {
-            logger.error(String.format("failed starting routing verticle %s", deploymentID()), e);
+            logger.error(String.format("failed starting routing verticle at %s", deploymentID()), e);
             throw e;
         }
     }
@@ -191,9 +191,9 @@ public class RoutingVerticle extends AbstractVerticle {
         if (httpServer != null) {
             httpServer.close(event -> {
                 if (event.succeeded()) {
-                    logger.info(String.format("success closing http server on port %d", httpServer.actualPort()));
+                    logger.info(String.format("success removing http server listener on port %d", httpServer.actualPort()));
                 } else {
-                    logger.error(String.format("failed closing http server on port %d",
+                    logger.error(String.format("failed removing http server listener on port %d",
                             httpServer.actualPort()), event.cause());
                 }
             });
@@ -203,8 +203,9 @@ public class RoutingVerticle extends AbstractVerticle {
             consumer.unregister();
         }
         //注销本实例的消费者
+        //TODO 不能优雅的退出
         deregister(vertx);
-        logger.info(String.format("success stop routing verticle %s ", deploymentID()));
+        logger.info(String.format("success stop routing verticle at %s ", deploymentID()));
     }
 
     /**
