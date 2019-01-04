@@ -226,7 +226,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     public void stop(final Runnable callback) {
         Vertx vertx = this.vertx;
         if (vertx != null) {
-            logger.debug("Shutting down Vert.x instance");
+            logger.info("Shutting down Vert.x instance");
             vertx.close(ar -> {
                 if (ar.succeeded()) {
                     logger.info("Vert.x instance shut down successfully");
