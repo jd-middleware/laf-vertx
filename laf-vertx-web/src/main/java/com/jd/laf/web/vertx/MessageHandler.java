@@ -7,7 +7,7 @@ import io.vertx.core.eventbus.Message;
 /**
  * 消息处理器
  */
-public interface MessageHandler<T> extends Handler<Message<T>>, Type {
+public interface MessageHandler<T> extends Handler<Message<T>>, Type<String> {
 
 
 }
