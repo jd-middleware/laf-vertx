@@ -56,7 +56,7 @@ public class MessageRegistrar implements Registrar {
 
     @Override
     public void deregister(final Vertx vertx) {
-        CODEC.extensions().forEach(o -> vertx.eventBus().unregisterDefaultCodec(o.type()));
+        //TODO 不能优雅的退出
         //反序遍历注销
         for (int i = consumers.size() - 1; i >= 0; i--) {
             Consumer consumer = consumers.get(i);
@@ -71,7 +71,7 @@ public class MessageRegistrar implements Registrar {
                 }
             });
         }
-        //TODO 不能优雅的退出
+        CODEC.extensions().forEach(o -> vertx.eventBus().unregisterDefaultCodec(o.type()));
         consumers.clear();
     }
 
