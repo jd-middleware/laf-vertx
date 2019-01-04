@@ -9,6 +9,7 @@ import com.jd.laf.web.vertx.message.RouteMessage;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.Poolable;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.Message;
@@ -210,10 +211,18 @@ public class RoutingVerticle extends AbstractVerticle {
         }
         //注销本实例的消费者
         if (consumer != null) {
-            consumer.unregister();
+            consumer.unregister(new Handler<AsyncResult<Void>>() {
+                @Override
+                public void handle(AsyncResult<Void> event) {
+                    if (event.succeeded()) {
+                        logger.info(String.format("success unregistering consumer %d of %s", id, RouteMessage.TOPIC));
+                    } else {
+                        logger.error(String.format("failed unregistering consumer %d of %s", id, RouteMessage.TOPIC));
+                    }
+                }
+            });
         }
         //注销本实例的消费者
-        //TODO 不能优雅的退出
         deregister(vertx);
         logger.info(String.format("success stop routing verticle %d at %s ", id, deploymentID()));
     }
