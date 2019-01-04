@@ -5,6 +5,7 @@ import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import io.vertx.core.Vertx;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -28,6 +29,11 @@ public interface Registrar extends Ordered {
      * 计数器
      */
     AtomicLong counter = new AtomicLong(0);
+
+    /**
+     * 等到初始化完成
+     */
+    CountDownLatch latch = new CountDownLatch(1);
 
 
     /**
