@@ -8,5 +8,8 @@
         <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
         <route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>
     </routes>
-    <messages/>
+    <messages>
+        <route type="MSG"
+               path="profile_clear_event" handlers="test"/>
+    </messages>
 </vertx>

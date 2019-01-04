@@ -13,6 +13,8 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import javax.xml.bind.JAXBException;
@@ -21,13 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @RunWith(VertxUnitRunner.class)
 public class RoutingVerticleTest {
 
-    protected static final Logger logger = Logger.getLogger(RoutingVerticleTest.class.getName());
+    protected static final Logger logger = LoggerFactory.getLogger(RoutingVerticleTest.class);
 
     protected static Vertx vertx;
     protected static WebClient client;
@@ -69,7 +69,7 @@ public class RoutingVerticleTest {
                 HttpResponse<Buffer> response = a.result();
                 result.set(response.bodyAsString());
             } else {
-                logger.log(Level.SEVERE, "failed", a.cause());
+                logger.error("failed", a.cause());
             }
             latch.countDown();
         });
@@ -87,7 +87,7 @@ public class RoutingVerticleTest {
                 HttpResponse<Buffer> response = a.result();
                 result.set(response.bodyAsString());
             } else {
-                logger.log(Level.SEVERE, "failed", a.cause());
+                logger.error("failed", a.cause());
             }
             latch.countDown();
         });
