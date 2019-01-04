@@ -25,7 +25,7 @@ public class DaemonRegistrar implements Registrar {
 
     @Override
     public void deregister(final Vertx vertx) {
-        DAEMON.extensions().forEach(Daemon::stop);
+        DAEMON.reverse().forEach(Daemon::stop);
     }
 
     @Override

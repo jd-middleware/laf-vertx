@@ -5,15 +5,13 @@ import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.MessageHandler;
 import com.jd.laf.web.vertx.RoutingVerticle;
 import com.jd.laf.web.vertx.config.VertxConfig;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.jd.laf.web.vertx.Plugin.CODEC;
@@ -27,7 +25,7 @@ public class MessageRegistrar implements Registrar {
     protected static final Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
 
     //消费者
-    protected List<MessageConsumer> consumers = new LinkedList<>();
+    protected List<MessageConsumer> consumers = new ArrayList<>(20);
 
     @Override
     public void register(final Vertx vertx, final Environment environment, final VertxConfig config) throws Exception {
@@ -57,16 +55,10 @@ public class MessageRegistrar implements Registrar {
 
     @Override
     public void deregister(final Vertx vertx) {
-        consumers.forEach(o -> o.unregister(new Handler<AsyncResult<Void>>() {
-            @Override
-            public void handle(AsyncResult<Void> event) {
-                if (event.succeeded()) {
-                    logger.info("success stopping message consumer. ");
-                }else {
-                    logger.error("failed stopping message consumer.");
-                }
-            }
-        }));
+        //反序遍历注销
+        for (int i = consumers.size() - 1; i >= 0; i--) {
+            consumers.get(i).unregister();
+        }
         consumers.clear();
     }
 }
