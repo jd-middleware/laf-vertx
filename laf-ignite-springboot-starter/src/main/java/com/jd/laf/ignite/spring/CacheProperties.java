@@ -13,7 +13,7 @@ import static org.apache.ignite.configuration.CacheConfiguration.*;
 
 public class CacheProperties {
     //名称配置成数组
-    protected String[] names;
+    protected String[] name;
     protected String groupName;
     protected String dataRegionName;
     protected boolean onheapCacheEnabled;
@@ -60,12 +60,12 @@ public class CacheProperties {
     protected boolean eventsDisabled = DFLT_EVENTS_DISABLED;
     protected long expireTime;
 
-    public String[] getNames() {
-        return names;
+    public String[] getName() {
+        return name;
     }
 
-    public void setNames(String[] names) {
-        this.names = names;
+    public void setName(String[] name) {
+        this.name = name;
     }
 
     public String getGroupName() {
@@ -432,8 +432,8 @@ public class CacheProperties {
         if (configurations == null) {
             return;
         }
-        if (names != null) {
-            for (String name : names) {
+        if (name != null) {
+            for (String name : name) {
                 if (name != null && !name.isEmpty()) {
                     configurations.put(name, build(name));
                 }
