@@ -7,6 +7,7 @@ import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.ignite.cache.CacheWriteSynchronizationMode.PRIMARY_SYNC;
 import static org.apache.ignite.configuration.CacheConfiguration.*;
 
 public class CacheProperties {
@@ -36,7 +37,7 @@ public class CacheProperties {
     protected int writeBehindFlushThreadCount = DFLT_WRITE_FROM_BEHIND_FLUSH_THREAD_CNT;
     protected int writeBehindBatchSize = DFLT_WRITE_BEHIND_BATCH_SIZE;
     protected boolean writeBehindCoalescing = DFLT_WRITE_BEHIND_COALESCING;
-    protected CacheWriteSynchronizationMode writeSynchronizationMode;
+    protected CacheWriteSynchronizationMode writeSynchronizationMode = PRIMARY_SYNC;
     protected int maxQueryIteratorsCount = DFLT_MAX_QUERY_ITERATOR_CNT;
     protected int maxConcurrentAsyncOperations = DFLT_MAX_CONCURRENT_ASYNC_OPS;
     protected int queryDetailMetricsSize = DFLT_QRY_DETAIL_METRICS_SIZE;
