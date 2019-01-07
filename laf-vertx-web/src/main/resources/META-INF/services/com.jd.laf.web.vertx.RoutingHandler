@@ -8,6 +8,5 @@ com.jd.laf.web.vertx.handler.RenderHandler
 com.jd.laf.web.vertx.handler.ResponseTimeHandler
 com.jd.laf.web.vertx.handler.SessionHandler
 com.jd.laf.web.vertx.handler.StaticHandler
-com.jd.laf.web.vertx.handler.TemplateHandler
 com.jd.laf.web.vertx.handler.TimeoutHandler
 com.jd.laf.web.vertx.handler.UserSessionHandler
