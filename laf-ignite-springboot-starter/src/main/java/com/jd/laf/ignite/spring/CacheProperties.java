@@ -5,12 +5,15 @@ import org.apache.ignite.configuration.CacheConfiguration;
 
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static org.apache.ignite.cache.CacheWriteSynchronizationMode.PRIMARY_SYNC;
 import static org.apache.ignite.configuration.CacheConfiguration.*;
 
 public class CacheProperties {
-    protected String name;
+    //名称配置成数组
+    protected String[] name;
     protected String groupName;
     protected String dataRegionName;
     protected boolean onheapCacheEnabled;
@@ -18,7 +21,7 @@ public class CacheProperties {
     protected long defaultLockTimeout = DFLT_LOCK_TIMEOUT;
     protected boolean loadPreviousValue = DFLT_LOAD_PREV_VAL;
     protected CacheMode cacheMode = DFLT_CACHE_MODE;
-    protected CacheAtomicityMode atomicityMode;
+    protected CacheAtomicityMode atomicityMode = DFLT_CACHE_ATOMICITY_MODE;
     protected int backups = DFLT_BACKUPS;
     protected boolean invalidate = DFLT_INVALIDATE;
     protected boolean readThrough;
@@ -36,7 +39,7 @@ public class CacheProperties {
     protected int writeBehindFlushThreadCount = DFLT_WRITE_FROM_BEHIND_FLUSH_THREAD_CNT;
     protected int writeBehindBatchSize = DFLT_WRITE_BEHIND_BATCH_SIZE;
     protected boolean writeBehindCoalescing = DFLT_WRITE_BEHIND_COALESCING;
-    protected CacheWriteSynchronizationMode writeSynchronizationMode;
+    protected CacheWriteSynchronizationMode writeSynchronizationMode = PRIMARY_SYNC;
     protected int maxQueryIteratorsCount = DFLT_MAX_QUERY_ITERATOR_CNT;
     protected int maxConcurrentAsyncOperations = DFLT_MAX_CONCURRENT_ASYNC_OPS;
     protected int queryDetailMetricsSize = DFLT_QRY_DETAIL_METRICS_SIZE;
@@ -57,11 +60,11 @@ public class CacheProperties {
     protected boolean eventsDisabled = DFLT_EVENTS_DISABLED;
     protected long expireTime;
 
-    public String getName() {
+    public String[] getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String[] name) {
         this.name = name;
     }
 
@@ -425,7 +428,23 @@ public class CacheProperties {
         this.expireTime = expireTime;
     }
 
-    public CacheConfiguration build() {
+    public void build(final Map<String, CacheConfiguration> configurations) {
+        if (configurations == null) {
+            return;
+        }
+        if (name != null) {
+            for (String name : name) {
+                if (name != null && !name.isEmpty()) {
+                    configurations.put(name, build(name));
+                }
+            }
+        } else {
+            //匹配所有配置
+            configurations.put("*", build("*"));
+        }
+    }
+
+    protected CacheConfiguration build(final String name) {
         CacheConfiguration result = new CacheConfiguration();
         result.setAtomicityMode(atomicityMode);
         result.setBackups(backups);
@@ -475,4 +494,5 @@ public class CacheProperties {
         result.setExpiryPolicyFactory(expireTime <= 0 ? null : CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.MICROSECONDS, expireTime)));
         return result;
     }
+
 }

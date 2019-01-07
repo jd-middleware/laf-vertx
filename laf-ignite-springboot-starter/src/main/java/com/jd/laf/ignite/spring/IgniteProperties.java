@@ -11,10 +11,7 @@ import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.plugin.segmentation.SegmentationPolicy;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.apache.ignite.configuration.IgniteConfiguration.*;
 
@@ -529,12 +526,14 @@ public class IgniteProperties {
             result.setDataStorageConfiguration(storage.build());
         }
         if (caches != null) {
-            CacheConfiguration[] configurations = new CacheConfiguration[caches.size()];
-            int i = 0;
+            Map<String, CacheConfiguration> configurations = new HashMap<>();
             for (CacheProperties cache : caches) {
-                configurations[i++] = cache.build();
+                cache.build(configurations);
             }
-            result.setCacheConfiguration(configurations);
+            if (!configurations.isEmpty()) {
+                Collection<CacheConfiguration> cfgs = configurations.values();
+                result.setCacheConfiguration(cfgs.toArray(new CacheConfiguration[cfgs.size()]));
+            }
         }
         result.setBinaryConfiguration(build(binaryTypes));
 
