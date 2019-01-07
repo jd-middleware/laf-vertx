@@ -17,7 +17,7 @@
             <artifactId>laf-vertx-web</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.jd.laf.web</groupId>
             <artifactId>laf-vertx-web-beetl</artifactId>
             <version>${project.version}</version>
@@ -26,7 +26,7 @@
             <groupId>com.jd.laf.web</groupId>
             <artifactId>laf-vertx-web-pebble</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.jd.laf.web</groupId>
             <artifactId>laf-vertx-springboot</artifactId>
