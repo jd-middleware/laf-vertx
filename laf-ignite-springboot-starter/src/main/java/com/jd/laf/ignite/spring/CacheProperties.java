@@ -18,7 +18,7 @@ public class CacheProperties {
     protected long defaultLockTimeout = DFLT_LOCK_TIMEOUT;
     protected boolean loadPreviousValue = DFLT_LOAD_PREV_VAL;
     protected CacheMode cacheMode = DFLT_CACHE_MODE;
-    protected CacheAtomicityMode atomicityMode;
+    protected CacheAtomicityMode atomicityMode = DFLT_CACHE_ATOMICITY_MODE;
     protected int backups = DFLT_BACKUPS;
     protected boolean invalidate = DFLT_INVALIDATE;
     protected boolean readThrough;
