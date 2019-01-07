@@ -5,13 +5,15 @@ import org.apache.ignite.configuration.CacheConfiguration;
 
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.apache.ignite.cache.CacheWriteSynchronizationMode.PRIMARY_SYNC;
 import static org.apache.ignite.configuration.CacheConfiguration.*;
 
 public class CacheProperties {
-    protected String name;
+    //名称配置成数组
+    protected String[] names;
     protected String groupName;
     protected String dataRegionName;
     protected boolean onheapCacheEnabled;
@@ -58,12 +60,12 @@ public class CacheProperties {
     protected boolean eventsDisabled = DFLT_EVENTS_DISABLED;
     protected long expireTime;
 
-    public String getName() {
-        return name;
+    public String[] getNames() {
+        return names;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNames(String[] names) {
+        this.names = names;
     }
 
     public String getGroupName() {
@@ -426,7 +428,23 @@ public class CacheProperties {
         this.expireTime = expireTime;
     }
 
-    public CacheConfiguration build() {
+    public void build(final Map<String, CacheConfiguration> configurations) {
+        if (configurations == null) {
+            return;
+        }
+        if (names != null) {
+            for (String name : names) {
+                if (name != null && !name.isEmpty()) {
+                    configurations.put(name, build(name));
+                }
+            }
+        } else {
+            //匹配所有配置
+            configurations.put("*", build("*"));
+        }
+    }
+
+    protected CacheConfiguration build(final String name) {
         CacheConfiguration result = new CacheConfiguration();
         result.setAtomicityMode(atomicityMode);
         result.setBackups(backups);
@@ -476,4 +494,5 @@ public class CacheProperties {
         result.setExpiryPolicyFactory(expireTime <= 0 ? null : CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.MICROSECONDS, expireTime)));
         return result;
     }
+
 }
