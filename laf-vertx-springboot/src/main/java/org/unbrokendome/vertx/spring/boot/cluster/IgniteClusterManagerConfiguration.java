@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
+import static org.apache.ignite.events.EventType.EVT_CACHE_OBJECT_REMOVED;
+
 
 @Configuration
 @ConditionalOnClass(IgniteClusterManager.class)
@@ -22,6 +24,10 @@ public class IgniteClusterManagerConfiguration {
             ObjectProvider<IgniteConfiguration> igniteProvider) {
         System.setProperty("IGNITE_NO_SHUTDOWN_HOOK", "true");
         IgniteConfiguration ignite = igniteProvider.getIfAvailable();
+        if (ignite.getIncludeEventTypes() == null) {
+            //添加Vertx默认需要的监听事件
+            ignite.setIncludeEventTypes(new int[]{EVT_CACHE_OBJECT_REMOVED});
+        }
         return ignite != null ? new IgniteClusterManager(ignite) : new IgniteClusterManager();
     }
 
