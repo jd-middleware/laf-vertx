@@ -5,10 +5,12 @@ import com.jd.laf.web.vertx.EnvironmentAware;
 import com.jd.laf.web.vertx.MessageHandler;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -47,32 +49,33 @@ public class MessageRegistrar implements Registrar {
                 }
             });
         });
+        VertxInternal internal = (VertxInternal) vertx;
+        //监听器采用AsyncMultiMap保存，内部由ClusterManager提供
+        //需要通过关闭钩子来提前注销监听器，如果在Verticle中进行异步销毁，这个时候事件线程池已经关闭，可能会挂住
+        internal.addCloseHook(completionHandler -> {
+            //反序遍历注销
+            for (int i = consumers.size() - 1; i >= 0; i--) {
+                Consumer consumer = consumers.get(i);
+                consumer.getConsumer().unregister(new Handler<AsyncResult<Void>>() {
+                    @Override
+                    public void handle(AsyncResult<Void> event) {
+                        if (event.succeeded()) {
+                            logger.info(String.format("success unregistering consumer %s of %s", consumer.getHandler(), consumer.getPath()));
+                        } else {
+                            logger.info(String.format("failed unregistering consumer %s of %s", consumer.getHandler(), consumer.getPath()));
+                        }
+                    }
+                });
+            }
+            CODEC.extensions().forEach(o -> vertx.eventBus().unregisterDefaultCodec(o.type()));
+            consumers.clear();
+            completionHandler.handle(Future.succeededFuture());
+        });
     }
 
     @Override
     public int order() {
         return MESSAGE_ORDER;
-    }
-
-    @Override
-    public void deregister(final Vertx vertx) {
-        //TODO 不能优雅的退出
-        //反序遍历注销
-        for (int i = consumers.size() - 1; i >= 0; i--) {
-            Consumer consumer = consumers.get(i);
-            consumer.getConsumer().unregister(new Handler<AsyncResult<Void>>() {
-                @Override
-                public void handle(AsyncResult<Void> event) {
-                    if (event.succeeded()) {
-                        logger.info(String.format("success unregistering consumer %s of %s", consumer.getHandler(), consumer.getPath()));
-                    } else {
-                        logger.info(String.format("failed unregistering consumer %s of %s", consumer.getHandler(), consumer.getPath()));
-                    }
-                }
-            });
-        }
-        CODEC.extensions().forEach(o -> vertx.eventBus().unregisterDefaultCodec(o.type()));
-        consumers.clear();
     }
 
     protected static class Consumer {
