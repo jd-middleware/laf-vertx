@@ -67,7 +67,22 @@ public class SsoLoginHandler extends RemoteIpHandler {
             if (userDetail == null) {
                 //获取单点登录的cookie
                 Cookie cookie = context.getCookie(ssoCookieName);
-                String ticket = cookie == null ? null : cookie.getValue();
+                String ticket ;
+                if(cookie != null) {
+                    ticket = cookie.getValue();
+                } else {
+                    //this is temp ticket , expired after 30 seconds
+                    ticket = request.getParam("sso_service_ticket") ;
+                    if(ticket != null ) {
+                        //get ticket and write sso cookie
+                        ticket = ssoService.getTicket(ticket , domain , remoteIP);
+                        Cookie ssoCookie = Cookie.cookie(ssoCookieName, ticket != null ? ticket : "");
+                        ssoCookie.setPath("/") ;
+                        // Don't set max age - it's a session cookie
+                        context.addCookie(ssoCookie);
+                    }
+                }
+
                 if (ticket != null && !ticket.isEmpty()) {
                     //session已经做了缓存，直接从服务获取
                     UserInfo userInfo = ssoService.verifyTicket(ticket, domain, remoteIP);

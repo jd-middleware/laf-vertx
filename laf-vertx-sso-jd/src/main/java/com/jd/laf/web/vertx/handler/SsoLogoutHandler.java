@@ -3,6 +3,7 @@ package com.jd.laf.web.vertx.handler;
 import com.jd.laf.binding.annotation.Value;
 import com.jd.laf.web.vertx.RoutingHandler;
 import io.vertx.core.http.HttpHeaders;
+import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
@@ -14,10 +15,14 @@ import static com.jd.laf.web.vertx.Environment.USER_KEY;
 public class SsoLogoutHandler implements RoutingHandler {
 
     //单点登录的cookie名称
-    @Value("sso.cookie.name")
-    protected String ssoCookieName = "sso.jd.com";
+    @Value(value = "sso.cookie.name", defaultValue = "sso.jd.com")
+    protected String ssoCookieName;
     @Value("sso.login.url")
     protected String ssoLoginUrl = "http://ssa.jd.com/sso/login";
+
+    @Value(value = "sso.logout.url", defaultValue = "http://ssa.jd.com/sso/logout")
+    protected String ssoLogoutUrl ;
+
     @Value("app.logout.url")
     protected String appLogoutUrl;
     @Value("app.index.url")
@@ -41,7 +46,11 @@ public class SsoLogoutHandler implements RoutingHandler {
             session.remove(userSessionKey);
         }
         //清理单点登录cookie
-        context.removeCookie(ssoCookieName);
+        Cookie ssoCookie = Cookie.cookie(ssoCookieName, "");
+        ssoCookie.setPath("/") ;
+        ssoCookie.setMaxAge(0) ;
+        context.addCookie(ssoCookie);
+
         //重定向到注销页面
         redirect2Login(context);
     }
@@ -52,7 +61,7 @@ public class SsoLogoutHandler implements RoutingHandler {
      * @param context
      */
     protected void redirect2Login(final RoutingContext context) {
-        String url = appLogoutUrl;
+        String url = ssoLogoutUrl;
         if (url == null || url.isEmpty()) {
             url = ssoLoginUrl;
             if (appIndexUrl != null && !appIndexUrl.isEmpty()) {
