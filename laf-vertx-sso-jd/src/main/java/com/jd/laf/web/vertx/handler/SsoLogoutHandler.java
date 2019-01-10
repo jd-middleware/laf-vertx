@@ -19,12 +19,8 @@ public class SsoLogoutHandler implements RoutingHandler {
     protected String ssoCookieName;
     @Value("sso.login.url")
     protected String ssoLoginUrl = "http://ssa.jd.com/sso/login";
-
     @Value(value = "sso.logout.url", defaultValue = "http://ssa.jd.com/sso/logout")
-    protected String ssoLogoutUrl ;
-
-    @Value("app.logout.url")
-    protected String appLogoutUrl;
+    protected String ssoLogoutUrl;
     @Value("app.index.url")
     protected String appIndexUrl;
     @Value(value = "sso.redirect.status", defaultValue = "401")
@@ -47,8 +43,8 @@ public class SsoLogoutHandler implements RoutingHandler {
         }
         //清理单点登录cookie
         Cookie ssoCookie = Cookie.cookie(ssoCookieName, "");
-        ssoCookie.setPath("/") ;
-        ssoCookie.setMaxAge(0) ;
+        ssoCookie.setPath("/");
+        ssoCookie.setMaxAge(0);
         context.addCookie(ssoCookie);
 
         //重定向到注销页面
