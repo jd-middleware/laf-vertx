@@ -140,7 +140,7 @@ public class RoutingVerticle extends AbstractVerticle {
                         addRoute(message.getConfig());
                         break;
                     case REMOVE:
-                        remoteRoute(message.getConfig());
+                        removeRoute(message.getConfig());
                         break;
                 }
             });
@@ -315,7 +315,7 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param config 路由配置
      */
-    protected void remoteRoute(final RouteConfig config) {
+    protected void removeRoute(final RouteConfig config) {
         Route route = getRoute(config, router);
         if (route != null) {
             route.remove();
