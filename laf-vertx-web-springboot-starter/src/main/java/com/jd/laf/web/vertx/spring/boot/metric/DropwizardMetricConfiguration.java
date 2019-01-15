@@ -39,7 +39,7 @@ public class DropwizardMetricConfiguration {
                 MetricAutoConfiguration.PROMETHEUS_METRIC,
                 MetricAutoConfiguration.INFLUXDB_METRIC,
         })
-        static class OnlyDropwizardOnClasspathCondition {
+        static class OnlyDropwizardCondition {
         }
     }
 }

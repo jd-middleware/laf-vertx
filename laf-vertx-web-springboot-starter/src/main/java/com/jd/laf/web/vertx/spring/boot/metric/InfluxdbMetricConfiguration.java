@@ -73,7 +73,7 @@ public class InfluxdbMetricConfiguration {
                 MetricAutoConfiguration.DROPWIZARD_METRIC,
                 MetricAutoConfiguration.PROMETHEUS_METRIC,
         })
-        static class OnlyInfluxdbOnClasspathCondition {
+        static class OnlyInfluxdbCondition {
         }
     }
 }

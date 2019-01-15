@@ -60,7 +60,7 @@ public class PrometheusMetricConfiguration {
                 MetricAutoConfiguration.DROPWIZARD_METRIC,
                 MetricAutoConfiguration.INFLUXDB_METRIC,
         })
-        static class OnlyPrometheusOnClasspathCondition {
+        static class OnlyPrometheusCondition {
         }
     }
 }
