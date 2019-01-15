@@ -2,6 +2,9 @@ package com.jd.laf.web.vertx.handler;
 
 import com.jd.laf.web.vertx.RoutingHandler;
 import com.jd.laf.web.vertx.render.Render;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 import static com.jd.laf.web.vertx.Plugin.RENDER;
@@ -14,7 +17,7 @@ public class RenderHandler implements RoutingHandler {
 
     public static final String RENDER_TYPE = "render";
 
-    public static final Render JSON = RENDER.get(APPLICATION_JSON);
+    private final static Logger logger = LoggerFactory.getLogger(ExceptionHandler.class);
 
     @Override
     public String type() {
@@ -23,29 +26,41 @@ public class RenderHandler implements RoutingHandler {
 
     @Override
     public void handle(final RoutingContext context) {
-        render(context);
+        render(context, true);
     }
 
     /**
      * 渲染
      *
-     * @param context
+     * @param context         上下文
+     * @param failOnException 异常调用上下文的fail
      */
-    public static void render(final RoutingContext context) {
+    public static void render(final RoutingContext context, final boolean failOnException) {
         if (context == null || context.response().ended()) {
             return;
         }
-        String contentType = context.request().getHeader("Content-Type");
+        //接收的格式
+        String contentType = context.getAcceptableContentType();
         if (contentType == null || contentType.isEmpty()) {
-            contentType = context.getAcceptableContentType();
+            //发送的格式
+            contentType = context.request().getHeader(HttpHeaders.CONTENT_TYPE);
         }
-        contentType = contentType == null ? APPLICATION_JSON : contentType.toLowerCase();
+        //没有拿到格式，则默认是JSON
+        contentType = contentType == null || contentType.isEmpty() ? APPLICATION_JSON : contentType.toLowerCase();
+        //获取渲染插件
         Render render = RENDER.get(contentType);
-        render = render == null ? JSON : render;
+        //系统默认提供了JSON渲染
+        if (render == null) {
+            render = RENDER.get(APPLICATION_JSON);
+        }
         try {
             render.render(context);
         } catch (Exception e) {
-            context.fail(e);
+            if (failOnException) {
+                context.fail(e);
+            } else {
+                logger.error(e.getMessage(), e);
+            }
         }
     }
 }
