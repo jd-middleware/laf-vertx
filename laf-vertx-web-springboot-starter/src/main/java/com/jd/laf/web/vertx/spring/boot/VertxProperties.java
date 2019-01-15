@@ -18,10 +18,7 @@ import static io.vertx.core.eventbus.EventBusOptions.*;
 import static io.vertx.core.file.FileSystemOptions.DEFAULT_CLASS_PATH_RESOLVING_ENABLED;
 import static io.vertx.core.file.FileSystemOptions.DEFAULT_FILE_CACHING_ENABLED;
 
-
 @ConfigurationProperties(prefix = "vertx")
-// As this class will *replace* the VertxOptions, we use "highest precedence" so this configurer is called first
-// in the chain, giving other configurers a chance to modify the options
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class VertxProperties {
 
