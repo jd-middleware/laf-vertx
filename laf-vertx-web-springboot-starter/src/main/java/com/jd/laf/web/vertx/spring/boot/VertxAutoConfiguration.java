@@ -67,6 +67,6 @@ public class VertxAutoConfiguration {
             }
         }
         return new SpringVertx(vertxFactory, vertxOptions, verticlesProvider.getIfAvailable(),
-                properties.getVerticlePrefix(), properties.getStartupPhase(), properties.isAutoStartup());
+                properties.getFactoryPrefix(), properties.getStartupPhase(), properties.isAutoStartup());
     }
 }

@@ -25,7 +25,7 @@ import static io.vertx.core.file.FileSystemOptions.DEFAULT_FILE_CACHING_ENABLED;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class VertxProperties {
 
-    private String verticlePrefix = "verticle";
+    private String factoryPrefix = "spring";
     private boolean autoStartup = true;
     private int startupPhase = 0;
     private boolean clustered = DEFAULT_CLUSTERED;
@@ -51,12 +51,12 @@ public class VertxProperties {
     private EventBusProperties eventBus = new EventBusProperties();
     private AddressResolverProperties addressResolver = new AddressResolverProperties();
 
-    public String getVerticlePrefix() {
-        return verticlePrefix;
+    public String getFactoryPrefix() {
+        return factoryPrefix;
     }
 
-    public void setVerticlePrefix(String verticlePrefix) {
-        this.verticlePrefix = verticlePrefix;
+    public void setFactoryPrefix(String factoryPrefix) {
+        this.factoryPrefix = factoryPrefix;
     }
 
     public boolean isAutoStartup() {

@@ -27,7 +27,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     private final Logger logger = LoggerFactory.getLogger(SpringVertx.class);
 
     protected final VertxFactory vertxFactory;
-    protected final String verticlePrefix;
+    protected final String factoryPrefix;
     protected final VertxOptions options;
     protected final List<VerticleProvider> providers;
     protected final int startupPhase;
@@ -37,11 +37,11 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     protected volatile Vertx vertx;
 
     public SpringVertx(VertxFactory vertxFactory, VertxOptions options, List<VerticleProvider> providers,
-                       String verticlePrefix, int startupPhase, boolean autoStartup) {
+                       String factoryPrefix, int startupPhase, boolean autoStartup) {
         this.vertxFactory = vertxFactory;
         this.options = options;
         this.providers = providers;
-        this.verticlePrefix = verticlePrefix;
+        this.factoryPrefix = factoryPrefix;
         this.startupPhase = startupPhase;
         this.autoStartup = autoStartup;
     }
@@ -71,13 +71,13 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         startVertx(startedFuture);
 
         //注册Spring工厂
-        if (verticlePrefix != null && !verticlePrefix.isEmpty()) {
+        if (factoryPrefix != null && !factoryPrefix.isEmpty()) {
             readyFuture = readyFuture.thenApply(vertx -> {
                 //基于Spring中的Bean的执行器工厂类，
                 vertx.registerVerticleFactory(new VerticleFactory() {
                     @Override
                     public String prefix() {
-                        return verticlePrefix;
+                        return factoryPrefix;
                     }
 
                     @Override
@@ -164,7 +164,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             vertx.deployVerticle(supplier, options, handler);
         } else {
             //根据名称部署
-            String beanName = name.startsWith(verticlePrefix + ".") ? name : verticlePrefix + "." + name;
+            String beanName = name.startsWith(factoryPrefix + ":") ? name.substring(factoryPrefix.length() + 1) : name;
             if (!beanFactory.containsBean(beanName)) {
                 future.completeExceptionally(new IllegalArgumentException("No such bean: " + beanName));
             } else if (!beanFactory.isTypeMatch(beanName, Verticle.class)) {
