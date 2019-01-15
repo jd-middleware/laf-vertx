@@ -163,7 +163,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
         if (supplier != null) {
             vertx.deployVerticle(supplier, options, handler);
         } else {
-            //根据名称部署
+            //根据名称部署，"js:app.js"，Vertx可以有多个工厂，前缀标识工厂
             String beanName = name.startsWith(factoryPrefix + ":") ? name.substring(factoryPrefix.length() + 1) : name;
             if (!beanFactory.containsBean(beanName)) {
                 future.completeExceptionally(new IllegalArgumentException("No such bean: " + beanName));
