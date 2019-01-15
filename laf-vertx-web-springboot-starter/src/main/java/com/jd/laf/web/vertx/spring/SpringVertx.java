@@ -82,7 +82,10 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
 
                     @Override
                     public Verticle createVerticle(final String verticleName, final ClassLoader classLoader) throws Exception {
-                        return beanFactory.getBean(verticleName, Verticle.class);
+                        String beanName = verticleName.startsWith(factoryPrefix + ":") ?
+                                verticleName.substring(factoryPrefix.length() + 1) :
+                                verticleName;
+                        return beanFactory.getBean(beanName, Verticle.class);
                     }
                 });
                 return vertx;
@@ -164,17 +167,33 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             vertx.deployVerticle(supplier, options, handler);
         } else {
             //根据名称部署，"js:app.js"，Vertx可以有多个工厂，前缀标识工厂
-            String beanName = name.startsWith(factoryPrefix + ":") ? name.substring(factoryPrefix.length() + 1) : name;
-            if (!beanFactory.containsBean(beanName)) {
-                future.completeExceptionally(new IllegalArgumentException("No such bean: " + beanName));
-            } else if (!beanFactory.isTypeMatch(beanName, Verticle.class)) {
-                future.completeExceptionally(new IllegalArgumentException("Bean \"" + beanName + "\" is not of type Verticle"));
+            String prefix = null, suffix = null;
+            int pos = name.indexOf(':');
+            if (pos > 0) {
+                prefix = name.substring(0, pos);
+                suffix = name.substring(pos + 1);
             } else {
-                if (beanFactory.isSingleton(beanName)) {
-                    options.setInstances(1);
-                }
-                vertx.deployVerticle(beanName, options, handler);
+                suffix = name;
             }
+            if (prefix == null || prefix.isEmpty() || prefix.equals(factoryPrefix)) {
+                //当前工厂
+                if (!beanFactory.containsBean(suffix)) {
+                    future.completeExceptionally(new IllegalArgumentException("No such bean: " + suffix));
+                } else if (!beanFactory.isTypeMatch(suffix, Verticle.class)) {
+                    future.completeExceptionally(new IllegalArgumentException("Bean \"" + suffix + "\" is not of type Verticle"));
+                } else {
+                    if (options.getInstances() > 1 && beanFactory.isSingleton(suffix)) {
+                        logger.warn("Bean \"" + suffix + "\" is singleton. the instance is changed to 1.");
+                        options.setInstances(1);
+                    }
+                    //需要加上前缀才能部署
+                    vertx.deployVerticle(factoryPrefix + ":" + suffix, options, handler);
+                }
+            } else {
+                //其它工厂
+                vertx.deployVerticle(name, options, handler);
+            }
+
         }
         return future;
     }
