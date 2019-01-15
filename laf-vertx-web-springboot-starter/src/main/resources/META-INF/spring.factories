@@ -1,3 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.jd.laf.web.vertx.spring.boot.cluster.ClusterAutoConfiguration,\
+  com.jd.laf.web.vertx.spring.boot.metric.MetricAutoConfiguration,\
+  com.jd.laf.web.vertx.spring.boot.VertxAutoConfiguration,\
   com.jd.laf.web.vertx.spring.boot.VertxWebAutoConfiguration,\
   com.jd.laf.web.vertx.spring.boot.PrometheusAutoConfiguration
