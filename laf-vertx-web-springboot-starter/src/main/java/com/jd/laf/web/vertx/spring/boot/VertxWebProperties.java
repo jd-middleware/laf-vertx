@@ -1,4 +1,4 @@
-package com.jd.laf.web.springboot.starter;
+package com.jd.laf.web.vertx.spring.boot;
 
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.http.ClientAuth;

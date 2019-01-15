@@ -1,4 +1,4 @@
-package com.jd.laf.web.springboot.starter;
+package com.jd.laf.web.vertx.spring.boot;
 
 import com.jd.laf.web.vertx.Environment;
 import com.jd.laf.web.vertx.EnvironmentAware;

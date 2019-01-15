@@ -1,5 +1,6 @@
-package com.jd.laf.web.springboot.starter;
+package com.jd.laf.web.vertx.spring.boot;
 
+import com.jd.laf.web.vertx.spring.SpringEnvironment;
 import com.jd.laf.web.vertx.RouteProvider;
 import com.jd.laf.web.vertx.RoutingVerticle;
 import org.springframework.beans.factory.ObjectProvider;
