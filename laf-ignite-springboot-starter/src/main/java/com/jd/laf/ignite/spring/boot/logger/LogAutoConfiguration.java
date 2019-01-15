@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring.logger;
+package com.jd.laf.ignite.spring.boot.logger;
 
 import org.apache.ignite.IgniteLogger;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

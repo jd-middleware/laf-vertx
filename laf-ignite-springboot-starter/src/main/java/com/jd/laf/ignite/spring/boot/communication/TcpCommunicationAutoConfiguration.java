@@ -1,6 +1,6 @@
-package com.jd.laf.ignite.spring.communication;
+package com.jd.laf.ignite.spring.boot.communication;
 
-import com.jd.laf.ignite.spring.SpiAdapterProperties;
+import com.jd.laf.ignite.spring.boot.SpiAdapterProperties;
 import org.apache.ignite.spi.communication.CommunicationSpi;
 import org.apache.ignite.spi.communication.tcp.TcpCommunicationSpi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

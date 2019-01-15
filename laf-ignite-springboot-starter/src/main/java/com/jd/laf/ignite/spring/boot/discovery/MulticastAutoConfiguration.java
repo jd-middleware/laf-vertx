@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring.discovery;
+package com.jd.laf.ignite.spring.boot.discovery;
 
 import org.apache.ignite.internal.managers.discovery.IgniteDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;

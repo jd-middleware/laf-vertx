@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring.communication;
+package com.jd.laf.ignite.spring.boot.communication;
 
 import org.apache.ignite.spi.communication.CommunicationSpi;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

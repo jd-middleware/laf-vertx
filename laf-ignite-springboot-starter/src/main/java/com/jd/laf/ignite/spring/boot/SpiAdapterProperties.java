@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring;
+package com.jd.laf.ignite.spring.boot;
 
 import org.apache.ignite.spi.IgniteSpiAdapter;
 

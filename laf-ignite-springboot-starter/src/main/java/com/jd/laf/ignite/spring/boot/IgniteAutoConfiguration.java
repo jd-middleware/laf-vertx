@@ -1,8 +1,9 @@
-package com.jd.laf.ignite.spring;
+package com.jd.laf.ignite.spring.boot;
 
-import com.jd.laf.ignite.spring.communication.CommunicationAutoConfiguration;
-import com.jd.laf.ignite.spring.discovery.DiscoveryAutoConfiguration;
-import com.jd.laf.ignite.spring.logger.LogAutoConfiguration;
+import com.jd.laf.ignite.spring.IgniteConfigurer;
+import com.jd.laf.ignite.spring.boot.communication.CommunicationAutoConfiguration;
+import com.jd.laf.ignite.spring.boot.discovery.DiscoveryAutoConfiguration;
+import com.jd.laf.ignite.spring.boot.logger.LogAutoConfiguration;
 import org.apache.ignite.IgniteLogger;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.internal.managers.discovery.IgniteDiscoverySpi;

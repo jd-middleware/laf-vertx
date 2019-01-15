@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring.logger;
+package com.jd.laf.ignite.spring.boot.logger;
 
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.logger.log4j2.Log4J2Logger;

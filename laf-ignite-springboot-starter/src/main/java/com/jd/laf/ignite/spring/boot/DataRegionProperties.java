@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring;
+package com.jd.laf.ignite.spring.boot;
 
 import org.apache.ignite.configuration.DataPageEvictionMode;
 import org.apache.ignite.configuration.DataRegionConfiguration;

@@ -1,4 +1,4 @@
-package com.jd.laf.ignite.spring.logger;
+package com.jd.laf.ignite.spring.boot.logger;
 
 import org.apache.ignite.logger.slf4j.Slf4jLogger;
 import org.slf4j.Logger;

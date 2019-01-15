@@ -1,5 +1,7 @@
-package com.jd.laf.ignite.spring;
+package com.jd.laf.ignite.spring.boot;
 
+import com.jd.laf.ignite.spring.BinaryMarshaller;
+import com.jd.laf.ignite.spring.NetUtils;
 import org.apache.ignite.binary.BinaryIdMapper;
 import org.apache.ignite.binary.BinaryNameMapper;
 import org.apache.ignite.binary.BinarySerializer;
@@ -13,6 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.*;
 
+import static com.jd.laf.ignite.spring.Plugin.MARSHALLER;
 import static org.apache.ignite.configuration.IgniteConfiguration.*;
 
 @ConfigurationProperties(prefix = "ignite")
@@ -569,7 +572,7 @@ public class IgniteProperties {
         //从插件加载
         BinaryTypeConfiguration binaryTypeCfg;
         String name;
-        for (BinaryMarshaller marshaller : BinaryMarshaller.Plugin.getPlugins()) {
+        for (BinaryMarshaller marshaller : MARSHALLER.extensions()) {
             name = marshaller.name();
             if (name == null || name.isEmpty()) {
                 if (binaryCfg.getSerializer() == null) {

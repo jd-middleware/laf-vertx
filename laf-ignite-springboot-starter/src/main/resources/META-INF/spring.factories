@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-com.jd.laf.ignite.spring.IgniteAutoConfiguration
+com.jd.laf.ignite.spring.boot.IgniteAutoConfiguration

@@ -1,6 +1,6 @@
-package com.jd.laf.ignite.spring.discovery;
+package com.jd.laf.ignite.spring.boot.discovery;
 
-import com.jd.laf.ignite.spring.SpiAdapterProperties;
+import com.jd.laf.ignite.spring.boot.SpiAdapterProperties;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 
 import static org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi.*;
