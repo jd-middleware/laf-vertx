@@ -149,8 +149,6 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             return CompletableFuture.completedFuture(vertx);
         }
 
-        final DeploymentOptions options = meta.getDeploymentOptions() == null ? new DeploymentOptions() : meta.getDeploymentOptions();
-
         final CompletableFuture<Vertx> future = new CompletableFuture<>();
         final Handler<AsyncResult<String>> handler = r -> {
             if (r.succeeded()) {
@@ -161,14 +159,16 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                 future.completeExceptionally(r.cause());
             }
         };
+
+        DeploymentOptions deployment = meta.getDeploymentOptions() == null ? new DeploymentOptions() : meta.getDeploymentOptions();
         //根据提供者部署
         if (supplier != null) {
-            vertx.deployVerticle(supplier, options, handler);
+            vertx.deployVerticle(supplier, deployment, handler);
         } else {
             //根据名称部署，"js:app.js"，Vertx可以有多个工厂，前缀标识工厂
             String prefix = null, suffix;
             int pos = name.indexOf(':');
-            if (pos > 0) {
+            if (pos >= 0) {
                 prefix = name.substring(0, pos);
                 suffix = name.substring(pos + 1);
             } else {
@@ -177,20 +177,20 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             if (prefix == null || prefix.isEmpty() || prefix.equals(factoryPrefix)) {
                 //当前工厂
                 if (!beanFactory.containsBean(suffix)) {
-                    future.completeExceptionally(new IllegalArgumentException("No such bean: " + suffix));
+                    future.completeExceptionally(new IllegalArgumentException("No such bean " + suffix));
                 } else if (!beanFactory.isTypeMatch(suffix, Verticle.class)) {
-                    future.completeExceptionally(new IllegalArgumentException("Bean \"" + suffix + "\" is not of type Verticle"));
+                    future.completeExceptionally(new IllegalArgumentException("Bean " + suffix + " is not of type Verticle"));
                 } else {
-                    if (options.getInstances() > 1 && beanFactory.isSingleton(suffix)) {
-                        logger.warn("Bean \"" + suffix + "\" is singleton. the instance is changed to 1.");
-                        options.setInstances(1);
+                    if (deployment.getInstances() > 1 && beanFactory.isSingleton(suffix)) {
+                        logger.warn("Bean " + suffix + " is singleton. the instance is changed to 1.");
+                        deployment.setInstances(1);
                     }
                     //需要加上前缀才能部署
-                    vertx.deployVerticle(factoryPrefix + ":" + suffix, options, handler);
+                    vertx.deployVerticle(factoryPrefix + ":" + suffix, deployment, handler);
                 }
             } else {
                 //其它工厂
-                vertx.deployVerticle(name, options, handler);
+                vertx.deployVerticle(name, deployment, handler);
             }
 
         }
@@ -199,19 +199,19 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
 
 
     @Override
-    public synchronized void stop(final Runnable callback) {
+    public synchronized void stop(final Runnable runnable) {
         Vertx vertx = this.vertx;
         if (vertx != null) {
             logger.info("stopping Vert.x instance");
-            vertx.close(ar -> {
-                if (ar.succeeded()) {
+            vertx.close(r -> {
+                if (r.succeeded()) {
                     logger.info("success stopping Vert.x instance");
                 } else {
-                    logger.error("failed stopping Vert.x instance", ar.cause());
+                    logger.error("failed stopping Vert.x instance", r.cause());
                 }
                 this.vertx = null;
-                if (callback != null) {
-                    callback.run();
+                if (runnable != null) {
+                    runnable.run();
                 }
             });
         }
