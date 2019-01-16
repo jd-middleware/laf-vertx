@@ -9,29 +9,29 @@ import java.util.function.Supplier;
 /**
  * Verticle元数据信息
  */
-public class VerticleMeta<T extends Verticle> {
+public class VerticleMeta {
 
-    protected Supplier<T> supplier;
+    protected Supplier<Verticle> supplier;
     protected DeploymentOptions deploymentOptions;
     protected String name;
 
     public VerticleMeta() {
     }
 
-    public VerticleMeta(T verticle) {
+    public VerticleMeta(Verticle verticle) {
         this(verticle, null);
     }
 
-    public VerticleMeta(T verticle, DeploymentOptions deploymentOptions) {
+    public VerticleMeta(Verticle verticle, DeploymentOptions deploymentOptions) {
         this.supplier = verticle == null ? null : () -> verticle;
         this.deploymentOptions = deploymentOptions;
     }
 
-    public VerticleMeta(Supplier<T> supplier) {
+    public VerticleMeta(Supplier<Verticle> supplier) {
         this.supplier = supplier;
     }
 
-    public VerticleMeta(Supplier<T> supplier, DeploymentOptions deploymentOptions) {
+    public VerticleMeta(Supplier<Verticle> supplier, DeploymentOptions deploymentOptions) {
         this.supplier = supplier;
         this.deploymentOptions = deploymentOptions;
     }
@@ -45,11 +45,11 @@ public class VerticleMeta<T extends Verticle> {
         this.deploymentOptions = deploymentOptions;
     }
 
-    public Supplier<T> getSupplier() {
+    public Supplier<Verticle> getSupplier() {
         return supplier;
     }
 
-    public void setSupplier(Supplier<T> supplier) {
+    public void setSupplier(Supplier<Verticle> supplier) {
         this.supplier = supplier;
     }
 

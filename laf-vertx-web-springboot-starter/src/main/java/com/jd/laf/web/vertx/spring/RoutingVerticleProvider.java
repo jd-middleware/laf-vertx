@@ -1,7 +1,7 @@
 package com.jd.laf.web.vertx.spring;
 
-import com.jd.laf.web.vertx.RoutingVerticle;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Verticle;
 
 import java.util.function.Supplier;
 
@@ -10,15 +10,15 @@ import java.util.function.Supplier;
  */
 public class RoutingVerticleProvider implements VerticleProvider {
 
-    protected Supplier<RoutingVerticle> supplier;
+    protected Supplier<Verticle> supplier;
 
     protected DeploymentOptions deploymentOptions;
 
-    public RoutingVerticleProvider(Supplier<RoutingVerticle> supplier) {
+    public RoutingVerticleProvider(Supplier<Verticle> supplier) {
         this.supplier = supplier;
     }
 
-    public RoutingVerticleProvider(Supplier<RoutingVerticle> supplier, DeploymentOptions deploymentOptions) {
+    public RoutingVerticleProvider(Supplier<Verticle> supplier, DeploymentOptions deploymentOptions) {
         this.supplier = supplier;
         this.deploymentOptions = deploymentOptions;
     }

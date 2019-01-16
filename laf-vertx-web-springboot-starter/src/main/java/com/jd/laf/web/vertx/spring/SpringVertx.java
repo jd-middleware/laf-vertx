@@ -10,7 +10,6 @@ import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.core.Ordered;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -81,7 +80,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
                     }
 
                     @Override
-                    public Verticle createVerticle(final String verticleName, final ClassLoader classLoader) throws Exception {
+                    public Verticle createVerticle(final String verticleName, final ClassLoader classLoader) {
                         String beanName = verticleName.startsWith(factoryPrefix + ":") ?
                                 verticleName.substring(factoryPrefix.length() + 1) :
                                 verticleName;
@@ -94,7 +93,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
 
         //按照顺序部署执行器
         if (providers != null && !providers.isEmpty()) {
-            Collections.sort(providers, Comparator.comparingInt(Ordered::getOrder));
+            providers.sort(Comparator.comparingInt(Ordered::getOrder));
             for (VerticleProvider provider : providers) {
                 readyFuture.thenCompose(vertx -> deployVerticle(vertx, provider.getVerticleMeta()));
             }
@@ -118,7 +117,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     /**
      * 启动vertx
      *
-     * @param startedFuture
+     * @param startedFuture 启动Future
      */
     protected void startVertx(final CompletableFuture<Vertx> startedFuture) {
         if (options.isClustered()) {
@@ -138,8 +137,8 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
     /**
      * 部署单个执行器
      *
-     * @param vertx
-     * @param meta
+     * @param vertx vertx对象
+     * @param meta  Verticle元数据
      * @return
      */
     protected CompletableFuture<Vertx> deployVerticle(final Vertx vertx, final VerticleMeta meta) {
@@ -167,7 +166,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware {
             vertx.deployVerticle(supplier, options, handler);
         } else {
             //根据名称部署，"js:app.js"，Vertx可以有多个工厂，前缀标识工厂
-            String prefix = null, suffix = null;
+            String prefix = null, suffix;
             int pos = name.indexOf(':');
             if (pos > 0) {
                 prefix = name.substring(0, pos);
