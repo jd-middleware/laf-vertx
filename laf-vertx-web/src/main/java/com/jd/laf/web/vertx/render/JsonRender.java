@@ -1,10 +1,10 @@
 package com.jd.laf.web.vertx.render;
 
-import com.jd.laf.binding.marshaller.JsonProviders;
 import com.jd.laf.web.vertx.Command;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.RoutingContext;
 
+import static com.jd.laf.binding.Plugin.JSON;
 import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
 
 /**
@@ -20,7 +20,7 @@ public class JsonRender implements Render {
         response.putHeader(CONTENT_TYPE, APPLICATION_JSON);
         if (result != null) {
             //数据不为空
-            response.end(JsonProviders.getPlugin().getMarshaller().marshall(result));
+            response.end(JSON.get().getMarshaller().marshall(result));
         } else {
             response.end();
         }

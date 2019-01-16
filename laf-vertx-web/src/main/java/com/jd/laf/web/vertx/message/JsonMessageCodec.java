@@ -1,11 +1,12 @@
 package com.jd.laf.web.vertx.message;
 
-import com.jd.laf.binding.marshaller.JsonProviders;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.EncodeException;
 
 import java.nio.charset.StandardCharsets;
+
+import static com.jd.laf.binding.Plugin.JSON;
 
 /**
  * JSON编解码
@@ -26,7 +27,7 @@ public class JsonMessageCodec<T> implements CustomCodec<T> {
             return;
         }
         try {
-            String value = JsonProviders.getPlugin().getMarshaller().marshall(message);
+            String value = JSON.get().getMarshaller().marshall(message);
             byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
             int length = bytes.length;
             buffer.appendInt(length);
@@ -43,7 +44,7 @@ public class JsonMessageCodec<T> implements CustomCodec<T> {
 
         String value = buffer.getString(start, start + length);
         try {
-            return JsonProviders.getPlugin().getUnmarshaller().unmarshall(value, type, null);
+            return JSON.get().getUnmarshaller().unmarshall(value, type, null);
         } catch (Exception e) {
             throw new DecodeException("Failed to decode: " + e.getMessage(), e);
         }

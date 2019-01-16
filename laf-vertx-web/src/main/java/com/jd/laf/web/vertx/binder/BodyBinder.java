@@ -1,8 +1,7 @@
 package com.jd.laf.web.vertx.binder;
 
+import com.jd.laf.binding.Plugin;
 import com.jd.laf.binding.binder.Binder;
-import com.jd.laf.binding.marshaller.JsonProviders;
-import com.jd.laf.binding.marshaller.XmlProviders;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.annotation.Body;
 import com.jd.laf.web.vertx.annotation.Body.BodyType;
@@ -48,10 +47,10 @@ public class BodyBinder implements Binder {
         try {
             switch (type) {
                 case JSON:
-                    return context.bind(JsonProviders.getPlugin().getUnmarshaller().unmarshall(
+                    return context.bind(Plugin.JSON.get().getUnmarshaller().unmarshall(
                             ctx.getBodyAsString(), field.getType(), null));
                 case XML:
-                    return context.bind(XmlProviders.getPlugin().getUnmarshaller().unmarshall(
+                    return context.bind(Plugin.XML.get().getUnmarshaller().unmarshall(
                             ctx.getBodyAsString(), field.getType(), null));
                 case PROPERTIES:
                     Properties properties = new Properties();
