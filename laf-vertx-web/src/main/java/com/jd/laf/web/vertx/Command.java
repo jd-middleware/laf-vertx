@@ -1,11 +1,12 @@
 package com.jd.laf.web.vertx;
 
+import com.jd.laf.extension.Prototype;
 import com.jd.laf.extension.Type;
 
 /**
- * 命令接口
+ * 命令接口,非单例
  */
-public interface Command<T> extends Type<String>, Cloneable {
+public interface Command<T> extends Type<String>, Cloneable, Prototype {
 
     /**
      * 结果

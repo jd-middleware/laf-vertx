@@ -1,6 +1,7 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
+import com.jd.laf.extension.ExtensionMeta;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
@@ -351,6 +352,7 @@ public class RoutingVerticle extends AbstractVerticle {
      */
     protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) {
         RoutingHandler handler;
+        ExtensionMeta<Command, String> meta;
         Command command;
         //上下文处理
         for (String name : config.getHandlers()) {
@@ -363,12 +365,12 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
                 route.handler(handler);
             } else {
-                //命令
-                command = COMMAND.get(name);
-                if (command != null) {
+                //命令插件元数据
+                meta = COMMAND.meta(name);
+                if (meta != null) {
                     Pool<Command> pool = null;
                     //判断命令是否需要池化
-                    if (command instanceof Poolable) {
+                    if (Poolable.class.isAssignableFrom(meta.getExtension().getClazz())) {
                         //对象池
                         int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
                         int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
@@ -379,10 +381,9 @@ public class RoutingVerticle extends AbstractVerticle {
                                 int min = Math.min(initializeSize, capacity);
                                 //初始化对象池大小
                                 for (int i = 0; i < min; i++) {
-                                    try {
-                                        pool.release(command.getClass().newInstance());
-                                    } catch (InstantiationException e) {
-                                    } catch (IllegalAccessException e) {
+                                    command = meta.getTarget();
+                                    if (command != null) {
+                                        pool.release(command);
                                     }
                                 }
                             }
@@ -390,7 +391,7 @@ public class RoutingVerticle extends AbstractVerticle {
                     } else {
                         pool = null;
                     }
-                    route.handler(new CommandHandler(command, pool));
+                    route.handler(new CommandHandler(meta, pool));
                 } else {
                     logger.warn(String.format("handler %s is not found. ignore.", name));
                 }
@@ -439,12 +440,12 @@ public class RoutingVerticle extends AbstractVerticle {
      */
     protected static class CommandHandler implements Handler<RoutingContext> {
         //命令
-        protected Command command;
+        protected ExtensionMeta<Command, String> meta;
         //对象池
         protected Pool<Command> pool;
 
-        public CommandHandler(Command command, Pool<Command> pool) {
-            this.command = command;
+        public CommandHandler(ExtensionMeta<Command, String> meta, Pool<Command> pool) {
+            this.meta = meta;
             this.pool = pool;
         }
 
@@ -456,7 +457,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 clone = pool == null ? null : pool.get();
                 if (clone == null) {
                     //构造新对象
-                    clone = command.getClass().newInstance();
+                    clone = meta.getTarget();
                 }
                 //使用环境和当前上下文进行绑定
                 //理论上只有新创建的对象才需要使用环境和上下文同时绑定，对象池中的对象已经使用环境绑定过了
