@@ -40,7 +40,7 @@
         <laf-binding.version>1.0.4</laf-binding.version>
         <laf-extension.version>1.0.10</laf-extension.version>
         <sso-uim-spring.version>1.0.4</sso-uim-spring.version>
-        <beetl.version>2.9.6</beetl.version>
+        <beetl.version>2.9.8</beetl.version>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <maven-jar-plugin.version>3.1.0</maven-jar-plugin.version>
