@@ -113,7 +113,7 @@ public class SpringVertx implements SmartLifecycle, BeanFactoryAware, Vertx {
         if (providers != null && !providers.isEmpty()) {
             providers.sort(Comparator.comparingInt(Ordered::getOrder));
             for (VerticleProvider provider : providers) {
-                readyFuture.thenCompose(vertx -> deployVerticle(vertx, provider.getVerticleMeta()));
+                readyFuture = readyFuture.thenCompose(vertx -> deployVerticle(vertx, provider.getVerticleMeta()));
             }
         } else {
             logger.info("there is not any verticle to be deployed after startup.");
