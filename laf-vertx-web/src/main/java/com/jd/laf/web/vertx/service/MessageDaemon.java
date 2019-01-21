@@ -57,8 +57,8 @@ public abstract class MessageDaemon<T> implements Daemon {
      * @param context
      */
     protected void doStart(final Environment context) {
-        queueSize = context.getPositive(queueSizeKey, 1000);
-        pollTimeout = context.getPositive(pollTimeoutKey, 5000);
+        queueSize = context.getPositive(queueSizeKey, queueSize);
+        pollTimeout = context.getPositive(pollTimeoutKey, pollTimeout);
         events = new LinkedBlockingQueue<>(queueSize);
         thread = new Thread(new TaskConsumer(events, pollTimeout), threadName);
         thread.setDaemon(true);
