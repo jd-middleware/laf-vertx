@@ -21,10 +21,13 @@ public abstract class MessageDaemon<T> implements Daemon {
     //从队列获取数据超时时间
     protected long pollTimeout = 5000;
 
+    protected String queueSizeKey;
+    protected String pollTimeoutKey;
+    protected String threadName = this.getClass().getSimpleName();
+    protected String daemonName = this.getClass().getSimpleName();
+
     protected BlockingQueue<T> events;
-
     protected Thread thread;
-
     protected AtomicBoolean started = new AtomicBoolean(false);
 
     public MessageDaemon() {
@@ -35,7 +38,7 @@ public abstract class MessageDaemon<T> implements Daemon {
     public synchronized void start(final Environment context) {
         if (started.compareAndSet(false, true)) {
             doStart(context);
-            logger.info(this.getClass().getSimpleName() + " is started!");
+            logger.info(daemonName + " is started!");
         }
     }
 
@@ -43,7 +46,7 @@ public abstract class MessageDaemon<T> implements Daemon {
     public synchronized void stop() {
         if (started.compareAndSet(true, false)) {
             doStop();
-            logger.info(this.getClass().getSimpleName() + " is stopped.");
+            logger.info(daemonName + " is stopped.");
         }
     }
 
@@ -53,8 +56,10 @@ public abstract class MessageDaemon<T> implements Daemon {
      * @param context
      */
     protected void doStart(final Environment context) {
+        queueSize = context.getPositive(queueSizeKey, 1000);
+        pollTimeout = context.getPositive(pollTimeoutKey, 5000);
         events = new LinkedBlockingQueue<>(queueSize);
-        thread = new Thread(new TaskConsumer(events, pollTimeout), this.getClass().getSimpleName());
+        thread = new Thread(new TaskConsumer(events, pollTimeout), threadName);
         thread.setDaemon(true);
         thread.start();
     }
