@@ -45,7 +45,13 @@ public class MessageRegistrar implements Registrar {
             route.getHandlers().forEach(name -> {
                 MessageHandler handler = MESSAGE.get(name);
                 if (handler != null && route.getPath() != null && !route.getPath().isEmpty()) {
-                    consumers.add(new Consumer(route.getPath(), name, eventBus.consumer(route.getPath(), handler)));
+                    //创建消费者
+                    MessageConsumer consumer = eventBus.consumer(route.getPath(), handler);
+                    //设置消费缓冲区大小
+                    if (route.getBufferSize() != null && route.getBufferSize() > 0) {
+                        consumer.setMaxBufferedMessages(route.getBufferSize());
+                    }
+                    consumers.add(new Consumer(route.getPath(), name, consumer));
                 }
             });
         });

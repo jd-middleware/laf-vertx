@@ -43,6 +43,9 @@ public class RouteConfig {
     //顺序
     @XmlAttribute
     private Integer order;
+    //缓冲区大小
+    @XmlAttribute
+    private Integer bufferSize;
     //支持的消费内容
     private Set<String> consumes;
     //支持的生产内容
@@ -126,6 +129,14 @@ public class RouteConfig {
 
     public void setOrder(Integer order) {
         this.order = order;
+    }
+
+    public Integer getBufferSize() {
+        return bufferSize;
+    }
+
+    public void setBufferSize(Integer bufferSize) {
+        this.bufferSize = bufferSize;
     }
 
     @XmlAttribute
