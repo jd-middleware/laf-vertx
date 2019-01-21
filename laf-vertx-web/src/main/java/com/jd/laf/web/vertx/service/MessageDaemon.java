@@ -20,6 +20,8 @@ public abstract class MessageDaemon<T> implements Daemon {
     protected int queueSize = 1000;
     //从队列获取数据超时时间
     protected long pollTimeout = 5000;
+    //检查周期
+    protected long checkInterval;
 
     protected String queueSizeKey = "message.queue.size";
     protected String pollTimeoutKey = "message.poll.timeout";
@@ -38,7 +40,17 @@ public abstract class MessageDaemon<T> implements Daemon {
     @Override
     public synchronized void start(final Environment context) throws Exception {
         if (started.compareAndSet(false, true)) {
+            queueSize = context.getPositive(queueSizeKey, queueSize);
+            pollTimeout = context.getPositive(pollTimeoutKey, pollTimeout);
+            events = new LinkedBlockingQueue<>(queueSize);
             doStart(context);
+            thread = new Thread(new TaskConsumer(events, pollTimeout, checkInterval), threadName);
+            thread.setDaemon(true);
+            thread.start();
+            if (daemonKey != null && !daemonKey.isEmpty()) {
+                context.put(daemonKey, this);
+            }
+
             logger.info(daemonName + " is started!");
         }
     }
@@ -46,6 +58,17 @@ public abstract class MessageDaemon<T> implements Daemon {
     @Override
     public synchronized void stop() {
         if (started.compareAndSet(true, false)) {
+            if (events != null) {
+                //通知一下，触发阻塞的线程
+                T message = stopMessage();
+                if (message != null) {
+                    events.add(message);
+                }
+            }
+            if (thread != null) {
+                thread.interrupt();
+                thread = null;
+            }
             doStop();
             logger.info(daemonName + " is stopped.");
         }
@@ -57,32 +80,12 @@ public abstract class MessageDaemon<T> implements Daemon {
      * @param context
      */
     protected void doStart(final Environment context) throws Exception {
-        queueSize = context.getPositive(queueSizeKey, queueSize);
-        pollTimeout = context.getPositive(pollTimeoutKey, pollTimeout);
-        events = new LinkedBlockingQueue<>(queueSize);
-        thread = new Thread(new TaskConsumer(events, pollTimeout), threadName);
-        thread.setDaemon(true);
-        thread.start();
-        if (daemonKey != null && !daemonKey.isEmpty()) {
-            context.put(daemonKey, this);
-        }
     }
 
     /**
      * 停止
      */
     protected void doStop() {
-        if (events != null) {
-            //通知一下，触发阻塞的线程
-            T message = stopMessage();
-            if (message != null) {
-                events.add(message);
-            }
-        }
-        if (thread != null) {
-            thread.interrupt();
-            thread = null;
-        }
     }
 
     /**
@@ -145,30 +148,53 @@ public abstract class MessageDaemon<T> implements Daemon {
     }
 
     /**
+     * 定期检查
+     */
+    protected void onCheck() {
+
+    }
+
+    /**
      * 队列消费者
      */
     protected class TaskConsumer implements Runnable {
 
         protected BlockingQueue<T> events;
         protected long pollTimeout;
+        protected long checkInterval;
 
-        public TaskConsumer(BlockingQueue<T> events, long pollTimeout) {
+        public TaskConsumer(BlockingQueue<T> events, long pollTimeout, long checkInterval) {
             this.events = events;
             this.pollTimeout = pollTimeout;
+            this.checkInterval = checkInterval;
         }
 
         @Override
         public void run() {
+            long last = System.currentTimeMillis();
+            long now;
+            T message;
             while (isStarted()) {
                 try {
                     //拿到更新的消息
-                    final T message = events.poll(pollTimeout, TimeUnit.MICROSECONDS);
+                    message = events.poll(pollTimeout, TimeUnit.MICROSECONDS);
                     if (!isStarted()) {
                         return;
                     } else if (message != null) {
                         onMessage(message);
                     } else {
                         onEmpty();
+                    }
+                    //超过了全量检查周期
+                    if (checkInterval > 0) {
+                        now = System.currentTimeMillis();
+                        if (now - last >= checkInterval) {
+                            last = now;
+                            //全量检查
+                            onCheck();
+                            //再次设置一下时间，避免检查时间过长
+                            last = System.currentTimeMillis();
+                        }
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
