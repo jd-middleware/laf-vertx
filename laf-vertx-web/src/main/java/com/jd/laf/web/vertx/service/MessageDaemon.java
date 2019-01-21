@@ -32,7 +32,7 @@ public abstract class MessageDaemon<T> implements Daemon {
     }
 
     @Override
-    public synchronized void start(final Environment context) throws Exception {
+    public synchronized void start(final Environment context) {
         if (started.compareAndSet(false, true)) {
             doStart(context);
             logger.info(this.getClass().getSimpleName() + " is started!");
