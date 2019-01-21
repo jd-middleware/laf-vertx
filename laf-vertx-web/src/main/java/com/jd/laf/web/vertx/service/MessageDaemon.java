@@ -36,7 +36,7 @@ public abstract class MessageDaemon<T> implements Daemon {
     }
 
     @Override
-    public synchronized void start(final Environment context) {
+    public synchronized void start(final Environment context) throws Exception {
         if (started.compareAndSet(false, true)) {
             doStart(context);
             logger.info(daemonName + " is started!");
@@ -56,7 +56,7 @@ public abstract class MessageDaemon<T> implements Daemon {
      *
      * @param context
      */
-    protected void doStart(final Environment context) {
+    protected void doStart(final Environment context) throws Exception {
         queueSize = context.getPositive(queueSizeKey, queueSize);
         pollTimeout = context.getPositive(pollTimeoutKey, pollTimeout);
         events = new LinkedBlockingQueue<>(queueSize);
