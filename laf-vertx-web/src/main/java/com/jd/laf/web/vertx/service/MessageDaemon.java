@@ -21,8 +21,9 @@ public abstract class MessageDaemon<T> implements Daemon {
     //从队列获取数据超时时间
     protected long pollTimeout = 5000;
 
-    protected String queueSizeKey;
-    protected String pollTimeoutKey;
+    protected String queueSizeKey = "message.queue.size";
+    protected String pollTimeoutKey = "message.poll.timeout";
+    protected String daemonKey;
     protected String threadName = this.getClass().getSimpleName();
     protected String daemonName = this.getClass().getSimpleName();
 
@@ -62,6 +63,9 @@ public abstract class MessageDaemon<T> implements Daemon {
         thread = new Thread(new TaskConsumer(events, pollTimeout), threadName);
         thread.setDaemon(true);
         thread.start();
+        if (daemonKey != null && !daemonKey.isEmpty()) {
+            context.put(daemonKey, this);
+        }
     }
 
     /**
