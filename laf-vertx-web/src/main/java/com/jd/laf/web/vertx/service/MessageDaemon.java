@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class MessageDaemon<T> implements Daemon {
 
-    protected final Logger logger;
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     //队列大小
     protected int queueSize = 1000;
@@ -30,10 +30,6 @@ public abstract class MessageDaemon<T> implements Daemon {
     protected BlockingQueue<T> events;
     protected Thread thread;
     protected AtomicBoolean started = new AtomicBoolean(false);
-
-    public MessageDaemon() {
-        logger = LoggerFactory.getLogger(this.getClass());
-    }
 
     @Override
     public synchronized void start(final Environment context) {
@@ -98,6 +94,7 @@ public abstract class MessageDaemon<T> implements Daemon {
             //如果没有添加成功则丢弃
             events.add(message);
         } catch (IllegalStateException e) {
+            logger.error(e);
         }
     }
 
