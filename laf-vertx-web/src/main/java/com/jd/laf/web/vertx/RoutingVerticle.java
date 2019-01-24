@@ -351,52 +351,69 @@ public class RoutingVerticle extends AbstractVerticle {
      * @param environment 环境
      */
     protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) {
-        RoutingHandler handler;
+        Handler<RoutingContext> handler;
         ExtensionMeta<Command, String> meta;
         Command command;
         //上下文处理
         for (String name : config.getHandlers()) {
             handler = ROUTING.get(name);
+            if (handler == null) {
+                //命令插件元数据
+                handler = buildCommand(COMMAND.meta(name), environment);
+            }
             if (handler != null) {
                 if (handler instanceof RouteAware) {
                     //感知路由配置，复制一份对象，确保环境初始化的设置
                     handler = ((RouteAware) handler).clone();
                     ((RouteAware) handler).setup(config);
                 }
-                route.handler(handler);
-            } else {
-                //命令插件元数据
-                meta = COMMAND.meta(name);
-                if (meta != null) {
-                    Pool<Command> pool = null;
-                    //判断命令是否需要池化
-                    if (Poolable.class.isAssignableFrom(meta.getExtension().getClazz())) {
-                        //对象池
-                        int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
-                        int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
-                        if (capacity > 0) {
-                            //构造对象池
-                            pool = POOL.get().create(capacity);
-                            if (initializeSize > 0) {
-                                int min = Math.min(initializeSize, capacity);
-                                //初始化对象池大小
-                                for (int i = 0; i < min; i++) {
-                                    command = meta.getTarget();
-                                    if (command != null) {
-                                        pool.release(command);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        pool = null;
-                    }
-                    route.handler(new CommandHandler(meta, pool));
+                if (config.isBlocking()) {
+                    route.blockingHandler(handler);
                 } else {
-                    logger.warn(String.format("handler %s is not found. ignore.", name));
+                    route.handler(handler);
                 }
+            } else {
+                logger.warn(String.format("handler %s is not found. ignore.", name));
             }
         }
+    }
+
+    /**
+     * 创建命令
+     *
+     * @param meta
+     * @param environment
+     * @return
+     */
+    protected Handler<RoutingContext> buildCommand(final ExtensionMeta<Command, String> meta, final Environment environment) {
+        if (meta == null) {
+            return null;
+        }
+        Command command;
+        Pool<Command> pool = null;
+        //判断命令是否需要池化
+        if (Poolable.class.isAssignableFrom(meta.getExtension().getClazz())) {
+            //对象池
+            int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
+            int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
+            if (capacity > 0) {
+                //构造对象池
+                pool = POOL.get().create(capacity);
+                if (initializeSize > 0) {
+                    int min = Math.min(initializeSize, capacity);
+                    //初始化对象池大小
+                    for (int i = 0; i < min; i++) {
+                        command = meta.getTarget();
+                        if (command != null) {
+                            pool.release(command);
+                        }
+                    }
+                }
+            }
+        } else {
+            pool = null;
+        }
+        return new CommandHandler(meta, pool);
     }
 
     /**
