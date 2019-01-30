@@ -367,7 +367,7 @@ public class RoutingVerticle extends AbstractVerticle {
                     handler = ((RouteAware) handler).clone();
                     ((RouteAware) handler).setup(config);
                 }
-                if (config.isBlocking()) {
+                if (handler instanceof Blocking) {
                     route.blockingHandler(handler);
                 } else {
                     route.handler(handler);

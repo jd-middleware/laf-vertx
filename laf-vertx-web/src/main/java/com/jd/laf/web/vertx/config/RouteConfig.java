@@ -28,9 +28,6 @@ public class RouteConfig {
     //是否是正则表达式
     @XmlAttribute
     private boolean regex;
-    //是否阻塞链
-    @XmlAttribute
-    private boolean blocking;
     //继承自
     @XmlAttribute
     private String inherit;
@@ -92,14 +89,6 @@ public class RouteConfig {
 
     public void setRegex(boolean regex) {
         this.regex = regex;
-    }
-
-    public boolean isBlocking() {
-        return blocking;
-    }
-
-    public void setBlocking(boolean blocking) {
-        this.blocking = blocking;
     }
 
     public String getInherit() {
