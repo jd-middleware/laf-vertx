@@ -124,32 +124,57 @@ public class RoutingVerticle extends AbstractVerticle {
                 }
             }
             //启动服务
-            httpServer = vertx.createHttpServer(httpOptions);
-            httpServer.requestHandler(router).listen(event -> {
-                if (event.succeeded()) {
-                    logger.info(String.format("success binding http listener %d on port %d", id, httpServer.actualPort()));
-                } else {
-                    logger.error(String.format("failed binding http listener %d on port %d", id,
-                            httpServer.actualPort()), event.cause());
-                }
-            });
+            startHttpServer();
             //注册路由变更消息监听器
-            consumer = vertx.eventBus().consumer(RouteMessage.TOPIC, (Handler<Message<RouteMessage>>) event -> {
-                RouteMessage message = event.body();
-                switch (message.getType()) {
-                    case ADD:
-                        addRoute(message.getConfig());
-                        break;
-                    case REMOVE:
-                        removeRoute(message.getConfig());
-                        break;
-                }
-            });
+            dynamicRoute();
             logger.info(String.format("success starting routing verticle %d at %s", id, deploymentID()));
         } catch (Exception e) {
             logger.error(String.format("failed starting routing verticle %d at %s", id, deploymentID()), e);
             throw e;
         }
+    }
+
+    /**
+     * 注册动态路由信息
+     */
+    protected void dynamicRoute() {
+        consumer = vertx.eventBus().consumer(RouteMessage.TOPIC, (Handler<Message<RouteMessage>>) event -> {
+            RouteMessage message = event.body();
+            switch (message.getType()) {
+                case ADD:
+                    addRoute(message.getConfig());
+                    break;
+                case REMOVE:
+                    removeRoute(message.getConfig());
+                    break;
+            }
+        });
+    }
+
+    /**
+     * 启动HTTP服务
+     */
+    protected void startHttpServer() {
+        httpServer = vertx.createHttpServer(httpOptions);
+        //配置HTTP服务处理器
+        ExceptionHandler exceptionHandler = EXCEPTION.get(config.getException());
+        ConnectionHandler connectionHandler = CONNECTION.get(config.getConnection());
+        if (exceptionHandler != null) {
+            httpServer.exceptionHandler(exceptionHandler);
+        }
+        if (connectionHandler != null) {
+            httpServer.connectionHandler(connectionHandler);
+        }
+        httpServer.requestHandler(router);
+        httpServer.listen(event -> {
+            if (event.succeeded()) {
+                logger.info(String.format("success binding http listener %d on port %d", id, httpServer.actualPort()));
+            } else {
+                logger.error(String.format("failed binding http listener %d on port %d", id,
+                        httpServer.actualPort()), event.cause());
+            }
+        });
+
     }
 
 

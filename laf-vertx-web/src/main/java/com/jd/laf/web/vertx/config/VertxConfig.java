@@ -22,8 +22,14 @@ public class VertxConfig {
     List<RouteConfig> routes = new ArrayList<>(50);
     //消息处理器
     @XmlElementWrapper
-    @XmlElement(name = "route")
-    List<RouteConfig> messages = new ArrayList<>(10);
+    @XmlElement(name = "message")
+    List<MessageConfig> messages = new ArrayList<>(10);
+    //连接处理器
+    @XmlAttribute
+    String connection;
+    //连接异常处理器
+    @XmlAttribute
+    String exception;
 
     public VertxConfig() {
     }
@@ -36,27 +42,49 @@ public class VertxConfig {
         this.routes = routes;
     }
 
-    public List<RouteConfig> getMessages() {
+    public List<MessageConfig> getMessages() {
         return messages;
     }
 
-    public void setMessages(List<RouteConfig> messages) {
+    public void setMessages(List<MessageConfig> messages) {
         this.messages = messages;
+    }
+
+    public String getConnection() {
+        return connection;
+    }
+
+    public void setConnection(String connection) {
+        this.connection = connection;
+    }
+
+    public String getException() {
+        return exception;
+    }
+
+    public void setException(String exception) {
+        this.exception = exception;
     }
 
     /**
      * 添加路由处理器配制
      *
-     * @param route 路由处理器配制
+     * @param config 路由处理器配制
      */
-    public void add(final RouteConfig route) {
-        if (route != null) {
-            switch (route.getType()) {
-                case MSG:
-                    messages.add(route);
-                default:
-                    routes.add(route);
-            }
+    public void add(final RouteConfig config) {
+        if (config != null) {
+            routes.add(config);
+        }
+    }
+
+    /**
+     * 添加路由处理器配制
+     *
+     * @param config 路由处理器配制
+     */
+    public void add(final MessageConfig config) {
+        if (config != null) {
+            messages.add(config);
         }
     }
 

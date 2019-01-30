@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<vertx>
+<vertx connection="" exception="">
     <routes>
         <route name="default" route="true" type="GET"
                consumes="application/json"
@@ -9,7 +9,6 @@
         <route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>
     </routes>
     <messages>
-        <route type="MSG"
-               path="profile_clear_event" handlers="test"/>
+        <message path="profile_clear_event" handlers="test"/>
     </messages>
 </vertx>

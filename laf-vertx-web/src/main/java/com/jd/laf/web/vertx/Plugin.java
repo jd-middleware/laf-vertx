@@ -37,6 +37,10 @@ public interface Plugin {
     ExtensionPoint<Daemon, String> DAEMON = new ExtensionPointLazy(Daemon.class);
     //编解码插件
     ExtensionPoint<CustomCodec, String> CODEC = new ExtensionPointLazy(CustomCodec.class);
+    //连接处理器插件
+    ExtensionPoint<ConnectionHandler, String> CONNECTION = new ExtensionPointLazy(ConnectionHandler.class);
+    //连接异常处理器插件
+    ExtensionPoint<ExceptionHandler, String> EXCEPTION = new ExtensionPointLazy(ExceptionHandler.class);
     //异常处理插件
     ExtensionSelector<ErrorSupplier, Class<?>, Class<?>, ErrorSupplier> THROWABLE = new ExtensionSelector<>(
             new ExtensionPointLazy(ErrorSupplier.class, (Comparator<ExtensionMeta<ErrorSupplier, Class<?>>>) (o1, o2) -> {

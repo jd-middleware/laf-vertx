@@ -14,11 +14,9 @@ import java.util.Set;
  */
 @XmlType(name = "route")
 @XmlAccessorType(XmlAccessType.NONE)
-public class RouteConfig {
+public class RouteConfig extends HandlerConfig {
     public static final String PLACE_HOLDER = "{}";
-    //路径
-    @XmlAttribute
-    private String path;
+
     //名称，可用于继承
     @XmlAttribute
     private String name;
@@ -43,28 +41,15 @@ public class RouteConfig {
     //顺序
     @XmlAttribute
     private Integer order;
-    //缓冲区大小
-    @XmlAttribute
-    private Integer bufferSize;
     //支持的消费内容
     private Set<String> consumes;
     //支持的生产内容
     private Set<String> produces;
-    //处理器
-    private List<String> handlers = new ArrayList<>(5);
     //异常处理器
     private List<String> errors = new ArrayList<>(3);
 
     public RouteConfig() {
 
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
     }
 
     public String getName() {
@@ -131,14 +116,6 @@ public class RouteConfig {
         this.order = order;
     }
 
-    public Integer getBufferSize() {
-        return bufferSize;
-    }
-
-    public void setBufferSize(Integer bufferSize) {
-        this.bufferSize = bufferSize;
-    }
-
     @XmlAttribute
     @XmlJavaTypeAdapter(SetXmlAdapter.class)
     public Set<String> getConsumes() {
@@ -161,28 +138,12 @@ public class RouteConfig {
 
     @XmlAttribute
     @XmlJavaTypeAdapter(ListXmlAdapter.class)
-    public List<String> getHandlers() {
-        return handlers;
-    }
-
-    public void setHandlers(List<String> handlers) {
-        this.handlers = handlers;
-    }
-
-    @XmlAttribute
-    @XmlJavaTypeAdapter(ListXmlAdapter.class)
     public List<String> getErrors() {
         return errors;
     }
 
     public void setErrors(List<String> errors) {
         this.errors = errors;
-    }
-
-    public void addHandler(final String handler) {
-        if (handler != null && !handler.isEmpty()) {
-            handlers.add(handler);
-        }
     }
 
     public void addError(final String error) {
@@ -194,10 +155,18 @@ public class RouteConfig {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("RouteConfig{");
-        sb.append("type=").append(type);
-        if (path != null && !path.isEmpty()) {
-            sb.append(", path='").append(path).append('\'');
-        }
+        sb.append("path='").append(path).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", route=").append(route);
+        sb.append(", regex=").append(regex);
+        sb.append(", inherit='").append(inherit).append('\'');
+        sb.append(", template='").append(template).append('\'');
+        sb.append(", type=").append(type);
+        sb.append(", timeout=").append(timeout);
+        sb.append(", order=").append(order);
+        sb.append(", consumes=").append(consumes);
+        sb.append(", produces=").append(produces);
+        sb.append(", errors=").append(errors);
         sb.append(", handlers=").append(handlers);
         sb.append('}');
         return sb.toString();
