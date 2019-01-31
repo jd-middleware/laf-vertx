@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -150,6 +151,56 @@ public class RouteConfig extends HandlerConfig {
         if (error != null && !error.isEmpty()) {
             errors.add(error);
         }
+    }
+
+    public void inherit(final RouteConfig parent) {
+        if (parent == null) {
+            return;
+        }
+        if (type == null && parent.type != null) {
+            type = parent.type;
+        }
+        if ((consumes == null || consumes.isEmpty())
+                && parent.consumes != null && !parent.consumes.isEmpty()) {
+            consumes = parent.consumes;
+        }
+        if ((produces == null || produces.isEmpty())
+                && parent.produces != null && !parent.produces.isEmpty()) {
+            produces = parent.produces;
+        }
+        //处理业务处理器
+        handlers = merge(parent.handlers, handlers);
+        //处理异常处理器，直接覆盖
+        errors = merge(parent.errors, errors);
+    }
+
+    /**
+     * 合并处理链
+     *
+     * @param parent
+     * @param child
+     * @return
+     */
+    protected List<String> merge(final List<String> parent, final List<String> child) {
+        List<String> result = child;
+        if (parent != null && !parent.isEmpty()) {
+            result = new LinkedList<>();
+            boolean flag = false;
+            for (String handler : parent) {
+                if (!PLACE_HOLDER.equals(handler)) {
+                    result.add(handler);
+                } else if (!flag) {
+                    flag = true;
+                    if (child != null) {
+                        result.addAll(child);
+                    }
+                }
+            }
+            if (!flag && child != null) {
+                result.addAll(child);
+            }
+        }
+        return result;
     }
 
     @Override

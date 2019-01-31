@@ -4,7 +4,8 @@
         <route name="default" route="true" type="GET"
                consumes="application/json"
                produces="application/json"
-               handlers="{} render"/>
+               handlers="{} render"
+               errors="error"/>
         <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
         <route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>
     </routes>

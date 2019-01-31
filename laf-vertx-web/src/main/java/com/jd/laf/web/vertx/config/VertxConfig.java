@@ -8,8 +8,6 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.jd.laf.web.vertx.config.RouteConfig.PLACE_HOLDER;
-
 /**
  * 配置
  */
@@ -154,13 +152,9 @@ public class VertxConfig {
             if (routes == null || routes.isEmpty()) {
                 return config;
             }
-            LinkedList<RouteConfig> inherits = new LinkedList<>();
-            for (RouteConfig cfg : config.getRoutes()) {
-                if (cfg.getInherit() == null || cfg.getInherit().isEmpty() || cfg.isRoute()) {
-                    continue;
-                }
-                inherits.add(cfg);
-            }
+            LinkedList<RouteConfig> inherits = config.getRoutes().stream().
+                    filter(a -> !a.isRoute() && a.getInherit() != null && !a.getInherit().isEmpty()).
+                    collect(Collectors.toCollection(LinkedList::new));
             if (inherits == null || inherits.isEmpty()) {
                 return config;
             }
@@ -168,8 +162,6 @@ public class VertxConfig {
             Map<String, RouteConfig> map = config.getRoutes().stream().filter(a -> a.getName() != null)
                     .collect(Collectors.toMap(a -> a.getName(), a -> a));
             RouteConfig parent;
-            List<String> result;
-            boolean flag;
             //当前节点遍历过的节点，防止递归
             Set<RouteConfig> graph = new HashSet<>(map.size());
             for (RouteConfig cfg : inherits) {
@@ -179,44 +171,7 @@ public class VertxConfig {
                 graph.clear();
                 graph.add(cfg);
                 while (parent != null && graph.add(parent)) {
-                    if (cfg.getType() == null && parent.getType() != null) {
-                        cfg.setType(parent.getType());
-                    }
-                    if ((cfg.getConsumes() == null || cfg.getConsumes().isEmpty())
-                            && parent.getConsumes() != null && !parent.getConsumes().isEmpty()) {
-                        cfg.setConsumes(parent.getConsumes());
-                    }
-                    if ((cfg.getProduces() == null || cfg.getProduces().isEmpty())
-                            && parent.getProduces() != null && !parent.getProduces().isEmpty()) {
-                        cfg.setProduces(parent.getProduces());
-                    }
-                    //处理业务处理器
-                    if (parent.getHandlers() != null && !parent.getHandlers().isEmpty()) {
-                        if (cfg.getHandlers() == null || cfg.getHandlers().isEmpty()) {
-                            cfg.setHandlers(parent.getHandlers());
-                        } else {
-                            result = new ArrayList<>(parent.getHandlers().size()
-                                    + (cfg.getHandlers() == null ? 0 : cfg.getHandlers().size()));
-                            flag = false;
-                            for (String b : parent.getHandlers()) {
-                                if (!PLACE_HOLDER.equals(b)) {
-                                    result.add(b);
-                                } else if (!flag) {
-                                    flag = true;
-                                    result.addAll(cfg.getHandlers());
-                                }
-                            }
-                            if (!flag) {
-                                result.addAll(cfg.getHandlers());
-                            }
-                            cfg.setHandlers(result);
-                        }
-                    }
-                    //处理异常处理器，直接覆盖
-                    if ((cfg.getErrors() == null || cfg.getErrors().isEmpty())
-                            && parent.getErrors() != null && !parent.getErrors().isEmpty()) {
-                        cfg.setErrors(parent.getHandlers());
-                    }
+                    cfg.inherit(parent);
                     parent = parent.getInherit() == null || parent.getInherit().isEmpty() ? null : map.get(parent.getInherit());
                 }
             }
