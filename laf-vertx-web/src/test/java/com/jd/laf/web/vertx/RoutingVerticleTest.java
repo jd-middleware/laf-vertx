@@ -3,10 +3,12 @@ package com.jd.laf.web.vertx;
 import com.jd.laf.web.vertx.service.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.common.template.test;
 import io.vertx.ext.web.templ.thymeleaf.ThymeleafTemplateEngine;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -60,10 +62,30 @@ public class RoutingVerticleTest {
     }
 
     @Test
-    public void testText() throws InterruptedException {
+    public void start() throws InterruptedException {
         final AtomicReference<String> result = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
-        client.get(8080, "localhost", "/hello?echo=1234567").
+        client.get(8080, "localhost", "/hello?echo=1234567")
+                .putHeader("Accept", "text/plain")
+                .send(a -> {
+                    if (a.succeeded()) {
+                        HttpResponse<Buffer> response = a.result();
+                        result.set(response.bodyAsString());
+                    } else {
+                        logger.error("failed", a.cause());
+                    }
+                    latch.countDown();
+        });
+        latch.await();
+        Assert.assertEquals(result.get(), "1234567");
+    }
+
+    @Test
+    public void testParam() throws InterruptedException {
+        final AtomicReference<String> result = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        client.get(8080, "localhost", "/param?id=11&code=12").
                 putHeader("Accept", "text/plain").send(a -> {
             if (a.succeeded()) {
                 HttpResponse<Buffer> response = a.result();
@@ -74,7 +96,54 @@ public class RoutingVerticleTest {
             latch.countDown();
         });
         latch.await();
-        Assert.assertEquals(result.get(), "1234567");
+        Assert.assertEquals(result.get(), "11_12");
+    }
+
+    @Test
+    public void testParam2() throws InterruptedException {
+        final AtomicReference<String> result = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        client.post(8080, "localhost", "/param2")
+                .putHeader("content-type", "application/json")
+                .sendJson(new User(1, "test"), a -> {
+            if (a.succeeded()) {
+                HttpResponse<Buffer> response = a.result();
+                result.set(response.bodyAsString());
+            } else {
+                logger.error("failed", a.cause());
+            }
+            latch.countDown();
+        });
+        latch.await();
+        Assert.assertEquals(result.get(), "11");
+    }
+
+    protected class User{
+        protected int id;
+        protected String code;
+
+        User() {}
+
+        public User(int id, String code) {
+            this.id = id;
+            this.code = code;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
     }
 
     @Test

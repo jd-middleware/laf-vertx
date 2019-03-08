@@ -2,10 +2,13 @@ package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
 import com.jd.laf.extension.ExtensionMeta;
+import com.jd.laf.web.vertx.binding.ParamBinding;
+import com.jd.laf.web.vertx.annotation.method.Path;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
 import com.jd.laf.web.vertx.lifecycle.Registrar;
+import com.jd.laf.web.vertx.handler.HandlerMethod;
 import com.jd.laf.web.vertx.message.RouteMessage;
 import com.jd.laf.web.vertx.pool.Pool;
 import com.jd.laf.web.vertx.pool.Poolable;
@@ -24,17 +27,23 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
+import org.apache.commons.lang3.reflect.MethodUtils;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static com.jd.laf.web.vertx.binding.ParamBinding.PARAM_BINDING_ARGS;
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_CAPACITY;
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_INITIALIZE_SIZE;
 import static com.jd.laf.web.vertx.Plugin.*;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.build;
 import static com.jd.laf.web.vertx.config.VertxConfig.Builder.inherit;
 import static com.jd.laf.web.vertx.handler.RenderHandler.render;
+import static com.jd.laf.web.vertx.handler.Handlers.getCommand;
+import static com.jd.laf.web.vertx.handler.Handlers.getPath;
+import static com.jd.laf.web.vertx.handler.Handlers.isMethodHandler;
 
 /**
  * 路由装配件
@@ -381,10 +390,11 @@ public class RoutingVerticle extends AbstractVerticle {
         Command command;
         //上下文处理
         for (String name : config.getHandlers()) {
-            handler = ROUTING.get(name);
+            String commandName = getCommand(name);
+            handler = ROUTING.get(commandName);
             if (handler == null) {
                 //命令插件元数据
-                handler = buildCommand(COMMAND.meta(name), environment);
+                handler = buildCommand(COMMAND.meta(commandName), environment, name);
             }
             if (handler != null) {
                 if (handler instanceof RouteAware) {
@@ -408,9 +418,10 @@ public class RoutingVerticle extends AbstractVerticle {
      *
      * @param meta
      * @param environment
+     * @param name 处理器
      * @return
      */
-    protected Handler<RoutingContext> buildCommand(final ExtensionMeta<Command, String> meta, final Environment environment) {
+    protected Handler<RoutingContext> buildCommand(final ExtensionMeta<Command, String> meta, final Environment environment, String name) {
         if (meta == null) {
             return null;
         }
@@ -438,7 +449,21 @@ public class RoutingVerticle extends AbstractVerticle {
         } else {
             pool = null;
         }
-        return new CommandHandler(meta, pool);
+        //方法级处理器需要传递方法信息
+        if (isMethodHandler(name)) {
+            String path = getPath(name);
+            for (Method method : MethodUtils.getMethodsWithAnnotation(meta.getExtension().getClazz(), Path.class)) {
+                if(method.getAnnotation(Path.class).value().equals(path)) {
+                    return new CommandHandler(meta, pool, new HandlerMethod(name,
+                            HandlerMethod.Type.PATH, method, path));
+                }
+            }
+            //未找到方法
+            logger.warn(String.format("未能在类 %s 下，找到@Path为 %s 的方法.", meta.getExtension().getClazz(), path));
+            return null;
+        } else {
+            return new CommandHandler(meta, pool, new HandlerMethod(name));
+        }
     }
 
     /**
@@ -485,10 +510,13 @@ public class RoutingVerticle extends AbstractVerticle {
         protected ExtensionMeta<Command, String> meta;
         //对象池
         protected Pool<Command> pool;
+        //执行方法
+        protected HandlerMethod method;
 
-        public CommandHandler(ExtensionMeta<Command, String> meta, Pool<Command> pool) {
+        public CommandHandler(ExtensionMeta<Command, String> meta, Pool<Command> pool, HandlerMethod method) {
             this.meta = meta;
             this.pool = pool;
+            this.method = method;
         }
 
         @Override
@@ -509,7 +537,19 @@ public class RoutingVerticle extends AbstractVerticle {
                 //验证
                 Validates.validate(clone);
                 //执行
-                Object obj = clone.execute();
+                Object obj;
+                if (method.getType() == HandlerMethod.Type.PATH) {
+                    //绑定方法参数上下文
+                    if (method.getMethod() != null && method.getName() != null) {
+                        context.put(PARAM_BINDING_ARGS, new Object[method.getMethod().getGenericParameterTypes().length]);
+                        ParamBinding.bind(context, clone, method.getMethod(), method.getName());
+                    }
+                    //执行方法
+                    obj = method.getMethod().invoke(clone, context.get(PARAM_BINDING_ARGS));
+                } else {
+                    obj = clone.execute();
+                }
+                //处理结果
                 Command.Result result = null;
                 if (obj != null) {
                     if (obj instanceof Command.Result) {

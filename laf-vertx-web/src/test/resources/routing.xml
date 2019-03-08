@@ -1,13 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vertx connection="" exception="">
     <routes>
-        <route name="default" route="true" type="GET"
+        <!--<route name="default" route="true" type="GET"-->
+               <!--consumes="application/json"-->
+               <!--produces="application/json"-->
+               <!--handlers="{} render"-->
+               <!--errors="error"/>-->
+        <route name="default" route="true" type="POST"
                consumes="application/json"
                produces="application/json"
                handlers="{} render"
                errors="error"/>
-        <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
-        <route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>
+        <!--<route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>-->
+        <!--<route path="/param" inherit="default" produces="text/plain" handlers="paramTest.test"/>-->
+        <route path="/param2" inherit="default" handlers="paramTest.test2"/>
+        <!--<route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>-->
     </routes>
     <messages>
         <message path="profile_clear_event" handlers="test"/>
