@@ -423,7 +423,8 @@ public class RoutingVerticle extends AbstractVerticle {
         Command command;
         Pool<Command> pool = null;
         //判断命令是否需要池化
-        if (Poolable.class.isAssignableFrom(meta.getExtension().getClazz())) {
+        Class<? extends Command> clazz = meta.getExtension().getClazz();
+        if (Poolable.class.isAssignableFrom(clazz)) {
             //对象池
             int capacity = environment.getInteger(COMMAND_POOL_CAPACITY, 500);
             int initializeSize = environment.getInteger(COMMAND_POOL_INITIALIZE_SIZE, 50);
@@ -446,9 +447,9 @@ public class RoutingVerticle extends AbstractVerticle {
         }
         //方法级处理器需要传递方法信息
         if (name.getPath() != null && !name.getPath().isEmpty()) {
-            Method method = getCandidate(meta.getExtension().getClazz(), name.getPath());
+            Method method = getCandidate(clazz, name.getPath());
             if (method == null) {
-                logger.warn(String.format("未能在类 %s 下，找到@Path为 %s 的方法.", meta.getExtension().getClazz(), name.getPath()));
+                logger.error(String.format("In this class %s, there is no way to match the path %s.", clazz, name.getPath()));
                 return null;
             } else {
                 name.setMethod(method);
