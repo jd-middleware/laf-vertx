@@ -12,6 +12,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,7 +47,7 @@ public class MyRouter extends RouterImpl {
     protected final Set<RouteImpl> routes = new ConcurrentSkipListSet<>(routeComparator);
     protected final AtomicInteger orderSequence = new AtomicInteger();
     protected final Environment environment;
-    protected Handler<Throwable> exceptionHandler;
+    protected Map<Integer, Handler<RoutingContext>> errorHandlers = new ConcurrentHashMap<>();
 
     public MyRouter(final Vertx vertx, final Environment environment) {
         super(vertx);
@@ -113,27 +114,40 @@ public class MyRouter extends RouterImpl {
         return super.vertx();
     }
 
+    @Deprecated
     @Override
-    public synchronized Router exceptionHandler(final Handler<Throwable> exceptionHandler) {
-        this.exceptionHandler = exceptionHandler;
+    public synchronized Router exceptionHandler(Handler<Throwable> exceptionHandler) {
+        if (exceptionHandler != null) {
+            this.errorHandler(500, routingContext -> exceptionHandler.handle(routingContext.failure()));
+        }
         return this;
     }
 
     @Override
-    protected Handler<Throwable> exceptionHandler() {
-        return exceptionHandler;
+    public Router errorHandler(int statusCode, Handler<RoutingContext> errorHandler) {
+        Objects.requireNonNull(errorHandler);
+        this.errorHandlers.put(statusCode, errorHandler);
+        return this;
     }
 
+    @Override
     protected void add(RouteImpl route) {
         routes.add(route);
     }
 
+    @Override
     protected void remove(RouteImpl route) {
         routes.remove(route);
     }
 
+    @Override
     protected Iterator<RouteImpl> iterator() {
         return routes.iterator();
+    }
+
+    @Override
+    Handler<RoutingContext> getErrorHandlerByStatusCode(int statusCode) {
+        return errorHandlers.get(statusCode);
     }
 
     protected String getAndCheckRoutePath(final RoutingContext ctx) {
