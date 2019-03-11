@@ -114,15 +114,6 @@ public class MyRouter extends RouterImpl {
         return super.vertx();
     }
 
-    @Deprecated
-    @Override
-    public synchronized Router exceptionHandler(Handler<Throwable> exceptionHandler) {
-        if (exceptionHandler != null) {
-            this.errorHandler(500, routingContext -> exceptionHandler.handle(routingContext.failure()));
-        }
-        return this;
-    }
-
     @Override
     public Router errorHandler(int statusCode, Handler<RoutingContext> errorHandler) {
         Objects.requireNonNull(errorHandler);
