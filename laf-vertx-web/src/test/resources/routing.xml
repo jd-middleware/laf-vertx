@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <vertx connection="" exception="">
     <routes>
-        <route name="default" route="true" type="POST"
+        <route name="default" route="true" type="GET"
                consumes="application/json"
                produces="application/json"
                handlers="{} render"
