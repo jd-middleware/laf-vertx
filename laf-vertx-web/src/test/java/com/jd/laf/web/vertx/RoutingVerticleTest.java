@@ -60,20 +60,19 @@ public class RoutingVerticleTest {
     }
 
     @Test
-    public void start() throws InterruptedException {
+    public void testText() throws InterruptedException {
         final AtomicReference<String> result = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
-        client.get(8080, "localhost", "/hello?echo=1234567")
-                .putHeader("Accept", "text/plain")
-                .send(a -> {
-                    if (a.succeeded()) {
-                        HttpResponse<Buffer> response = a.result();
-                        result.set(response.bodyAsString());
-                    } else {
-                        logger.error("failed", a.cause());
-                    }
-                    latch.countDown();
-                });
+        client.get(8080, "localhost", "/hello?echo=1234567").
+                putHeader("Accept", "text/plain").send(a -> {
+            if (a.succeeded()) {
+                HttpResponse<Buffer> response = a.result();
+                result.set(response.bodyAsString());
+            } else {
+                logger.error("failed", a.cause());
+            }
+            latch.countDown();
+        });
         latch.await();
         Assert.assertEquals(result.get(), "1234567");
     }
@@ -82,7 +81,7 @@ public class RoutingVerticleTest {
     public void echo() throws InterruptedException {
         final AtomicReference<String> result = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
-        client.get(8080, "localhost", "/hello1/test?echo=1234567")
+        client.get(8080, "localhost", "/hello2?echo=1234567")
                 .putHeader("Accept", "text/plain")
                 .send(a -> {
                     if (a.succeeded()) {
