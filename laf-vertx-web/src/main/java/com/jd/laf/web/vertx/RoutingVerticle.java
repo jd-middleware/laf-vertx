@@ -382,7 +382,6 @@ public class RoutingVerticle extends AbstractVerticle {
      */
     protected void buildHandlers(final Route route, final RouteConfig config, final Environment environment) {
         Handler<RoutingContext> handler;
-        ExtensionMeta<Command, String> meta;
         HandlerName handlerName;
         //上下文处理
         for (String name : config.getHandlers()) {
@@ -447,45 +446,58 @@ public class RoutingVerticle extends AbstractVerticle {
         }
         //方法级处理器需要传递方法信息
         if (name.getPath() != null && !name.getPath().isEmpty()) {
-            LinkedList<Method> candidates = new LinkedList<>();
-            Path path;
-            Class clazz;
-            boolean best;
-            LinkedList<Class> queue = new LinkedList<>();
-            queue.push(meta.getExtension().getClazz());
-            while (!queue.isEmpty()) {
-                clazz = queue.pop();
-                best = false;
-                for (Method method : clazz.getDeclaredMethods()) {
-                    path = method.getAnnotation(Path.class);
-                    if (path != null && path.value().equals(name.getPath())) {
-                        best = true;
-                        candidates.addFirst(method);
-                        break;
-                    } else if (method.getName().equals(name.getPath())) {
-                        candidates.add(method);
-                    }
-                }
-                if (best) {
-                    break;
-                }
-                clazz = clazz.getSuperclass();
-                if (clazz == Object.class) {
-                    break;
-                } else {
-                    queue.push(clazz);
-                }
-            }
-            if (candidates.isEmpty()) {
+            Method method = getCandidate(meta.getExtension().getClazz(), name.getPath());
+            if (method == null) {
                 logger.warn(String.format("未能在类 %s 下，找到@Path为 %s 的方法.", meta.getExtension().getClazz(), name.getPath()));
                 return null;
             } else {
-                name.setMethod(candidates.getFirst());
+                name.setMethod(method);
                 return new CommandHandler(meta, pool, name);
             }
         } else {
             return new CommandHandler(meta, pool, name);
         }
+    }
+
+    /**
+     * 查找匹配Path的方法
+     *
+     * @param clazz
+     * @param pathName
+     * @return
+     */
+    protected Method getCandidate(final Class clazz, final String pathName) {
+        LinkedList<Method> candidates = new LinkedList<>();
+        LinkedList<Class> queue = new LinkedList<>();
+        queue.push(clazz);
+
+        Path path;
+        Class cls;
+        boolean best;
+        while (!queue.isEmpty()) {
+            cls = queue.pop();
+            best = false;
+            for (Method method : cls.getDeclaredMethods()) {
+                path = method.getAnnotation(Path.class);
+                if (path != null && path.value().equals(pathName)) {
+                    best = true;
+                    candidates.addFirst(method);
+                    break;
+                } else if (method.getName().equals(pathName)) {
+                    candidates.add(method);
+                }
+            }
+            if (best) {
+                break;
+            }
+            cls = cls.getSuperclass();
+            if (cls == Object.class) {
+                break;
+            } else {
+                queue.push(cls);
+            }
+        }
+        return candidates.isEmpty() ? null : candidates.getFirst();
     }
 
     /**
