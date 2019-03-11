@@ -24,6 +24,11 @@
             <version>${laf-binding.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.jd.laf.binding</groupId>
+            <artifactId>laf-binding-java8</artifactId>
+            <version>${laf-binding.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
             <version>${validation-api.version}</version>

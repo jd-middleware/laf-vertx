@@ -21,6 +21,10 @@ public class HelloWorldCommand implements Command, Poolable {
         return new Result(echo == null ? "hello world!" : echo);
     }
 
+    public Result test(@QueryParam("echo") String echo) throws Exception {
+        return new Result(echo);
+    }
+
     @Override
     public void clean() {
         echo = null;

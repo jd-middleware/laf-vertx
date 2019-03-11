@@ -1,16 +1,10 @@
 package com.jd.laf.web.vertx;
 
 import com.jd.laf.binding.Binding;
-import com.jd.laf.binding.Binding.BinderAnnotation;
-import com.jd.laf.binding.binder.Binder;
-import com.jd.laf.binding.converter.Conversion;
-import com.jd.laf.binding.converter.ConversionType;
-import com.jd.laf.binding.converter.Converter;
-import com.jd.laf.binding.converter.Scope;
-import com.jd.laf.binding.reflect.Generics;
+import com.jd.laf.binding.reflect.PropertySupplier.AbstractSupplier;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.extension.ExtensionMeta;
-import com.jd.laf.web.vertx.annotation.CPath;
+import com.jd.laf.web.vertx.annotation.Path;
 import com.jd.laf.web.vertx.config.RouteConfig;
 import com.jd.laf.web.vertx.config.RouteType;
 import com.jd.laf.web.vertx.config.VertxConfig;
@@ -34,20 +28,12 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
-import static com.jd.laf.binding.Plugin.BINDER;
-import static com.jd.laf.binding.Plugin.CONVERTER;
-import static com.jd.laf.binding.util.Primitive.inbox;
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_CAPACITY;
 import static com.jd.laf.web.vertx.Environment.COMMAND_POOL_INITIALIZE_SIZE;
 import static com.jd.laf.web.vertx.Plugin.*;
@@ -64,8 +50,6 @@ public class RoutingVerticle extends AbstractVerticle {
     public static final int DEFAULT_PORT = 8080;
     protected static final Logger logger = LoggerFactory.getLogger(RoutingVerticle.class);
     protected static final AtomicLong counter = new AtomicLong(0);
-    // 缓存方法的绑定关系
-    protected static Map<Method, List<ParameterBinding>> PARAMETERS = new ConcurrentHashMap<>();
 
     //注入的环境
     protected Environment env;
@@ -464,14 +448,32 @@ public class RoutingVerticle extends AbstractVerticle {
         //方法级处理器需要传递方法信息
         if (name.getPath() != null && !name.getPath().isEmpty()) {
             LinkedList<Method> candidates = new LinkedList<>();
-            CPath path;
-            for (Method method : meta.getExtension().getClazz().getMethods()) {
-                path = method.getAnnotation(CPath.class);
-                if (path != null && path.value().equals(name.getPath())) {
-                    candidates.addFirst(method);
+            Path path;
+            Class clazz;
+            boolean best;
+            LinkedList<Class> queue = new LinkedList<>();
+            queue.push(meta.getExtension().getClazz());
+            while (!queue.isEmpty()) {
+                clazz = queue.pop();
+                best = false;
+                for (Method method : clazz.getDeclaredMethods()) {
+                    path = method.getAnnotation(Path.class);
+                    if (path != null && path.value().equals(name.getPath())) {
+                        best = true;
+                        candidates.addFirst(method);
+                        break;
+                    } else if (method.getName().equals(name.getPath())) {
+                        candidates.add(method);
+                    }
+                }
+                if (best) {
                     break;
-                } else if (method.getName().equals(name.getPath())) {
-                    candidates.add(method);
+                }
+                clazz = clazz.getSuperclass();
+                if (clazz == Object.class) {
+                    break;
+                } else {
+                    queue.push(clazz);
                 }
             }
             if (candidates.isEmpty()) {
@@ -560,7 +562,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 Object obj;
                 if (handlerName.method != null) {
                     //执行方法
-                    obj = handlerName.method.invoke(clone, getArgs(clone, handlerName.method, context));
+                    obj = handlerName.method.invoke(clone, getArgs(handlerName.method, context));
                 } else {
                     obj = clone.execute();
                 }
@@ -611,23 +613,13 @@ public class RoutingVerticle extends AbstractVerticle {
             }
         }
 
-        protected Object[] getArgs(final Command target, final Method method, final RoutingContext context) throws ReflectionException {
-            Object[] args = new Object[method.getParameterCount()];
-            if (args.length > 0) {
-                List<ParameterBinding> bindings = PARAMETERS.computeIfAbsent(method, o -> {
-                    Parameter[] parameters = o.getParameters();
-                    List<ParameterBinding> result = new ArrayList<>(parameters.length);
-                    for (int i = 0; i < parameters.length; i++) {
-                        result.add(new ParameterBinding(parameters[i], new ParameterConsumer(args, i)));
-                    }
-
-                    return result;
-                });
-                for (ParameterBinding parameter : bindings) {
-                    parameter.bind(context, target);
+        protected Object[] getArgs(final Method method, final RoutingContext context) throws ReflectionException {
+            return Binding.bind(context, method, new AbstractSupplier() {
+                @Override
+                public Object get(final Object target, final String name) {
+                    return ((RoutingContext) target).get(name);
                 }
-            }
-            return args;
+            });
         }
 
     }
@@ -643,10 +635,10 @@ public class RoutingVerticle extends AbstractVerticle {
         public HandlerName(String handler) {
             int pos = handler.indexOf('#');
             if (pos > 0) {
-                this.handler = handler;
-            } else {
                 this.handler = handler.substring(0, pos);
                 this.path = handler.substring(pos + 1);
+            } else {
+                this.handler = handler;
             }
         }
 
@@ -668,194 +660,4 @@ public class RoutingVerticle extends AbstractVerticle {
     }
 
 
-    /**
-     * 参数值消费者
-     */
-    protected static class ParameterConsumer implements Consumer {
-
-        protected Object[] args;
-        protected int index;
-
-        public ParameterConsumer(final Object[] args, final int index) {
-            this.args = args;
-            this.index = index;
-        }
-
-        @Override
-        public void accept(final Object o) {
-            args[index] = o;
-        }
-    }
-
-    /**
-     * 绑定字段
-     */
-    protected static class ParameterBinding {
-        //方法参数
-        final protected Parameter parameter;
-        //值消费者
-        final protected Consumer consumer;
-        //绑定实现
-        final protected List<BinderAnnotation> binders = new ArrayList<>(2);
-
-        public ParameterBinding(final Parameter parameter, final Consumer consumer) {
-            this.parameter = parameter;
-            this.consumer = consumer;
-            Annotation[] annotations = parameter.getDeclaredAnnotations();
-            Binder binder;
-            if (annotations != null) {
-                for (Annotation annotation : annotations) {
-                    binder = BINDER.get(annotation.annotationType());
-                    if (binder != null) {
-                        binders.add(new BinderAnnotation(annotation, binder));
-                    }
-                }
-            }
-            if (binders.isEmpty()) {
-                //TODO 直接根据参数名称绑定请求参数值
-            }
-        }
-
-        /**
-         * 绑定
-         *
-         * @param source
-         * @param target
-         * @throws ReflectionException
-         */
-        public void bind(final Object source, final Object target) throws ReflectionException {
-            Binder.Context context;
-            for (BinderAnnotation annotation : binders) {
-                context = new ParameterContext(source, target, annotation.getAnnotation(), parameter, consumer);
-                if (annotation.getBinder().bind(context)) {
-                    return;
-                }
-            }
-
-        }
-    }
-
-    /**
-     * 方法参数上下文
-     */
-    protected static class ParameterContext extends Binder.Context {
-        //方法参数
-        protected Parameter parameter;
-        //值消费者
-        protected Consumer consumer;
-
-        public ParameterContext(final Object source, final Object target, final Annotation annotation, final Parameter parameter, final Consumer consumer) {
-            super(source, target, annotation);
-            this.parameter = parameter;
-            this.consumer = consumer;
-        }
-
-        @Override
-        public String getName() {
-            return parameter.getName();
-        }
-
-        @Override
-        public Class<?> getType() {
-            return parameter.getType();
-        }
-
-        @Override
-        public Object evaluate(final String name) throws ReflectionException {
-            return ((RoutingContext) source).get(name);
-        }
-
-        @Override
-        public boolean bind(final Object value) throws ReflectionException {
-            return bind(value, null);
-        }
-
-        @Override
-        public boolean bind(final Object value, final String format) throws ReflectionException {
-            try {
-                Class<?> type = parameter.getType();
-                if (value == null) {
-                    //值为空
-                    if (type.isPrimitive()) {
-                        //基本类型不能为空
-                        return false;
-                    }
-                    consumer.accept(null);
-                    return true;
-                }
-                Class<?> inboxTargetType = inbox(type);
-                Class<?> inboxSourceType = inbox(value.getClass());
-                MyParameterScope scope = new MyParameterScope(parameter);
-                //获取转换器
-                Converter operation = CONVERTER.select(new ConversionType(inboxSourceType, inboxTargetType, scope));
-                if (operation != null) {
-                    //拿到转换器
-                    Object obj = operation.execute(new Conversion(inboxSourceType, inboxTargetType, value, format, scope));
-                    if (obj != null) {
-                        //转换成功
-                        consumer.accept(obj);
-                        return true;
-                    }
-                }
-                return false;
-            } catch (ReflectionException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new ReflectionException(e.getMessage(), e);
-            }
-        }
-    }
-
-
-    /**
-     * 参数作用域
-     */
-    protected static class MyParameterScope implements Scope {
-        //方法
-        protected final Parameter parameter;
-        //注解
-        protected final Annotation[] annotations;
-        //泛型
-        protected final Class genericType;
-
-        public MyParameterScope(Parameter parameter) {
-            this.parameter = parameter;
-            this.annotations = parameter.getAnnotations();
-            this.genericType = Generics.getGenericType(parameter.getParameterizedType());
-        }
-
-        @Override
-        public Annotation[] getAnnotations() {
-            return annotations;
-        }
-
-        @Override
-        public Class getGenericType() {
-            return genericType;
-        }
-
-        @Override
-        public Object target() {
-            return parameter;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-
-            MyParameterScope that = (MyParameterScope) o;
-
-            return parameter.equals(that.parameter);
-        }
-
-        @Override
-        public int hashCode() {
-            return parameter.hashCode();
-        }
-    }
 }
