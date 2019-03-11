@@ -6,8 +6,6 @@ import com.jd.laf.web.vertx.annotation.CookieParam;
 import io.vertx.ext.web.Cookie;
 import io.vertx.ext.web.RoutingContext;
 
-import java.lang.reflect.Field;
-
 /**
  * Cookie读取
  */
@@ -19,9 +17,8 @@ public class CookieParamBinder implements Binder {
         if (!(source instanceof RoutingContext)) {
             return false;
         }
-        Field field = context.getField();
         String name = annotation.value();
-        name = name == null || name.isEmpty() ? field.getName() : name;
+        name = name == null || name.isEmpty() ? context.getName() : name;
         Cookie cookie = ((RoutingContext) source).getCookie(name);
         return cookie == null ? false : context.bind(cookie.getValue());
     }

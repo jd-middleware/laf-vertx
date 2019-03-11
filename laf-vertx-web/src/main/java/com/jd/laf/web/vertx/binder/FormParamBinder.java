@@ -6,7 +6,6 @@ import com.jd.laf.web.vertx.annotation.FormParam;
 import io.vertx.core.MultiMap;
 import io.vertx.ext.web.RoutingContext;
 
-import java.lang.reflect.Field;
 import java.util.Collection;
 
 /**
@@ -20,10 +19,9 @@ public class FormParamBinder implements Binder {
         if (!(source instanceof RoutingContext)) {
             return false;
         }
-        Field field = context.getField();
         String name = annotation.value();
-        name = name == null || name.isEmpty() ? field.getName() : name;
-        Class<?> type = field.getType();
+        name = name == null || name.isEmpty() ? context.getName() : name;
+        Class<?> type = context.getType();
         MultiMap attributes = ((RoutingContext) source).request().formAttributes();
         if (Collection.class.isAssignableFrom(type) || type.isArray()) {
             //集合

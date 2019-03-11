@@ -8,7 +8,6 @@ import com.jd.laf.web.vertx.annotation.Body.BodyType;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.StringReader;
-import java.lang.reflect.Field;
 import java.util.Properties;
 
 /**
@@ -18,7 +17,6 @@ public class BodyBinder implements Binder {
     @Override
     public boolean bind(final Context context) throws ReflectionException {
         Body annotation = (Body) context.getAnnotation();
-        Field field = context.getField();
         Object source = context.getSource();
         if (!(source instanceof RoutingContext)) {
             return false;
@@ -48,10 +46,10 @@ public class BodyBinder implements Binder {
             switch (type) {
                 case JSON:
                     return context.bind(Plugin.JSON.get().getUnmarshaller().unmarshall(
-                            ctx.getBodyAsString(), field.getType(), null));
+                            ctx.getBodyAsString(), context.getType(), null));
                 case XML:
                     return context.bind(Plugin.XML.get().getUnmarshaller().unmarshall(
-                            ctx.getBodyAsString(), field.getType(), null));
+                            ctx.getBodyAsString(), context.getType(), null));
                 case PROPERTIES:
                     Properties properties = new Properties();
                     properties.load(new StringReader(ctx.getBody().toString()));

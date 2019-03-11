@@ -5,8 +5,6 @@ import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.annotation.HeaderParam;
 import io.vertx.ext.web.RoutingContext;
 
-import java.lang.reflect.Field;
-
 /**
  * 表单绑定
  */
@@ -18,9 +16,8 @@ public class HeaderParamBinder implements Binder {
         if (!(source instanceof RoutingContext)) {
             return false;
         }
-        Field field = context.getField();
         String name = annotation.value();
-        name = name == null || name.isEmpty() ? field.getName() : name;
+        name = name == null || name.isEmpty() ? context.getName() : name;
         return context.bind(((RoutingContext) source).request().getHeader(name));
     }
 

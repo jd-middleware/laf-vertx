@@ -1,15 +1,15 @@
-package com.jd.laf.web.vertx.binder.method;
+package com.jd.laf.web.vertx.binder;
 
 import com.jd.laf.binding.binder.Binder;
-import com.jd.laf.binding.reflect.Reflect;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
-import com.jd.laf.web.vertx.annotation.method.Path;
+import com.jd.laf.web.vertx.annotation.CPath;
 import io.vertx.ext.web.RoutingContext;
 
 /**
  * 方法路径
  */
 public class PathBinder implements Binder {
+
     @Override
     public boolean bind(Context context) throws ReflectionException {
         if (context == null) {
@@ -20,11 +20,12 @@ public class PathBinder implements Binder {
             return false;
         }
         RoutingContext ctx = (RoutingContext) obj;
-        return Reflect.set(context.getTarget(), context.getField(), ctx.normalisedPath(), null, context.getFactory());
+        return context.bind(ctx.normalisedPath());
     }
 
     @Override
     public Class<?> annotation() {
-        return Path.class;
+        return CPath.class;
     }
+
 }

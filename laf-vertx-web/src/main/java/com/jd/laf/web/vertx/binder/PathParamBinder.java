@@ -18,9 +18,8 @@ public class PathParamBinder implements Binder {
         if (!(source instanceof RoutingContext)) {
             return false;
         }
-        Field field = context.getField();
         String name = annotation.value();
-        name = name == null || name.isEmpty() ? field.getName() : name;
+        name = name == null || name.isEmpty() ? context.getName() : name;
         return context.bind(((RoutingContext) source).pathParam(name));
     }
 

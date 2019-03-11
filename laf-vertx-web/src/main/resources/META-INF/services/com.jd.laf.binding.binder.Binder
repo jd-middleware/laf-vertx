@@ -10,6 +10,6 @@ com.jd.laf.web.vertx.binder.SessionBinder
 com.jd.laf.web.vertx.binder.SessionParamBinder
 com.jd.laf.web.vertx.binder.VertxBinder
 com.jd.laf.web.vertx.binder.BodyBinder
-com.jd.laf.web.vertx.binder.method.PathBinder
+com.jd.laf.web.vertx.binder.PathBinder
 com.jd.laf.web.vertx.binder.parameter.BodyBinder
 com.jd.laf.web.vertx.binder.parameter.QueryParamBinder

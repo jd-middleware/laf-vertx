@@ -21,7 +21,6 @@ import static com.jd.laf.binding.Plugin.BINDER;
 public class ParamBinding {
 
     protected static ConcurrentMap<String, List<BindingMethod>> bindingMethods = new ConcurrentHashMap();
-    public static final String PARAM_BINDING_ARGS = "paramBindingArgs";
 
     /**
      * 绑定上下文

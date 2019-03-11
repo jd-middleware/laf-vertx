@@ -6,8 +6,6 @@ import com.jd.laf.web.vertx.annotation.SessionParam;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.Session;
 
-import java.lang.reflect.Field;
-
 /**
  * 会话参数绑定
  */
@@ -19,9 +17,8 @@ public class SessionParamBinder implements Binder {
         if (!(source instanceof RoutingContext)) {
             return false;
         }
-        Field field = context.getField();
         String name = annotation.value();
-        name = name == null || name.isEmpty() ? field.getName() : name;
+        name = name == null || name.isEmpty() ? context.getName() : name;
         Session session = ((RoutingContext) source).session();
         return session == null ? false : context.bind(session.get(name));
     }
