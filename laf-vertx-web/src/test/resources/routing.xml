@@ -7,7 +7,8 @@
                handlers="{} render"
                errors="error"/>
         <route path="/hello" inherit="default" produces="text/plain" handlers="helloWorld"/>
-        <route path="/hello1/test" inherit="default" produces="text/plain" handlers="helloWorld#test"/>
+        <route path="/hello1" inherit="default" template="hello.html" produces="text/html" handlers="helloWorld"/>
+        <route path="/hello2" inherit="default" produces="text/plain" handlers="helloWorld#test"/>
     </routes>
     <messages>
         <message path="profile_clear_event" handlers="test"/>
