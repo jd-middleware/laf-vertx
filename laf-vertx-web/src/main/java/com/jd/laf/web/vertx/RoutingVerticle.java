@@ -575,7 +575,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 Object obj;
                 if (handlerName.method != null) {
                     //执行方法
-                    obj = handlerName.method.invoke(clone, getArgs(handlerName.method, context));
+                    obj = handlerName.method.invoke(clone, getArgs(clone, handlerName.method, context));
                 } else {
                     obj = clone.execute();
                 }
@@ -626,8 +626,8 @@ public class RoutingVerticle extends AbstractVerticle {
             }
         }
 
-        protected Object[] getArgs(final Method method, final RoutingContext context) throws ReflectionException {
-            return Binding.bind(context, method, new AbstractSupplier() {
+        protected Object[] getArgs(final Object target, final Method method, final RoutingContext context) throws ReflectionException {
+            return Binding.bind(context, target, method, new AbstractSupplier() {
                 @Override
                 public Object get(final Object target, final String name) {
                     return ((RoutingContext) target).get(name);
