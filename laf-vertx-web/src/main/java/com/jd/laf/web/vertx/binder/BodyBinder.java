@@ -2,12 +2,15 @@ package com.jd.laf.web.vertx.binder;
 
 import com.jd.laf.binding.Plugin;
 import com.jd.laf.binding.binder.Binder;
+import com.jd.laf.binding.converter.Scope;
+import com.jd.laf.binding.marshaller.TypeReference;
 import com.jd.laf.binding.reflect.exception.ReflectionException;
 import com.jd.laf.web.vertx.annotation.Body;
 import com.jd.laf.web.vertx.annotation.Body.BodyType;
 import io.vertx.ext.web.RoutingContext;
 
 import java.io.StringReader;
+import java.lang.reflect.Type;
 import java.util.Properties;
 
 /**
@@ -45,11 +48,18 @@ public class BodyBinder implements Binder {
         try {
             switch (type) {
                 case JSON:
+                    Scope scope = context.getScope();
+                    Class genericType = scope.getGenericType();
+                    if (genericType == null) {
+                        return context.bind(Plugin.JSON.get().getUnmarshaller().unmarshall(
+                                ctx.getBodyAsString(), context.getType()));
+                    }
                     return context.bind(Plugin.JSON.get().getUnmarshaller().unmarshall(
-                            ctx.getBodyAsString(), context.getType(), null));
+                            ctx.getBodyAsString(), new TypeReference(scope.getType(), new Type[]{scope.getGenericType()}) {
+                            }));
                 case XML:
                     return context.bind(Plugin.XML.get().getUnmarshaller().unmarshall(
-                            ctx.getBodyAsString(), context.getType(), null));
+                            ctx.getBodyAsString(), context.getType()));
                 case PROPERTIES:
                     Properties properties = new Properties();
                     properties.load(new StringReader(ctx.getBody().toString()));

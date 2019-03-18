@@ -3,6 +3,7 @@ package com.jd.laf.web.vertx.marshaller;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.jd.laf.binding.marshaller.JsonProvider;
 import com.jd.laf.binding.marshaller.Marshaller;
+import com.jd.laf.binding.marshaller.TypeReference;
 import com.jd.laf.binding.marshaller.Unmarshaller;
 import io.vertx.core.json.Json;
 
@@ -44,6 +45,16 @@ public class JacksonProvider implements JsonProvider {
         @Override
         public <T> T unmarshall(final String value, final Class<T> clazz) {
             return Json.decodeValue(value, clazz);
+        }
+
+        @Override
+        public <T> T unmarshall(final String value, final TypeReference<T> reference, final String format) throws Exception {
+            return Json.mapper.readValue(value, Json.mapper.getTypeFactory().constructType(reference.getType()));
+        }
+
+        @Override
+        public <T> T unmarshall(final String value, final TypeReference<T> reference) throws Exception {
+            return Json.mapper.readValue(value, Json.mapper.getTypeFactory().constructType(reference.getType()));
         }
     }
 
