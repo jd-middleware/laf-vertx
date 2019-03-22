@@ -19,7 +19,9 @@ public interface Command<T> extends Type<String>, Cloneable, Prototype {
      * @return
      * @throws Exception
      */
-    T execute() throws Exception;
+    default T execute() throws Exception {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * 名称

@@ -28,6 +28,7 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.impl.MyRoute;
 import io.vertx.ext.web.impl.MyRouter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
@@ -617,6 +618,8 @@ public class RoutingVerticle extends AbstractVerticle {
                 } else {
                     context.next();
                 }
+            } catch (InvocationTargetException invocationException) {
+                context.fail(invocationException.getTargetException());
             } catch (Exception e) {
                 context.fail(e);
             } finally {
