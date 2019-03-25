@@ -30,6 +30,8 @@ import io.vertx.ext.web.impl.MyRouter;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -469,27 +471,46 @@ public class RoutingVerticle extends AbstractVerticle {
      * @return
      */
     protected Method getCandidate(final Class clazz, final String pathName) {
-        LinkedList<Method> candidates = new LinkedList<>();
         LinkedList<Class> queue = new LinkedList<>();
         queue.push(clazz);
 
         Path path;
         Class cls;
-        boolean best;
+        Method best = null;
+        int priority = 0;
+        int match;
+        Parameter[] parameters;
         while (!queue.isEmpty()) {
             cls = queue.pop();
-            best = false;
             for (Method method : cls.getDeclaredMethods()) {
-                path = method.getAnnotation(Path.class);
-                if (path != null && path.value().equals(pathName)) {
-                    best = true;
-                    candidates.addFirst(method);
-                    break;
-                } else if (method.getName().equals(pathName)) {
-                    candidates.add(method);
+                if (Modifier.isPublic(method.getModifiers())) {
+                    //公共方法
+                    path = method.getAnnotation(Path.class);
+                    match = 0;
+                    if (path != null && path.value().equals(pathName)) {
+                        //有@Path注解
+                        match = 2;
+                    } else if (method.getName().equals(pathName)) {
+                        //方法名相同
+                        match = 1;
+                    }
+                    if (match > 0) {
+                        //匹配
+                        if (match > priority) {
+                            //更高优先级
+                            best = method;
+                            priority = match;
+                        } else if (match == priority) {
+                            //Java8，会重载产生擦除了泛型的参数为Object的方法
+                            parameters = best.getParameters();
+                            if (parameters.length > 0 && parameters[0].getType() == Object.class) {
+                                best = method;
+                            }
+                        }
+                    }
                 }
             }
-            if (best) {
+            if (best != null) {
                 break;
             }
             cls = cls.getSuperclass();
@@ -499,7 +520,7 @@ public class RoutingVerticle extends AbstractVerticle {
                 queue.push(cls);
             }
         }
-        return candidates.isEmpty() ? null : candidates.getFirst();
+        return best;
     }
 
     /**
