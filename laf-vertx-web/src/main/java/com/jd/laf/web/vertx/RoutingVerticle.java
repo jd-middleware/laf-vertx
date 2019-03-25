@@ -31,7 +31,6 @@ import io.vertx.ext.web.impl.MyRouter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -479,7 +478,6 @@ public class RoutingVerticle extends AbstractVerticle {
         Method best = null;
         int priority = 0;
         int match;
-        Parameter[] parameters;
         while (!queue.isEmpty()) {
             cls = queue.pop();
             for (Method method : cls.getDeclaredMethods()) {
@@ -494,19 +492,13 @@ public class RoutingVerticle extends AbstractVerticle {
                         //方法名相同
                         match = 1;
                     }
-                    if (match > 0) {
-                        //匹配
-                        if (match > priority) {
-                            //更高优先级
-                            best = method;
-                            priority = match;
-                        } else if (match == priority) {
-                            //Java8，会重载产生擦除了泛型的参数为Object的方法
-                            parameters = best.getParameters();
-                            if (parameters.length > 0 && parameters[0].getType() == Object.class) {
-                                best = method;
-                            }
-                        }
+                    if (match > 0
+                            && (match > priority || match == priority
+                            && (Modifier.isVolatile(best.getModifiers()) && !Modifier.isVolatile(method.getModifiers())))) {
+                        //更高优先级，或相同优先级
+                        //Java8，会重载产生擦除了泛型的参数为Object的方法，方法上带有volatile标识
+                        best = method;
+                        priority = match;
                     }
                 }
             }
