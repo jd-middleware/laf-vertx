@@ -174,7 +174,7 @@ public abstract class MessageDaemon<T> implements Daemon {
             while (isStarted()) {
                 try {
                     //拿到更新的消息
-                    message = events.poll(pollTimeout, TimeUnit.MICROSECONDS);
+                    message = events.poll(pollTimeout, TimeUnit.MILLISECONDS);
                     if (!isStarted()) {
                         return;
                     } else if (message != null) {
