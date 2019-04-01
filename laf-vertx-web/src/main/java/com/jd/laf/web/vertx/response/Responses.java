@@ -152,7 +152,8 @@ public abstract class Responses {
             if (supplier != null) {
                 return supplier.error(throwable);
             } else {
-                return error(defaultCode, defaultStatus, throwable.getMessage());
+                //not found supplier for throwable , should print the error stack
+                return new ErrorResponse(defaultCode,defaultStatus,throwable.getMessage(),true);
             }
         }
     }
