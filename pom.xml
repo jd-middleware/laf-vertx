@@ -18,7 +18,6 @@
         <module>laf-vertx-web</module>
         <module>laf-vertx-web-pebble</module>
         <module>laf-vertx-web-beetl</module>
-        <module>laf-vertx-sso-jd</module>
         <module>laf-vertx-web-springboot-starter</module>
         <module>laf-ignite-springboot-starter</module>
     </modules>
