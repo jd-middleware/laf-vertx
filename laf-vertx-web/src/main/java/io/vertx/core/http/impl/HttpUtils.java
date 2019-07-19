@@ -41,8 +41,7 @@ import static io.vertx.core.http.Http2Settings.*;
 
 /**
  * Various http utils.
- * <p>
- * update normalizePath & decodeUnreserved & validateHeader & validateHeaderValue
+ * <p> update normalizePath,decodeUnreserved,validateHeader, validateHeaderValue</p>
  *
  * @author <a href="mailto:nmaurer@redhat.com">Norman Maurer</a>
  */
@@ -105,7 +104,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">rfc3986</a>.
      *
      * There are 2 extra transformations that are not part of the spec but kept for backwards compatibility:
      *
@@ -190,7 +189,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     * Normalizes a path as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">rfc3986</a>.
      * <p>
      * There are 2 extra transformations that are not part of the spec but kept for backwards compatibility:
      * <p>
@@ -388,7 +387,7 @@ public final class HttpUtils {
     }
 
     /**
-     * Removed dots as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>.
+     * Removed dots as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">rfc3986</a>.
      * <p>
      * There is 1 extra transformation that are not part of the spec but kept for backwards compatibility:
      * <p>
@@ -459,14 +458,14 @@ public final class HttpUtils {
     }
 
     /**
-     * Resolve an URI reference as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>
+     * Resolve an URI reference as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">rfc3986</a>
      */
     public static URI resolveURIReference(String base, String ref) throws URISyntaxException {
         return resolveURIReference(URI.create(base), ref);
     }
 
     /**
-     * Resolve an URI reference as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4>rfc3986</a>
+     * Resolve an URI reference as per <a href="http://tools.ietf.org/html/rfc3986#section-5.2.4">rfc3986</a>
      */
     public static URI resolveURIReference(URI base, String ref) throws URISyntaxException {
         URI _ref = URI.create(ref);

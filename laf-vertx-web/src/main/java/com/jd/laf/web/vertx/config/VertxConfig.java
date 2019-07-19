@@ -96,7 +96,7 @@ public class VertxConfig {
          *
          * @param reader
          * @return
-         * @throws IOException
+         * @throws JAXBException
          */
         public static VertxConfig build(final Reader reader) throws JAXBException {
             JAXBContext context = JAXBContext.newInstance(RouteConfig.class, RouteType.class, VertxConfig.class);
