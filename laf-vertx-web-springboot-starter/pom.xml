@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>laf-vertx</artifactId>
-        <groupId>com.jd.laf.web</groupId>
+        <groupId>com.jd.joyqueue</groupId>
         <version>1.0.18</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -13,7 +13,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.jd.laf.web</groupId>
+            <groupId>com.jd.joyqueue</groupId>
             <artifactId>laf-vertx-web</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -28,7 +28,7 @@
             <version>${project.version}</version>
         </dependency>-->
         <dependency>
-            <groupId>com.jd.laf</groupId>
+            <groupId>com.jd.joyqueue</groupId>
             <artifactId>laf-extension-springboot-starter</artifactId>
             <version>${laf-extension.version}</version>
         </dependency>
